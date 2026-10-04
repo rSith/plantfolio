@@ -200,3 +200,30 @@ function time_ago($datetime)
     $months = intdiv($days, 30);
     return $months . ($months === 1 ? ' month ago' : ' months ago');
 }
+
+/** A short day for messages, e.g. "7 Oct". */
+function format_day($date)
+{
+    return date('j M', strtotime($date));
+}
+
+/**
+ * The fixed confidence word for an ML result. The limits are a design system rule and must not change:
+ * High from 80%, Medium from 60% to 79%, Not sure below 60%.
+ * $confidence is between 0 and 1, as the ML service returns it. The word is decided from the rounded
+ * percentage, so it always agrees with the number the user sees.
+ * Returns 'key' (used in CSS class names) and 'label' (the word shown).
+ */
+function confidence_level($confidence)
+{
+    $percent = round($confidence * 100);
+
+    if ($percent >= 80) {
+        return ['key' => 'high', 'label' => 'High'];
+    }
+    if ($percent >= 60) {
+        return ['key' => 'medium', 'label' => 'Medium'];
+    }
+
+    return ['key' => 'low', 'label' => 'Not sure'];
+}

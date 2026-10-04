@@ -264,11 +264,18 @@ img {
   color: var(--status-sick-text);
 }
 
+/* Care that is late: the only use of red besides Sick and destructive actions */
+.badge-overdue {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
 /* The dot in front of a health status; currentColor means "same as the text colour" */
 .badge-thriving::before,
 .badge-stable::before,
 .badge-needs-attention::before,
-.badge-sick::before {
+.badge-sick::before,
+.badge-overdue::before {
   content: "";
   width: 7px;
   height: 7px;
@@ -907,4 +914,264 @@ textarea.input {
 .rating-count,
 .rating-none {
   color: var(--color-muted);
+}
+
+/* Five stars in a row, e.g. on a profile or in the Rate a trader dialog. Filled ones get .is-filled. */
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--color-line-strong);
+}
+
+.stars .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.star.is-filled {
+  color: var(--color-amber);
+}
+
+.star.is-filled .icon {
+  fill: currentColor;
+}
+
+/* ── Care row ───────────────────────────────────────── */
+/* Printed by partials/care-row.php. Phone: photo, text and a tick button, with the badge under the text. */
+
+.care-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.care-row:first-child {
+  border-top: 0;
+}
+
+.thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+/* Each piece is given its place by name: the photo and the button are two rows tall,
+   the text sits in the first row and the badge in the second */
+.care-row .thumb {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.care-row-text {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  min-width: 0;   /* lets long names wrap instead of pushing the button off the screen */
+}
+
+.care-row .badge {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+}
+
+.care-row .btn {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  min-width: 44px;
+}
+
+.care-row-species {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-style: italic;
+}
+
+.care-row-task {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.care-row-btn-label {
+  display: none;
+}
+
+/* Tablet and up: everything on one line, and the button shows its words */
+@media (min-width: 768px) {
+  .care-row {
+    grid-template-columns: auto 1fr auto auto;
+  }
+
+  .care-row .thumb {
+    grid-row: 1;
+  }
+
+  .care-row .badge {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .care-row .btn {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .care-row-btn-label {
+    display: inline;
+  }
+}
+
+/* ── Confidence meter ───────────────────────────────── */
+/* Printed by partials/confidence-meter.php. The class confidence-high / -medium / -low picks the bar colour. */
+
+.confidence {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.confidence-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--text-small);
+}
+
+.confidence-title {
+  font-weight: var(--weight-medium);
+}
+
+.confidence-label {
+  color: var(--color-muted);
+}
+
+.confidence-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.meter {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf);
+}
+
+.confidence-medium .meter-fill {
+  background: var(--color-amber);
+}
+
+.confidence-low .meter-fill {
+  background: var(--color-meter-low);
+}
+
+.confidence-value {
+  min-width: 4ch;   /* room for "100%", so bars in a list all end at the same place */
+  text-align: right;
+  font-size: var(--text-body-sm);
+}
+
+/* ── Toast ──────────────────────────────────────────── */
+/* A short confirmation with an optional Undo. JavaScript shows and hides it from week 5 (CORE-23). */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  max-width: 420px;
+  padding: var(--space-4) var(--space-8) var(--space-4) var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-size: var(--text-body-sm);
+  box-shadow: var(--shadow-toast);
+}
+
+.toast-message {
+  flex: 1;
+  padding: var(--space-8) 0;
+}
+
+.toast-action {
+  min-height: 44px;
+  padding: 0 var(--space-12);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-sage);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  text-decoration: underline;
+}
+
+/* The usual green outline would not show on the dark toast */
+.toast-action:focus-visible {
+  outline-color: var(--color-sage);
+}
+
+/* Where toasts sit on a real page: fixed to the bottom of the screen, centred */
+.toast-region {
+  position: fixed;
+  right: var(--space-16);
+  bottom: var(--space-16);
+  left: var(--space-16);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;   /* the empty strip beside a toast must not block clicks on the page */
+}
+
+.toast-region .toast {
+  pointer-events: auto;
+}
+
+/* ── Alerts ─────────────────────────────────────────── */
+/* A message that stays in the page: .alert (information) plus -warning, -success or -danger */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+}
+
+.alert .icon {
+  margin-top: 2px;
+}
+
+.alert-warning {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.alert-success {
+  background: var(--status-thriving-bg);
+  color: var(--status-thriving-text);
+}
+
+.alert-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }

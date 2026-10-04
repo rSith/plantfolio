@@ -48,6 +48,7 @@ $health_statuses = [
     .sg-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); margin-bottom: var(--space-16); }
     .sg-row:last-child { margin-bottom: 0; }
     .sg-row-spaced { margin-top: var(--space-16); }
+    .sg-row > .confidence, .sg-row > .alert { flex: 1; }
     .sg-swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-12); }
     .sg-swatch { border: 1px solid var(--color-line); border-radius: var(--radius-input); overflow: hidden; }
     .sg-swatch-colour { height: 56px; border-bottom: 1px solid var(--color-line); }
@@ -292,6 +293,53 @@ $health_statuses = [
         <?php endforeach; ?>
       </div>
       <p class="text-small sg-note">Contact details never appear on a card. Cards link to pages that are built in weeks 3 and 4.</p>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-care">
+      <h2 class="label" id="sg-care">Care row, confidence, rating</h2>
+      <div class="sg-grid-2">
+        <div>
+          <?php foreach ($mock_reminders as $reminder): ?>
+            <?php partial('care-row', ['reminder' => $reminder]); ?>
+          <?php endforeach; ?>
+        </div>
+        <div>
+          <?php foreach ([0.88, 0.64, 0.42] as $confidence): ?>
+            <div class="sg-row">
+              <?php partial('confidence-meter', ['prediction' => ['confidence' => $confidence]]); ?>
+            </div>
+          <?php endforeach; ?>
+          <p class="text-small">High 80%+ (green) · Medium 60–79% (amber) · Not sure below 60% (grey)</p>
+          <div class="sg-row">
+            <?php partial('rating', ['rating' => $current_user]); ?>
+            <span class="stars" role="img" aria-label="4 out of 5 stars">
+              <?php for ($star = 1; $star <= 5; $star++): ?>
+                <span class="star<?= $star <= 4 ? ' is-filled' : '' ?>"><?= icon('star') ?></span>
+              <?php endfor; ?>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-feedback">
+      <h2 class="label" id="sg-feedback">Feedback</h2>
+      <div class="sg-grid-2">
+        <div>
+          <div class="toast" role="status">
+            <?= icon('check') ?>
+            <span class="toast-message">Watered Monty · next on <?= e(format_day(mock_date(7))) ?></span>
+            <button type="button" class="toast-action">Undo</button>
+          </div>
+          <p class="text-small sg-note">On a real page the toast sits at the bottom of the screen and hides by itself (week 5).</p>
+        </div>
+        <div>
+          <div class="sg-row"><div class="alert alert-warning"><?= icon('triangle-alert') ?> Suggestion, not a diagnosis.</div></div>
+          <div class="sg-row"><div class="alert"><?= icon('info') ?> You can change this later.</div></div>
+          <div class="sg-row"><div class="alert alert-success"><?= icon('check') ?> Interest sent</div></div>
+          <div class="sg-row"><div class="alert alert-danger"><?= icon('triangle-alert') ?> We could not save your changes. Try again.</div></div>
+        </div>
+      </div>
     </section>
   </main>
 </body>

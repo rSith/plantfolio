@@ -76,6 +76,23 @@ $mock_plants = [
      'task' => 'water', 'interval_days' => 2, 'next_due' => mock_date(1)],
 ];
 
+// Care that is due today or overdue — rows of `care_reminders` (wireframe p10), each joined with:
+//   plants → nickname, photo        plant_species → common_name
+// Every row keeps the rule from database/README.md: next_due = last_done + interval_days.
+$mock_reminders = [
+    ['id' => 12, 'plant_id' => 43, 'task' => 'water', 'interval_days' => 5,
+     'last_done' => mock_date(-7), 'next_due' => mock_date(-2),
+     'nickname' => 'Goldie', 'photo' => 'mock/goldie.svg', 'common_name' => 'Golden pothos'],
+
+    ['id' => 11, 'plant_id' => 42, 'task' => 'water', 'interval_days' => 7,
+     'last_done' => mock_date(-7), 'next_due' => mock_date(0),
+     'nickname' => 'Monty', 'photo' => 'mock/monty.svg', 'common_name' => 'Swiss cheese plant'],
+
+    ['id' => 13, 'plant_id' => 44, 'task' => 'fertilise', 'interval_days' => 30,
+     'last_done' => mock_date(-30), 'next_due' => mock_date(0),
+     'nickname' => 'Sergeant', 'photo' => 'mock/sergeant.svg', 'common_name' => 'Snake plant'],
+];
+
 // Open listings on the marketplace — rows of `exchange_listings` (wireframe p17), each joined with:
 //   users → username, full_name, avatar of the owner
 // and four calculated columns: rating_avg and rating_count (from user_ratings), interest_count
