@@ -1,235 +1,249 @@
-# PlantFolio — Complete Implementation Roadmap
+# PlantFolio — Build Roadmap (frontend first)
 
-**Project:** A web application where plant lovers can create digital plant portfolios, track care, and exchange plants locally.
+*Version 2 · 4 October 2026 · replaces the September Flask roadmap*
 
-**Tech Stack:** Python (Flask), MySQL, HTML5, CSS3, vanilla JavaScript. No React, no Java.
+This is the week-by-week order for building PlantFolio. It follows the **frontend-first** approach:
+build every page to match its wireframe with mock data, then wire it to PHP and MySQL, then add the ML service.
+Task IDs (`CORE-14`, `COM-07`, `ML-12` …) refer to the **PlantFolio Task Sheet**, which holds each task's
+definition of done, dependencies, owner and reviewer. Page codes (`P01`–`P15`, states `S1`–`S6`) refer to
+`PlantFolio_Wireframes_UX_Structure.pdf`.
 
-**Marking:** Functionality 70%, UX 15%, Code quality 10%, Documentation 5%.
-
----
-
-## Phase 0: Foundations (1-2 weeks before Week 1)
-
-Goal: learn just enough of each technology to build one tiny working page end to end.
-
-### Tools to install
-- Python 3 (recent version) and pip ✓
-- MySQL Server and MySQL Workbench ✓
-- Git ✓
-- VS Code with Python and live-preview extensions
-- Postman or Thunder Client (for testing routes)
-- A modern browser with DevTools
-
-### Practice exercise (Phase 0 checkpoint)
-Build and delete a throwaway "Hello Plants" app: one Flask page with a form where you type a plant name, it saves to a MySQL table, and the page lists all saved plants. When this works, you have touched every layer PlantFolio uses.
+**Why frontend first:** visible progress from week 1, the UX is settled before any database work, and each page
+teaches HTML/CSS/JS fundamentals before PHP. Because mock data is shaped like real database rows, stage B swaps
+the data source without redesigning pages.
 
 ---
 
-## Phase 1: Planning and design (1 week, before Week 1)
+## At a glance
 
-### Step 1.1 - Lock the scope
-MVP: sign up, log in, profiles, gardens, plant CRUD, photos, care history, health status, search/filter, care reminders, exchange listings, user ratings, mobile-responsive design.
+| Stage | Weeks | Dates | What gets built | Ends with |
+|---|---|---|---|---|
+| 0 · Planning & design | 0 | 28 Sep – 4 Oct | Proposal, 25-page wireframes, Figma prototype, repo skeleton | ✅ MS-0 passed (30 Sep) |
+| **F · Frontend with mock data** | 1–7 | 5 Oct – 22 Nov | Design tokens, components, all 15 pages, states S1–S6, responsive pass | MS-1 Kick-off (wk 1) · **UI freeze** (wk 7) |
+| **B · Backend & database** | 8–10 | 23 Nov – 13 Dec | Schema, seed, auth, CRUD, uploads, reminders, community, exchange, ratings | **Gate 1** (wk 9) · **Gate 2 — coursework complete** (wk 10) |
+| **M · ML features** | 11–14 | 14 Dec – 10 Jan | Flask service, disease CNN, species recognition, P07/P08 wired | **Gate 3** (wk 14) |
+| **D · Testing & delivery** | 15–16 | 11 – 24 Jan | Security, usability and regression testing, report, slides, release | Release v1.0 · submission ~26 Jan 2027 |
+| After submission | 17–20 | 25 Jan – 21 Feb | Retrospective, feedback fixes, portfolio polish | MS-7 Post-project review |
 
-Nice to have: messaging, email reminders, smart recommendations, AI exchange matching.
+### Gates: original plan vs frontend first
 
-### Step 1.2 - Map the user journey
-Sign up → Profile → Garden → Add plant → Log care → Browse community → Exchange listing → Rate
+The gate **criteria** on the Task Sheet's Milestones tab do not change — only **when** they land.
 
-### Step 1.3 - List the pages
-Landing, Sign up / Log in, Dashboard, Garden view, Plant profile, Add / edit plant, User profile, Explore / search, Exchange marketplace, Listing detail, My exchanges.
+| Milestone | Exit criteria (short) | Original 12-week plan | Frontend first |
+|---|---|---|---|
+| MS-1 Kick-off | Approved; repo + branching live; team onboarded; ERD, schema, API contract, security checklist | Week 1 | Week 1 (database design may finish in week 2) |
+| UI freeze *(new)* | All 15 pages + S1–S6 match the wireframes with mock data, at 375/768/1024 px | — | Week 7 |
+| Gate 1 — Core foundation | Register → add plant with photo → log health → reminder on Dashboard → mark done | Week 4 | Week 9 |
+| Gate 2 — Coursework complete | All nine core features end to end; Phase 2 tests pass; `v1.0-core` tagged | Week 8 | Week 10 |
+| Gate 3 — ML integrated | Disease model ≥ 90 % test accuracy; top-3 measured; offline fallback verified | Week 11 | Week 14 |
+| MS-5 Release candidate | Security review; journeys A–D; usability test; no open Critical/High issues | Week 12 | Week 16 |
+| MS-6 Submission & presentation | Report, README, notebooks, v1.0 submitted; demo delivered | Week 12 | ~Week 17 |
 
-### Step 1.4 - Wireframes and design system
-Sketch every page: mobile first, then desktop. Pick colour palette (green primary, neutral, health colours), two fonts, spacing scale.
-
-### Step 1.5 - Design the database (8 tables)
-- users (id, email, password_hash, name, bio, location, profile_photo)
-- user_gardens (id, user_id, name)
-- plant_species (id, common_name, scientific_name, water_frequency, light_needs)
-- plants (id, user_garden_id, nickname, species_id, photo_path, health_status, last_watered, acquired_date)
-- plant_history (id, plant_id, event_type, date, notes)
-- plant_listings (id, plant_id, user_id, listing_type, status, description)
-- user_interests (id, user_id, listing_id)
-- user_ratings (id, from_user_id, to_user_id, listing_id, rating, comment)
-
-Draw an ER diagram in MySQL Workbench.
-
-### Step 1.6 - Plan the routes
-Group by feature: auth, gardens, plants, care, search, listings, ratings.
-
-### Step 1.7 - Plan the project structure
-Use Flask blueprints: `auth/`, `gardens/`, `plants/`, `community/`, `exchange/`, `ai/`. Keep templates, static (CSS, JS), and uploads in separate folders. Store secrets in `.env` file, never in code.
-
-**Checkpoint:** scope table, wireframes, ER diagram, route list in docs folder.
+> **Schedule check.** The proposal promised every coursework feature by week 8; frontend first moves that to week 10
+> and stretches the plan to about 16 weeks. That only works if the official submission is **late January 2027 or later**.
+> As soon as PLN-04 confirms the date:
+> - **Date is late January or later →** keep this plan; update Start wk / End wk on the Task Sheet so Overdue flags stay meaningful.
+> - **Date is earlier →** switch to *frontend first per phase*: UI for core pages (wk 1–2) → wire core (wk 3–4, Gate 1) →
+>   UI for community pages (wk 5–6) → wire community (wk 7–8, Gate 2) → ML (wk 9–11). Gate 2 then lands on week 8 as proposed.
+> - Either way: **core features before ML, always.** If stage B overruns, stage M shrinks — never the other way round.
 
 ---
 
-## Phase 2 (Weeks 1-2): Setup, database and authentication
+## Stage F — Frontend with mock data (weeks 1–7)
 
-### Week 1 - Foundation
+**Rules for this stage**
+- Every page is a real `.php` file in `public/` using `includes/header.php`, `includes/footer.php` and `partials/`.
+- Data comes from `includes/mock-data.php` — arrays shaped like future query results (see [Mock data](#mock-data)).
+- JavaScript is UI-only: tabs, modals, toasts, toggles, validation, previews. Nothing is saved yet.
+- Each module gets a **UI pull request** (`feature/<module>-ui`) reviewed against the wireframe — see CONTRIBUTING.md.
+- On the Task Sheet these tasks move to **In progress**; they become **Done** after stage B wires them.
 
-1. Create GitHub repository with README, .gitignore, and docs folder.
-2. Create Python virtual environment, install Flask, SQLAlchemy, MySQL driver, password-hashing library, Pillow, form library.
-3. Create MySQL database and dedicated user (not root).
-4. Build folder structure and application factory (creates and configures the app).
-5. Write SQLAlchemy models for all 8 tables using Flask-Migrate for migrations.
-6. Seed plant_species with 30-50 common house plants.
-7. Build base template: navbar, footer, flash-message area, CSS design system. Every page extends it.
+### Week 1 · 5–11 Oct — Foundation
+| Task | Build | Module |
+|---|---|---|
+| PLN-07 | Dev environment: XAMPP (PHP 8+), Git, VS Code, Python 3.10+; `phpinfo()` loads | — |
+| PLN-09 | Create `develop`, protect `main` and `develop`, set `develop` as default branch | — |
+| — | `config/config.php`, `includes/helpers.php` with `e()`, first `includes/mock-data.php` | MOD-01 |
+| CORE-04 | `assets/css/variables.css` — palette, health colours, Lora + Poppins, 8-pt spacing, radii, breakpoints | MOD-01 |
+| CORE-05 | `components.css` + `partials/` — buttons, form controls, badges, status chips, confidence meter, plant card, listing card, toast | MOD-01 |
+| CORE-06 | `header.php` (public + logged-in), mobile bottom bar, `footer.php`, active-page highlight | MOD-01 |
+| — | `public/styleguide.php` — gallery of every component (dev only) | MOD-01 |
 
-### Week 2 - Authentication
+**Learn this week:** CSS custom properties, flexbox and grid (MDN) · PHP `include`/`require`, arrays and `foreach`.
+**Done when:** the style guide shows every component from wireframe p7 correctly at 375 px and 1024 px, and a blank page shows the header, bottom bar and footer.
 
-1. Sign-up page: validate input (email format, password length, unique email) on browser and server.
-2. Store passwords as hashes only, using a hashing library.
-3. Log in and log out using Flask sessions (Flask-Login recommended).
-4. Protect private pages with a "login required" guard.
-5. CSRF protection on every form.
-6. User profile page: view and edit bio, location, profile photo.
-7. Dashboard page: empty state saying "Create your first garden".
-8. Landing page for logged-out visitors.
-9. Check every page at phone width in DevTools.
+**In parallel (planning & design tasks, due for MS-1):**
+PLN-03 submit the proposal for approval · PLN-05 assign modules and reviewers · PLN-06 working agreement into README ·
+PLN-10 team onboarding (weeks 1–2) · PLN-12 learning plan · DES-09 architecture note · DES-10 ML API contract ·
+DES-11 PHP conventions · DES-12 security checklist ·
+**DES-06/07/08 ERD + schema reconciliation + data dictionary and DES-13 species CSV — finish by the end of week 2**,
+because mock data uses their column names.
 
-**Checkpoint:** new user can register, log in, edit profile, log out; wrong passwords show clear message; private pages redirect to login; code on GitHub with meaningful commits.
+### Week 2 · 12–18 Oct — Pages A: first impressions
+| Page | Task(s) | Notes | Module |
+|---|---|---|---|
+| P01 Landing | CORE-27 | Hero, community collage, How it works (3 steps), smart-tools teaser; counts from mock data | MOD-10 |
+| P02 Sign up · Log in | CORE-07, CORE-09 (UI) | One page, two tabs; password meter; optional location; community panel | MOD-03 |
+| P03 Dashboard | CORE-24 (UI) | Greeting + counts, Today's care (due = terracotta, overdue = red), Needs attention, Quick actions, Garden at a glance | MOD-06 |
+| S1 Empty garden | CORE-25 (UI) | Shown on Dashboard and My Garden when the mock user has no plants | MOD-06 |
 
----
+**Learn:** semantic HTML, page layout with grid, forms and labels (MDN).
+Also this week: DES-05 is complete — the Figma link is in the README; mark it Done.
 
-## Phase 3 (Weeks 3-4): Gardens, plant profiles and care history
+### Week 3 · 19–25 Oct — Pages B: my plants
+| Page | Task(s) | Notes | Module |
+|---|---|---|---|
+| P04 My Garden | CORE-14, CORE-15 (UI) | Collection tabs with counts and lock icon, search/filter/sort bar, plant cards with next-care hint, card ⋯ menu | MOD-04 |
+| P05 Plant Profile | CORE-18 (UI) | Breadcrumb, gallery, identity + status, actions, care at a glance, tabs (Story, Care guide, Reminders, Photos), reminders card | MOD-05 |
+| P06 Add / Edit Plant | CORE-16 (UI) | Full page (not a modal): photo upload area, details, current health, reminder defaults, visibility, sticky save bar | MOD-05 |
+| P15 Settings | CORE-26 (UI) | Section menu; Profile, Account & security, Privacy, Reminders, Delete account cards | MOD-10 |
 
-### Week 3 - Gardens and plant CRUD
+### Week 4 · 26 Oct – 1 Nov — Pages C: community
+| Page | Task(s) | Notes | Module |
+|---|---|---|---|
+| P09 Explore | COM-01, COM-02, COM-03 (UI) | Unified search, Plants / People tabs, filter sidebar, active chips, matching people row | MOD-07 |
+| P14 Public Profile | COM-05, COM-13 (UI) | Identity, stats row, tabs, collection collages, rating breakdown, latest review — no contact details | MOD-10 |
+| P10 Exchange | COM-07 (UI) | How-it-works strip, filters, listing cards with type badge, distance, looking for, rating, interest count | MOD-08 |
+| P11 Listing Detail | COM-08 (UI) | Gallery, summary, plant-story link, owner trust card, safety tips; state A (before interest) and state B (contact revealed) | MOD-08 |
 
-1. Create, rename, delete gardens (decide: delete plants or move them?).
-2. Add-plant form: nickname, species (dropdown), garden, acquired date, health status, photo.
-3. Photo upload: accept only images, limit file size, resize with Pillow to standard width + thumbnail.
-4. Plant profile page: large photo, species info, health badge, days since watered.
-5. Edit and delete plant with confirmation.
-6. Ownership check: users can only edit their own plants.
+**Learn:** reusing partials with different data; query strings (`$_GET`) to read `?id=` and `?q=` from the URL.
 
-### Week 4 - Care history and dashboard
+### Week 5 · 2–8 Nov — Pages D + interactivity A
+| Page / feature | Task(s) | Notes | Module |
+|---|---|---|---|
+| P12 Create Listing | COM-06 (UI) | Pick-a-plant strip, Swap/Free/Either, Looking for, location and contact-sharing choices, live preview card | MOD-08 |
+| P13 My Exchanges | COM-10 (UI) | Section tabs, listing selector, interest table with requester rating and New/Seen tag, rating prompt | MOD-09 |
+| Tabs | — | P05 tabs, P09 Plants/People, P13 sections, P14 profile tabs — one shared script | MOD-01 |
+| Modals S4, S5, S6 | COM-12, CORE-19, CORE-20 (UI) | Rate a trader, Log a health update, Delete confirmation — open/close on ×, Cancel, scrim, Esc | MOD-01 |
+| Toasts with Undo | CORE-23 (UI) | "Watered Monty · next on 7 Oct — Undo"; auto-hide | MOD-06 |
+| Grid / list toggle | CORE-14 (UI) | My Garden list view becomes a table | MOD-04 |
 
-1. Log care: water, fertilize, repot, prune, or note. Water updates "last watered".
-2. Care timeline on plant profile, newest first.
-3. Photo gallery per plant (show growth over time).
-4. Dashboard: garden cards with plant counts, "needs water" list.
-5. Public view of user's collection (read-only for visitors).
-6. Use JavaScript fetch for quick actions (log water without page reload).
+**Learn:** DOM events, `classList`, `dataset`, focus handling for modals (MDN).
 
-**Checkpoint:** create garden, add 5 plants with photos, log care, edit/delete plant; another user cannot edit your plants; pages load quickly with 50+ plants.
+### Week 6 · 9–15 Nov — Interactivity B + responsive pass
+| Feature | Task(s) | Notes | Module |
+|---|---|---|---|
+| Client-side validation | — | Inline errors on P02, P06, P12, P15 (blur + submit); the server re-checks in stage B | all |
+| Live username check | CORE-08 (UI) | `fetch('api/check-username.php')` against a mock list of taken names | MOD-03 |
+| Filter chips & sort | COM-03, CORE-15 (UI) | Filters build a GET query string so URLs are shareable, as the wireframes require | MOD-07 |
+| Upload preview | CORE-16 (UI) | Preview, drag-and-drop, `accept="image/*" capture="environment"`, 5 MB / type check in JS | MOD-05 |
+| Responsive pass | COM-16 | Filters in a bottom sheet, My Exchanges table → stacked cards, floating List a plant, mobile + sheet (Add plant · Identify · Health check), inner pages hide the bar | MOD-01 |
 
----
+**Learn:** `fetch()` and JSON, `URLSearchParams`, `FileReader`, media queries written mobile-first.
 
-## Phase 4 (Weeks 5-6): Search, filters, health status and reminders
+### Week 7 · 16–22 Nov — AI pages, read-only views, polish → UI freeze
+| Page / feature | Task(s) | Notes | Module |
+|---|---|---|---|
+| P07 Plant Identifier | ML-12 (UI) | Tool switcher, photo preview, tips, top match with confidence label, care chips, alternatives, honesty note | MOD-11 |
+| P08 Health Check | ML-14 (UI) | Plant link, diagnosis, plain explanation, 4-step action plan, supported-crops statement, save buttons | MOD-12 |
+| S2 Analysing · S3 Not sure | ML-17 (UI) | Disabled buttons while "analysing"; below 60 % never shown as an answer | MOD-11/12 |
+| AI suggestion on P06 | ML-13 (UI) | Top-3 with Use buttons, Filled-by-AI tag, manual fallback | MOD-11 |
+| Public read-only views | CORE-21 (UI) | P05 for visitors: owner card and like button instead of edit controls | MOD-05 |
+| Accessibility & polish | TST-07 (early) | Alt text, labels, focus states, contrast check, hover/pressed states | all |
 
-### Week 5 - Search and community discovery
+**UI freeze (end of week 7):** every page and state matches its wireframe with mock data, passes the 375/768/1024 px
+check and has no console errors. Merge `develop` into `main` and tag `v0.5-ui` so the UI-only version is preserved.
 
-1. Explore page: public plants and users as cards.
-2. Keyword search: plant nickname, species, owner name.
-3. Filters: plant type, location, health status, garden. Combine filters.
-4. Pagination (e.g. 12 cards per page).
-5. Database indexes on filtered columns.
-6. Empty states with suggestions.
-
-### Week 6 - Health and care reminders
-
-1. Health status badges everywhere (colour + text, accessible).
-2. Reminder logic: compare last watered with species' water frequency; flag "due today" or "overdue".
-3. Reminders panel on dashboard, count badge in navbar.
-4. Optional: APScheduler for daily recalculation. In-app reminders are enough for MVP.
-5. Health history: record changes in plant_history.
-
-**Checkpoint:** search and filters work in combination; overdue plants show on dashboard; app works on phone.
-
----
-
-## Phase 5 (Weeks 7-8): Plant exchange, ratings, polish and testing
-
-### Week 7 - Exchange listings and reputation
-
-1. Create listing from one of your plants: trade or gift, description, want, location.
-2. Marketplace page with filters (type, location, species) and listing detail.
-3. "I'm interested" button (one per user per listing; cannot express interest in own listing).
-4. Owner view: list of interested users. Contact details revealed only after owner accepts.
-5. Mark listing as exchanged or closed.
-6. Ratings: after exchange, each side rates the other 1-5 stars + comment. Show average on profiles and listings.
-
-### Week 8 - Polish, testing and documentation
-
-1. Test every user story by hand (desktop and phone); write test results table.
-2. Automated tests with pytest for auth, ownership checks, exchange rules.
-3. Friendly error pages (404, 500) and clear form error messages.
-4. UX pass: spacing, loading states, confirmations, accessible labels, alt text.
-5. Code quality: remove unused code, consistent naming, comments, one feature per blueprint.
-6. Documentation: README, ER diagram, route list, screenshots, user guide.
-7. Load demo data: several users, gardens, plants, listings.
-
-**Checkpoint (MVP complete):** full journey from sign-up to rated exchange works without errors.
-
----
-
-## Phase 6 (bonus): AI plant recognition and disease detection
-
-Only start after Phase 5 is fully working. Functionality is 70% of marks; AI is extra.
-
-### Step 6.1 - Learn the basics (1 week)
-- Image classification and transfer learning
-- CNNs at a high level
-- Keras in Google Colab with GPU
-- Metrics: accuracy, precision, recall
-
-### Step 6.2 - Plant recognition
-1. Use pre-trained MobileNetV2.
-2. Find or collect house-plant dataset matching plant_species.
-3. Fine-tune top layers in Colab; save model.
-4. Evaluate on test set; record accuracy and confusion matrix.
-
-### Step 6.3 - Disease detection
-1. Use PlantVillage dataset (54,000+ labelled leaf images).
-2. Train/validation/test split; apply augmentation.
-3. Train with transfer learning on MobileNetV2; compare setups.
-4. Note limitation: PlantVillage photos are single leaves on plain backgrounds.
-
-### Step 6.4 - Integrate into Flask
-1. Load each model once when app starts.
-2. Add "Identify this plant" to add-plant form (pre-fills species).
-3. Add "Check health" on plant profile.
-4. Resize photo with Pillow, run prediction, show top 3 results with confidence.
-5. Below confidence threshold, say "not sure".
-6. Save diagnosis to plant_history.
-
-**Checkpoint:** both features work on new photos; accuracy and limitations documented with training charts.
+**Meanwhile, the team can start the report early:** DEP-09 (introduction, problem, requirements) and DEP-10 (design:
+UX, ERD, architecture) only need the proposal and wireframes — drafting them now relieves the final weeks.
 
 ---
 
-## Phase 7: Deployment, submission and portfolio
+## Stage B — Backend & database (weeks 8–10)
 
-1. Deploy Flask app and MySQL on Python-friendly platform (PythonAnywhere, Render, Railway).
-2. Use production server, turn debug mode off, secrets as environment variables.
-3. Test live site on phone and laptop: sign up, add plant, list it, express interest.
-4. Submission: source code link, live link, README, ER diagram, test results, screenshots, ML report (if Phase 6 done).
-5. Presentation: 5-minute demo following user journey, slide on architecture, slide on AI results.
-6. Portfolio: pin repo on GitHub, add demo GIF to README, post on LinkedIn and IEEE Student Branch.
+Wire pages in Task Sheet dependency order. Each module gets a **wired PR** (`feature/<module>`) that must pass its Test Plan cases.
+Replace one mock array at a time with a query function returning the same shape, and delete it from `mock-data.php` when done.
+
+### Week 8 · 23–29 Nov — Database, accounts, sessions
+CORE-01 `schema.sql` (InnoDB, utf8mb4, foreign keys, re-runnable) · CORE-02 `seed.sql` built from the mock data ·
+CORE-03 `config.php` + `includes/db.php` (one PDO, exceptions on, emulated prepares off) ·
+CORE-07 registration · CORE-08 real username check · CORE-09 login, logout, sessions ·
+CORE-10 `includes/auth.php` (`require_login()`, ownership checks) · CORE-11 CSRF tokens · CORE-12 login lockout ·
+CORE-26 settings saves (profile, password).
+**Learn:** PDO prepared statements, `password_hash()`, sessions (PHP manual). **Tests:** TC-001 – TC-011, TC-028, TC-029.
+
+### Week 9 · 30 Nov – 6 Dec — Core features → Gate 1
+CORE-13 collections CRUD + privacy · CORE-14/15 My Garden from the database · CORE-16 plant create/edit ·
+CORE-17 secure upload handler (`includes/upload.php`: `finfo`, 5 MB, random names, resize to 1600 px) ·
+CORE-18 plant profile data · CORE-19 health logs + story · CORE-20 delete with files · CORE-21 public view rules ·
+CORE-22 reminders · CORE-23 Mark done + Undo · CORE-24/25 Dashboard data + empty states · CORE-27 live landing counts ·
+CORE-28 Phase 1 test pass · CORE-29 peer reviews MOD-01 – MOD-06.
+**Gate 1 demo:** register → add plant with photo → log health → reminder appears on Dashboard → mark done.
+
+### Week 10 · 7–13 Dec — Community & exchange → Gate 2
+COM-01/02 Explore + people search · COM-03/04 filters + pagination (12 per page) · COM-05/13 public profile + rating breakdown ·
+COM-06 create/edit listing · COM-07 marketplace · COM-08 listing detail · COM-09 interest + contact reveal ·
+COM-10 My Exchanges · COM-11 mark exchanged / close · COM-12 trader ratings (one per person per exchange) ·
+COM-14 Dashboard exchange card · COM-15 likes *(Could)* · COM-16 responsive re-check · COM-17 Phase 2 test pass ·
+COM-18 peer reviews MOD-07 – MOD-10 · COM-19 merge to `main`, tag **`v1.0-core`** with a database dump.
+**Gate 2:** all nine core features work end to end — the project is submittable from here.
+*This is the heaviest week. If it overflows, Gate 2 moves into week 11 and stage M gives up the time.*
 
 ---
 
-## Habits for every phase
+## Stage M — ML features (weeks 11–14)
 
-- **Git:** commit small and often; one branch per feature; push daily.
-- **Build vertically:** finish one feature end to end before starting the next.
-- **Weekly review:** compare progress with roadmap; cut from "nice to have" if behind, never from MVP.
-- **Ask for code by step:** "Give me code for Phase 3, Week 3, step 3 (photo upload)" — small pieces you understand.
+The P07/P08 pages already exist from week 7, so this stage is mostly the Flask service, the models and swapping
+mock results for real ones. Weeks 12–13 include the holidays — Colab training can run unattended.
 
-## Security checklist
+| Week | Dates | Tasks |
+|---|---|---|
+| 11 | 14–20 Dec | ML-01 Flask skeleton with `/health` · **ML-02 PHP ↔ Flask hello-world call** (cURL multipart, 10 s timeout, offline handling) · ML-03 PlantVillage split 70/15/15 · ML-07 **decide** own MobileNetV2 vs Pl@ntNet API for recognition |
+| 12 | 21–27 Dec | ML-04 baseline CNN from scratch · ML-05 fine-tune MobileNetV2 with augmentation (target ≥ 90 %) · ML-06 evaluate (test set + 20–30 phone photos) · ML-08 labelled photo set, top-1/top-3 · ML-15 guidance text per disease class |
+| 13 | 28 Dec – 3 Jan | ML-09 `/predict/species` · ML-10 `/predict/disease` · ML-11 log every call in `ml_predictions` (`includes/ml-client.php`) · ML-12 and ML-14 wired |
+| 14 | 4–10 Jan | ML-13 AI suggestions in Add Plant · ML-16 save diagnosis to the story + 7-day re-check reminder · ML-17 states wired · ML-18 ML test pass (incl. Flask stopped) · ML-19 reviews MOD-11/12 → **Gate 3** |
 
-- Passwords hashed; secrets never on GitHub
-- CSRF protection on every form; input validated on server
-- Ownership checked on every edit and delete
-- Uploads restricted by type/size, renamed safely
-- Contact details shown only after owner accepts exchange
+**Learn:** Flask routing and JSON, PHP cURL, Keras transfer learning, precision/recall and confusion matrices.
+**Tests:** TC-044 – TC-051. ML reviewers (Members 6 and 7) can prepare datasets, photo sets and guidance text from week 8.
 
-## Master checklist
+---
 
-- [ ] Phase 0: tools installed; practice app works
-- [ ] Phase 1: scope, wireframes, ER diagram, route list
-- [ ] Phase 2: sign up, log in, log out, profile
-- [ ] Phase 3: gardens, plants, photos, care history
-- [ ] Phase 4: search, filters, health, reminders
-- [ ] Phase 5: exchange, ratings, tested, documented
-- [ ] Phase 6: AI features (bonus)
-- [ ] Phase 7: deployed, submitted, presented
+## Stage D — Testing & delivery (weeks 15–16)
+
+| Week | Dates | Tasks |
+|---|---|---|
+| 15 | 11–17 Jan | TST-02 security review · TST-03 input validation · TST-04 journeys A–D · TST-05 responsive on real phones · TST-06 browsers · TST-07 accessibility · TST-08 usability test with 5–10 students · TST-09 performance · DEP-05 README + setup guide · DEP-07 code clean-up · DEP-08 notebooks + model card · DEP-11 – DEP-14 report sections |
+| 16 | 18–24 Jan | TST-10 bug fixes · TST-11 final regression · DEP-02 production config · DEP-03/04 deploy *(if hosting online)* · DEP-06 fresh install from README · DEP-15 assemble report · DEP-16 slides · DEP-17 backup demo video · DEP-18 rehearse twice · DEP-19 tag `v1.0` and submit · DEP-20 present |
+
+**Decide hosting early:** DEP-01 depends on the supervisor's answer to PLN-03 — settle it by week 10, not week 15.
+
+## After submission (weeks 17–20)
+MNT-01 retrospective → `docs/retrospective.md` · MNT-02 act on feedback · MNT-03 backups · MNT-04 dependency updates ·
+MNT-05 monitor predictions · MNT-06 houseplant disease data · MNT-07 email reminders · MNT-08 portfolio polish · MNT-09 future-work backlog.
+
+---
+
+## Mock data
+
+`includes/mock-data.php` holds PHP arrays that look exactly like the rows future queries will return (column names
+from [`database/README.md`](../database/README.md), plus joined columns such as `scientific_name` or `collection_name`).
+Use the wireframe's sample content so every page can be checked against the PDF and the Figma prototype; CORE-02's
+`seed.sql` is later built from the same data.
+
+| Kind | Sample content (from the wireframes) |
+|---|---|
+| Signed-in user | Nimali Perera · `@nimali.grows` · Kurunegala · member since Mar 2025 · 18 plants in 3 collections · 12 swaps · 4.9 (23) |
+| Collections | Living room (7) · Balcony (6) · Succulents (5) — one marked private for testing |
+| Plants | Monty *Monstera deliciosa* (Thriving) · Goldie *Epipremnum aureum* (Needs attention, water 2 days overdue) · Sergeant *Dracaena trifasciata* (Thriving) · Figgy *Ficus lyrata* (Stable) · Lily *Spathiphyllum wallisii* (Stable) · Vera *Aloe vera* (Thriving) · Tommy *Solanum lycopersicum* (Sick — early blight, 92 %) · Pearl *Echeveria elegans* (Thriving) |
+| Other members | `@aroid.amaya` (Colombo, 4.8) · `@kandy.jungle` (Kandy, 5.0) · `@dinesh.greens` (Negombo, 4.7) · `@ruwan.roots` (4.6) |
+| Listings | Pothos 'Golden', 3 rooted cuttings (Swap) · Aloe vera pups (4) (Free) · Snake plant 'Laurentii' (Swap) · Tomato seedlings (6) (Free) · Peace lily division (Swap) · Echeveria cuttings (5) (Swap) |
+
+Health status values are always `thriving`, `stable`, `needs_attention` or `sick`. Use your own photos or free-licence
+images in `public/assets/img/mock/` and record their sources in `docs/credits.md` for the report.
+
+---
+
+## Habits for every week
+
+- **One task at a time, end to end** — finish the page (or the wiring) before starting the next.
+- **Commit small and often** on a feature branch; push daily; open a PR per module and get it reviewed within 3 days.
+- **Check 375 px before calling anything finished.**
+- **Weekly review (20 min, every Sunday):** update the Task Sheet, log the week, re-check this roadmap. If behind,
+  cut from Should/Could tasks — never from Must tasks or security.
+- **Ask for code in small pieces** — e.g. "CORE-14, step 2: the collection tabs" — so every line can be explained in the viva.
+
+## Learning resources (just in time)
+- HTML, CSS layout, forms, JavaScript, `fetch()` — MDN Web Docs: <https://developer.mozilla.org/>
+- PHP includes, arrays, PDO, sessions, password hashing — PHP manual: <https://www.php.net/manual/en/>
+- Flask — <https://flask.palletsprojects.com/>
+- Keras transfer learning — <https://keras.io/guides/transfer_learning/>

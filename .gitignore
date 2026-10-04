@@ -1,0 +1,45 @@
+# ── Secrets & local config ─────────────────────────────
+# Real credentials live in config/config.php (never committed).
+# Copy config/config.example.php → config/config.php on each machine.
+config/config.php
+.env
+*.env
+ml-service/.env
+
+# ── User uploads (plant photos) ────────────────────────
+public/uploads/*
+!public/uploads/.gitkeep
+
+# ── Python / ML service ────────────────────────────────
+venv/
+.venv/
+ml-service/venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+# Trained models are large — share via Google Drive, not Git
+ml-service/models/*
+!ml-service/models/.gitkeep
+!ml-service/models/README.md
+# Datasets (PlantVillage etc.)
+ml-service/data/
+datasets/
+
+# ── Database dumps (schema.sql and seed.sql ARE committed) ──
+*.sql.gz
+database/dumps/
+
+# ── Editors, AI tools & OS ─────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+# Personal Claude Code settings (CLAUDE.md itself IS committed)
+.claude/settings.local.json
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs & temp ────────────────────────────────────────
+*.log
+tmp/

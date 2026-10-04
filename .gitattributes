@@ -1,0 +1,16 @@
+# Normalise line endings so Windows and Mac/Linux teammates don't fight over them
+* text=auto eol=lf
+*.bat text eol=crlf
+
+# Binary files — never try to diff or merge these
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.pdf binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.xlsx binary
+*.h5 binary
+*.keras binary
