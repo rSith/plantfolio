@@ -13,13 +13,19 @@ require_once __DIR__ . '/../includes/mock-data.php';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PlantFolio</title>
+  <!-- Fonts and tokens: these links move into includes/header.php in CORE-06 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Poppins:wght@400;600&display=swap">
+  <link rel="stylesheet" href="<?= e($config['base_url']) ?>/assets/css/variables.css">
   <style>
-    /* Colours from the design system (wireframes p6): Cream, Ink, Forest, Muted */
-    body { font-family: system-ui, sans-serif; background: #F7F4EC; color: #2B2B28;
+    /* Every value comes from a design token in variables.css (CORE-04) */
+    body { font-family: var(--font-body); background: var(--color-cream); color: var(--color-ink);
            display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    main { text-align: center; padding: 16px; }
-    h1 { color: #2E4A2B; margin-bottom: .25rem; }
-    small { color: #6E6C62; }
+    main { text-align: center; padding: var(--space-16); }
+    h1 { font-family: var(--font-display); font-weight: var(--weight-semibold);
+         color: var(--color-forest); margin-bottom: var(--space-4); }
+    small { color: var(--color-muted); }
   </style>
 </head>
 <body>
