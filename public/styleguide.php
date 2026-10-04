@@ -60,10 +60,14 @@ $health_statuses = [
     .sg-type-row > * { margin: 0; }
     .sg-status-row { display: grid; gap: var(--space-4); padding: var(--space-8) 0; border-top: 1px solid var(--color-line); }
     .sg-status-row > * { justify-self: start; }
+    .sg-grid-2 { display: grid; gap: var(--space-24); }
+    .sg-grid-2 > * { min-width: 0; }
+    .sg-note { margin: var(--space-16) 0 0; }
     @media (min-width: 768px) {
       .sg-page { padding: var(--space-48) var(--gutter); }
       .sg-card { padding: var(--space-24); }
       .sg-swatches { grid-template-columns: repeat(4, 1fr); }
+      .sg-grid-2 { grid-template-columns: 1fr 1fr; }
       .sg-type-row { grid-template-columns: 210px 1fr; align-items: baseline; gap: var(--space-24); }
       .sg-status-row { grid-template-columns: 210px 1fr auto; align-items: center; gap: var(--space-24); }
     }
@@ -158,6 +162,70 @@ $health_statuses = [
         <span class="badge badge-neutral">Neutral</span>
       </div>
       <p class="text-small">Status is always shown with its word, never colour alone.</p>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-forms">
+      <h2 class="label" id="sg-forms">Form controls</h2>
+      <div class="sg-grid-2">
+        <div>
+          <div class="field">
+            <label class="field-label" for="sg-search">Default</label>
+            <input class="input" type="search" id="sg-search" placeholder="Search your garden">
+          </div>
+          <div class="field">
+            <label class="field-label" for="sg-username">With a hint</label>
+            <input class="input" type="text" id="sg-username" value="<?= e($current_user['username']) ?>" aria-describedby="sg-username-hint">
+            <span class="field-hint" id="sg-username-hint">Click a field to see the focus state.</span>
+          </div>
+          <div class="field">
+            <label class="field-label" for="sg-taken">Error</label>
+            <input class="input" type="text" id="sg-taken" value="nimali" aria-invalid="true" aria-describedby="sg-taken-error">
+            <span class="field-error" id="sg-taken-error">That username is taken</span>
+          </div>
+        </div>
+        <div>
+          <div class="field">
+            <label class="field-label" for="sg-collection">Select</label>
+            <select class="input" id="sg-collection">
+              <option>Living room</option>
+              <option>Balcony</option>
+              <option>Succulents</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label" for="sg-bio">Text area</label>
+            <textarea class="input" id="sg-bio"><?= e($current_user['bio']) ?></textarea>
+          </div>
+          <div class="sg-row">
+            <label class="check"><input type="checkbox" checked> Check</label>
+            <label class="check"><input type="radio" name="sg-radio" checked> Radio</label>
+            <label class="check"><input type="radio" name="sg-radio"> Radio</label>
+            <label class="toggle"><input type="checkbox" role="switch" checked> Toggle</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-chips">
+      <h2 class="label" id="sg-chips">Chips and segmented control</h2>
+      <div class="sg-row">
+        <a class="chip is-selected" href="#sg-chips" aria-current="true">All plants <span class="chip-count">18</span></a>
+        <a class="chip" href="#sg-chips">Living room <span class="chip-count">7</span></a>
+        <a class="chip" href="#sg-chips">Balcony <span class="chip-count">6</span></a>
+        <button type="button" class="chip chip-add">New collection</button>
+      </div>
+      <div class="sg-grid-2">
+        <fieldset class="segmented">
+          <legend class="visually-hidden">Listing type</legend>
+          <input type="radio" name="sg-type" id="sg-type-swap" value="swap" checked>
+          <label for="sg-type-swap">Swap</label>
+          <input type="radio" name="sg-type" id="sg-type-free" value="free">
+          <label for="sg-type-free">Free</label>
+          <input type="radio" name="sg-type" id="sg-type-either" value="either">
+          <label for="sg-type-either">Either</label>
+        </fieldset>
+      </div>
+      <p class="text-small sg-note">The selector is three radio buttons, so the arrow keys move between the choices.</p>
     </section>
   </main>
 </body>

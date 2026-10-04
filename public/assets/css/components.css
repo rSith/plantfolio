@@ -275,3 +275,262 @@ img {
   background: var(--color-neutral-bg);
   color: var(--color-neutral-text);
 }
+
+/* ── Form controls ──────────────────────────────────── */
+/* Wrap each control in .field with a .field-label; messages go in .field-hint or .field-error */
+
+/* Hidden from sight but still read by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+}
+
+.field-label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.field-hint,
+.field-error {
+  font-size: var(--text-small);
+}
+
+.field-hint {
+  color: var(--color-muted);
+}
+
+.field-error {
+  color: var(--color-danger);
+}
+
+/* Text inputs, <select> and <textarea> all use .input */
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--text-base);
+  line-height: 1.4;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+.input:hover {
+  border-color: var(--color-muted);
+}
+
+/* The transparent outline is invisible normally but shows up in Windows high-contrast mode */
+.input:focus {
+  border-color: var(--color-leaf);
+  box-shadow: var(--focus-ring);
+  outline: 2px solid transparent;
+}
+
+/* aria-invalid is what a screen reader announces; styling it keeps the look and the meaning together */
+.input.is-error,
+.input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.input.is-error:focus,
+.input[aria-invalid="true"]:focus {
+  box-shadow: var(--focus-ring-danger);
+}
+
+.input:disabled {
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+textarea.input {
+  min-height: 96px;
+  resize: vertical;
+}
+
+@media (min-width: 768px) {
+  .input {
+    font-size: var(--text-body-sm);
+  }
+}
+
+/* Checkbox, radio and toggle: the <label> wraps the input, so clicking the words works too */
+.check,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* accent-color recolours the built-in checkbox and radio, keeping all of their normal behaviour */
+.check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-leaf);
+  cursor: pointer;
+}
+
+/* The toggle is a real checkbox redrawn as a switch: the input is the track, ::before is the knob */
+.toggle input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-line-strong);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.toggle input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.toggle input:checked {
+  background: var(--color-leaf);
+}
+
+.toggle input:checked::before {
+  transform: translateX(16px);
+}
+
+/* ── Chips ──────────────────────────────────────────── */
+/* Pill-shaped filters and collection tabs: .chip, .chip.is-selected, .chip-add */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: var(--space-4) var(--space-16);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.chip:hover {
+  border-color: var(--color-leaf);
+  color: var(--color-ink);
+}
+
+.chip-count {
+  font-size: var(--text-label);
+  color: var(--color-muted);
+}
+
+.chip.is-selected {
+  background: var(--color-forest);
+  border-color: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip.is-selected .chip-count {
+  color: var(--color-sage);
+}
+
+.chip-add {
+  border-style: dashed;
+  background: transparent;
+  color: var(--color-muted);
+}
+
+@media (min-width: 768px) {
+  .chip {
+    min-height: 36px;
+  }
+}
+
+/* ── Segmented control ──────────────────────────────── */
+/* One choice from a few (Swap / Free / Either). Built from radio buttons, so it works without JavaScript. */
+
+.segmented {
+  position: relative;
+  display: flex;
+  min-width: 0;   /* a <fieldset> refuses to shrink below its content without this */
+  margin: 0;
+  padding: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+}
+
+/* The radio stays in the page for the keyboard and screen readers; only its label is seen */
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented label {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: var(--space-4) var(--space-12);
+  border-radius: calc(var(--radius-input) - var(--space-4));
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* "+" selects the label that comes straight after a checked radio */
+.segmented input:checked + label {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.segmented input:focus-visible + label {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}

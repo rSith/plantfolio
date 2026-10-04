@@ -35,10 +35,24 @@
   --color-neutral-text: #5A584F;      /* Muted is only 4.3:1 on the neutral background, this is 5.8:1 */
   --color-disabled-bg: #E6E0D2;
   --color-disabled-text: #9A968A;
+  --color-line-strong: #CFC8B6;       /* input borders, switched-off toggle */
+  --color-amber: #D9A02B;             /* Medium confidence bar, rating stars (never used for text) */
+  --color-meter-low: #B8B2A4;         /* "Not sure" confidence bar */
+  --avatar-tint-1: #DCE8D2;           /* backgrounds behind a member's initials */
+  --avatar-tint-2: #DCE5F0;
+  --avatar-tint-3: #F5DACB;
+  --avatar-tint-4: #F1E4C3;
 
   /* Interaction */
-  --focus-outline: 2px solid var(--color-leaf);   /* keyboard focus, shown by :focus-visible */
+  --focus-outline: 2px solid var(--color-leaf);            /* keyboard focus, shown by :focus-visible */
+  --focus-ring: 0 0 0 3px var(--color-sage);               /* soft ring around a focused input */
+  --focus-ring-danger: 0 0 0 3px var(--color-danger-bg);   /* the same ring on an input with an error */
   --transition-fast: 150ms ease;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(43, 43, 40, 0.14);      /* toggle knob, selected segment, badges on photos */
+  --shadow-card: 0 8px 20px rgba(46, 74, 43, 0.12);   /* a card being hovered */
+  --shadow-toast: 0 8px 24px rgba(43, 43, 40, 0.24);
 
   /* Fonts — the names after the first are fallbacks if Google Fonts fails to load */
   --font-display: 'Lora', Georgia, serif;             /* names, headings, scientific names */
@@ -49,6 +63,7 @@
   --text-h1: 2rem;            /* 32px */
   --text-h2: 1.5rem;          /* 24px */
   --text-h3: 1.125rem;        /* 18px */
+  --text-base: 1rem;          /* 16px: form inputs on phones (smaller text makes iOS Safari zoom in) */
   --text-body: 0.9375rem;     /* 15px */
   --text-body-sm: 0.875rem;   /* 14px */
   --text-small: 0.8125rem;    /* 13px */
