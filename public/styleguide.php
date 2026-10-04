@@ -238,6 +238,38 @@ $health_statuses = [
       </div>
       <p class="text-small sg-note">The selector is three radio buttons, so the arrow keys move between the choices.</p>
     </section>
+
+    <section class="sg-card" aria-labelledby="sg-tabs">
+      <h2 class="label" id="sg-tabs">Tabs, breadcrumb, avatars</h2>
+      <nav class="tabs" aria-label="Plant sections">
+        <a class="tab is-active" href="#sg-tabs" aria-current="page">Story</a>
+        <a class="tab" href="#sg-tabs">Care guide</a>
+        <a class="tab" href="#sg-tabs">Reminders</a>
+        <a class="tab" href="#sg-tabs">Photos <span class="tab-count">12</span></a>
+      </nav>
+      <nav class="sg-row sg-row-spaced" aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="#sg-tabs">My Garden</a></li>
+          <li><a href="#sg-tabs">Living room</a></li>
+          <li aria-current="page">Monty</li>
+        </ol>
+      </nav>
+      <div class="sg-row">
+        <?php partial('avatar', ['member' => $current_user, 'size' => 'sm']); ?>
+        <?php partial('avatar', ['member' => $current_user]); ?>
+        <?php partial('avatar', ['member' => $current_user, 'size' => 'lg']); ?>
+        <span class="avatar avatar-tint-1" aria-hidden="true">NP</span>
+        <span class="avatar avatar-tint-2" aria-hidden="true">DG</span>
+        <span class="avatar avatar-tint-3" aria-hidden="true">AM</span>
+        <span class="avatar avatar-tint-4" aria-hidden="true">RR</span>
+        <span class="avatar-stack">
+          <span class="avatar avatar-sm avatar-tint-2" aria-hidden="true">DG</span>
+          <span class="avatar avatar-sm avatar-tint-3" aria-hidden="true">AM</span>
+          <span class="avatar avatar-sm avatar-tint-4" aria-hidden="true">RR</span>
+        </span>
+      </div>
+      <p class="text-small">Small, medium and large come from <span class="sg-code">partials/avatar.php</span>; a member's tint is chosen from their username.</p>
+    </section>
   </main>
 </body>
 </html>

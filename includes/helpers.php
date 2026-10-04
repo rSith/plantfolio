@@ -60,3 +60,46 @@ function icon($name)
     // Decorative by default: the text next to an icon carries the meaning for screen readers.
     return preg_replace('/class="[^"]*"/', 'class="icon" aria-hidden="true"', $svg, 1);
 }
+
+/**
+ * Render a reusable piece from partials/ and hand it named variables:
+ * partial('plant-card', ['plant' => $plant]) runs partials/plant-card.php with $plant available inside it.
+ * Because it runs inside this function, the partial's own variables never leak into the page.
+ */
+function partial($partial_name, array $partial_data = [])
+{
+    extract($partial_data);   // turns ['plant' => …] into the variable $plant
+
+    include __DIR__ . '/../partials/' . $partial_name . '.php';
+}
+
+/**
+ * Address of a stored photo. The data holds only a path such as "mock/monty.svg".
+ * Stage F: photos live in public/assets/img/. Stage B points this one line at public/uploads/ instead.
+ */
+function photo_url($photo)
+{
+    return url('assets/img/' . $photo);
+}
+
+/**
+ * First letters of the first and last name, for avatars without a photo: "Nimali Perera" gives "NP".
+ * The mb_ functions count letters, not bytes, so Sinhala and Tamil names work too.
+ */
+function initials($full_name)
+{
+    $words = preg_split('/\s+/', trim($full_name));
+    $first = mb_substr($words[0], 0, 1);
+    $last  = count($words) > 1 ? mb_substr(end($words), 0, 1) : '';
+
+    return mb_strtoupper($first . $last);
+}
+
+/**
+ * Pick one of the four avatar colours (1–4) from the username.
+ * crc32() turns the text into a number, so the same member gets the same colour on every page.
+ */
+function avatar_tint($username)
+{
+    return crc32($username) % 4 + 1;
+}
