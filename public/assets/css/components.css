@@ -95,6 +95,17 @@ img {
   color: var(--color-muted);
 }
 
+/* ── Icons ──────────────────────────────────────────── */
+/* Printed by icon() in helpers.php. Sized in em, so an icon scales with the text beside it, */
+/* and drawn with stroke="currentColor", so it takes that text's colour. */
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  vertical-align: -0.2em;
+}
+
 /* ── Buttons ────────────────────────────────────────── */
 /* Use .btn plus one look (.btn-primary …) and optionally one size (.btn-sm, .btn-lg) */
 
@@ -367,6 +378,24 @@ img {
 textarea.input {
   min-height: 96px;
   resize: vertical;
+}
+
+/* An input with an icon inside its left edge: wrap the icon and the input in .input-icon */
+.input-icon {
+  position: relative;
+}
+
+.input-icon .icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-12);
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  pointer-events: none;   /* a click on the icon lands on the input underneath */
+}
+
+.input-icon .input {
+  padding-left: calc(var(--space-32) + var(--space-8));
 }
 
 @media (min-width: 768px) {

@@ -14,6 +14,9 @@ return [
     // Base URL of the site on your machine
     'base_url' => 'http://localhost/plantfolio/public',
 
+    // Time zone for every date the site shows or compares ("due today", "2 days ago")
+    'timezone' => 'Asia/Colombo',
+
     // MySQL — needed from stage B (week 8). XAMPP defaults: user "root", empty password.
     // Use a dedicated user with a strong password on any shared or hosted server.
     'db_host' => '127.0.0.1',

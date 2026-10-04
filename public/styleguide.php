@@ -1,7 +1,6 @@
 <?php
 // Style guide — dev-only gallery of every shared component, compared against wireframes p6–p7 (MOD-01, week 1).
 
-$config = require __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
@@ -37,8 +36,8 @@ $health_statuses = [
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Poppins:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="<?= e($config['base_url']) ?>/assets/css/variables.css">
-  <link rel="stylesheet" href="<?= e($config['base_url']) ?>/assets/css/components.css">
+  <link rel="stylesheet" href="<?= e(url('assets/css/variables.css')) ?>">
+  <link rel="stylesheet" href="<?= e(url('assets/css/components.css')) ?>">
   <style>
     /* Layout for this gallery page only (sg- = style guide). The real page frame is layout.css, CORE-06. */
     .sg-page { max-width: var(--content-width); margin: 0 auto; padding: var(--space-24) var(--space-16) var(--space-48); }
@@ -143,6 +142,10 @@ $health_statuses = [
         <button type="button" class="btn btn-primary">Medium</button>
         <button type="button" class="btn btn-primary btn-lg">Large</button>
       </div>
+      <div class="sg-row">
+        <button type="button" class="btn btn-primary"><?= icon('plus') ?> Add plant</button>
+        <button type="button" class="btn btn-secondary btn-sm"><?= icon('check') ?> Mark done</button>
+      </div>
       <p class="text-small">One primary button per area. Labels are verbs.</p>
     </section>
 
@@ -156,9 +159,9 @@ $health_statuses = [
         </div>
       <?php endforeach; ?>
       <div class="sg-row sg-row-spaced">
-        <span class="badge badge-tag">Care tag</span>
+        <span class="badge badge-tag"><?= icon('sun') ?> Care tag</span>
         <span class="badge badge-due">Due today</span>
-        <span class="badge badge-warning">Warning</span>
+        <span class="badge badge-warning"><?= icon('triangle-alert') ?> Warning</span>
         <span class="badge badge-neutral">Neutral</span>
       </div>
       <p class="text-small">Status is always shown with its word, never colour alone.</p>
@@ -170,7 +173,14 @@ $health_statuses = [
         <div>
           <div class="field">
             <label class="field-label" for="sg-search">Default</label>
-            <input class="input" type="search" id="sg-search" placeholder="Search your garden">
+            <input class="input" type="text" id="sg-search" placeholder="Monty">
+          </div>
+          <div class="field">
+            <label class="field-label" for="sg-search-icon">With an icon</label>
+            <div class="input-icon">
+              <?= icon('search') ?>
+              <input class="input" type="search" id="sg-search-icon" placeholder="Search your garden">
+            </div>
           </div>
           <div class="field">
             <label class="field-label" for="sg-username">With a hint</label>
@@ -212,7 +222,8 @@ $health_statuses = [
         <a class="chip is-selected" href="#sg-chips" aria-current="true">All plants <span class="chip-count">18</span></a>
         <a class="chip" href="#sg-chips">Living room <span class="chip-count">7</span></a>
         <a class="chip" href="#sg-chips">Balcony <span class="chip-count">6</span></a>
-        <button type="button" class="chip chip-add">New collection</button>
+        <a class="chip" href="#sg-chips"><?= icon('lock') ?> Succulents <span class="visually-hidden">(private)</span> <span class="chip-count">5</span></a>
+        <button type="button" class="chip chip-add"><?= icon('plus') ?> New collection</button>
       </div>
       <div class="sg-grid-2">
         <fieldset class="segmented">
