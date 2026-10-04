@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: snake plant. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#E2EADB"/>
+  <rect y="232" width="400" height="68" fill="#D3DECB"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <g stroke="#D8CF7A" stroke-width="3" stroke-linejoin="round">
+    <path d="M166 194Q140 152 130 108Q160 148 182 194Z" fill="#4A8A55"/>
+    <path d="M218 194Q246 152 270 114Q252 158 236 194Z" fill="#4A8A55"/>
+    <path d="M176 194Q160 132 162 80Q182 132 194 194Z" fill="#3C7C49"/>
+    <path d="M206 194Q222 132 242 76Q240 136 226 194Z" fill="#3C7C49"/>
+    <path d="M188 194Q184 110 200 46Q216 110 212 194Z" fill="#2F6B3D"/>
+  </g>
+  <path d="M158 196h84l-9 66a6 6 0 0 1 -6 5h-54a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="152" y="186" width="96" height="16" rx="4" fill="#C4633C"/>
+</svg>

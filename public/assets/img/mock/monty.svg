@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: Monstera deliciosa. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#E2EADB"/>
+  <rect y="232" width="400" height="68" fill="#D3DECB"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <g fill="none" stroke="#2F6B3D" stroke-width="5" stroke-linecap="round">
+    <path d="M200 192Q198 150 205 118"/>
+    <path d="M194 192Q168 184 142 158"/>
+    <path d="M206 192Q238 180 264 148"/>
+  </g>
+  <ellipse cx="138" cy="150" rx="38" ry="33" transform="rotate(-25 138 150)" fill="#3C7C49"/>
+  <ellipse cx="268" cy="140" rx="40" ry="35" transform="rotate(22 268 140)" fill="#3C7C49"/>
+  <ellipse cx="205" cy="100" rx="54" ry="50" fill="#2F6B3D"/>
+  <g fill="none" stroke="#E2EADB" stroke-width="5" stroke-linecap="round">
+    <path d="M152 92l22 6M156 118l20 -2M258 92l-22 6M254 118l-20 -2M180 56l10 16M230 56l-10 16"/>
+    <path d="M104 140l16 6M112 166l14 -6M300 126l-16 8M296 156l-14 -8"/>
+  </g>
+  <g fill="none" stroke="#24552F" stroke-width="2.5" stroke-linecap="round">
+    <path d="M205 60V142M138 124v48M268 112v52"/>
+  </g>
+  <path d="M158 196h84l-9 66a6 6 0 0 1 -6 5h-54a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="152" y="186" width="96" height="16" rx="4" fill="#C4633C"/>
+</svg>

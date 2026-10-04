@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: aloe vera. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#F1E3D8"/>
+  <rect y="232" width="400" height="68" fill="#E8D5C6"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <path d="M170 194Q130 182 96 170Q140 168 188 192Z" fill="#5C927B"/>
+  <path d="M230 194Q270 182 306 172Q260 168 212 192Z" fill="#5C927B"/>
+  <path d="M176 194Q138 160 110 126Q152 150 194 194Z" fill="#6FA58E"/>
+  <path d="M224 194Q262 160 292 128Q248 150 206 194Z" fill="#6FA58E"/>
+  <path d="M184 194Q160 140 148 92Q178 138 200 194Z" fill="#5C927B"/>
+  <path d="M216 194Q240 140 254 94Q224 138 200 194Z" fill="#5C927B"/>
+  <path d="M190 194Q188 120 200 72Q212 120 210 194Z" fill="#6FA58E"/>
+  <g fill="#EAF3EE" opacity=".85">
+    <circle cx="200" cy="110" r="2.5"/><circle cx="198" cy="140" r="2.5"/><circle cx="202" cy="166" r="2.5"/>
+    <circle cx="166" cy="130" r="2.5"/><circle cx="178" cy="158" r="2.5"/>
+    <circle cx="236" cy="132" r="2.5"/><circle cx="224" cy="160" r="2.5"/>
+    <circle cx="140" cy="152" r="2.5"/><circle cx="262" cy="154" r="2.5"/>
+  </g>
+  <path d="M158 196h84l-9 66a6 6 0 0 1 -6 5h-54a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="152" y="186" width="96" height="16" rx="4" fill="#C4633C"/>
+</svg>

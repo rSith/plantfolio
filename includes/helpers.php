@@ -103,3 +103,100 @@ function avatar_tint($username)
 {
     return crc32($username) % 4 + 1;
 }
+
+/**
+ * The word shown for a health_status value from the database, e.g. needs_attention gives "Needs attention".
+ * Kept in one place so every page uses exactly the same four words.
+ */
+function health_label($status)
+{
+    $labels = [
+        'thriving'        => 'Thriving',
+        'stable'          => 'Stable',
+        'needs_attention' => 'Needs attention',
+        'sick'            => 'Sick',
+    ];
+
+    return $labels[$status] ?? 'Unknown';
+}
+
+/** The word for a care_reminders.task value: water gives "Water". */
+function task_label($task)
+{
+    $labels = ['water' => 'Water', 'fertilise' => 'Fertilise'];
+
+    return $labels[$task] ?? ucfirst($task);
+}
+
+/** The icon for a care task: a droplet for watering, a sprout for fertilising. */
+function task_icon($task)
+{
+    return $task === 'fertilise' ? 'sprout' : 'droplet';
+}
+
+/** The words and icon for an exchange_listings.type value (swap, free or either). */
+function listing_type($type)
+{
+    $types = [
+        'swap'   => ['label' => 'Swap', 'icon' => 'repeat'],
+        'free'   => ['label' => 'Free', 'icon' => 'gift'],
+        'either' => ['label' => 'Swap or free', 'icon' => 'repeat'],
+    ];
+
+    return $types[$type] ?? $types['swap'];
+}
+
+/** Whole days from today to a date: 0 is today, 3 is in three days, -2 is two days ago. */
+function days_until($date)
+{
+    $today  = new DateTime('today');
+    $target = new DateTime(substr($date, 0, 10));   // keep the date, drop any time of day
+
+    return (int) $today->diff($target)->format('%r%a');
+}
+
+/**
+ * Describe when a reminder is due, from its next_due date.
+ * Returns two things: 'state' (overdue, due or upcoming), which decides the colour — red for overdue,
+ * terracotta for due today — and 'text', the words to show ("Overdue 2 days", "Due today", "In 3 days").
+ */
+function care_due($next_due)
+{
+    $days = days_until($next_due);
+
+    if ($days < 0) {
+        $late = abs($days);
+        return ['state' => 'overdue', 'text' => 'Overdue ' . $late . ($late === 1 ? ' day' : ' days')];
+    }
+    if ($days === 0) {
+        return ['state' => 'due', 'text' => 'Due today'];
+    }
+    if ($days === 1) {
+        return ['state' => 'upcoming', 'text' => 'Tomorrow'];
+    }
+
+    return ['state' => 'upcoming', 'text' => 'In ' . $days . ' days'];
+}
+
+/** How long ago something happened, in the wireframes' wording: "Today", "2 days ago", "1 week ago". */
+function time_ago($datetime)
+{
+    $days = -days_until($datetime);
+
+    if ($days <= 0) {
+        return 'Today';
+    }
+    if ($days === 1) {
+        return 'Yesterday';
+    }
+    if ($days < 7) {
+        return $days . ' days ago';
+    }
+    if ($days < 35) {
+        $weeks = intdiv($days, 7);
+        return $weeks . ($weeks === 1 ? ' week ago' : ' weeks ago');
+    }
+
+    $months = intdiv($days, 30);
+    return $months . ($months === 1 ? ' month ago' : ' months ago');
+}

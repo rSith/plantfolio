@@ -18,12 +18,12 @@ $palette = [
     '--color-line'       => ['Line', '#E6E0D2', 'Borders and dividers'],
 ];
 
-// Database value => [word shown to the user, meaning]. Pages will print plant health the same way.
+// Database value => what it means (wireframe p6). The word and colour come from partials/status-badge.php.
 $health_statuses = [
-    'thriving'        => ['Thriving', 'Growing well'],
-    'stable'          => ['Stable', 'No change, no action needed'],
-    'needs_attention' => ['Needs attention', 'Act soon: care overdue or early warning'],
-    'sick'            => ['Sick', 'Problem found, see care plan'],
+    'thriving'        => 'Growing well',
+    'stable'          => 'No change, no action needed',
+    'needs_attention' => 'Act soon: care overdue or early warning',
+    'sick'            => 'Problem found, see care plan',
 ];
 ?>
 <!doctype html>
@@ -62,6 +62,9 @@ $health_statuses = [
     .sg-grid-2 { display: grid; gap: var(--space-24); }
     .sg-grid-2 > * { min-width: 0; }
     .sg-note { margin: var(--space-16) 0 0; }
+    /* auto-fill fits as many columns as there is room for: 1 on a phone, 2 on a tablet, 3–4 on a desktop (p23) */
+    .sg-cards { display: grid; gap: var(--space-16); grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+    .sg-cards-wide { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
     @media (min-width: 768px) {
       .sg-page { padding: var(--space-48) var(--gutter); }
       .sg-card { padding: var(--space-24); }
@@ -151,9 +154,9 @@ $health_statuses = [
 
     <section class="sg-card" aria-labelledby="sg-badges">
       <h2 class="label" id="sg-badges">Health status and badges</h2>
-      <?php foreach ($health_statuses as $status => [$word, $meaning]): ?>
+      <?php foreach ($health_statuses as $status => $meaning): ?>
         <div class="sg-status-row">
-          <span class="badge badge-<?= e(str_replace('_', '-', $status)) ?>"><?= e($word) ?></span>
+          <?php partial('status-badge', ['status' => $status]); ?>
           <span><?= e($meaning) ?></span>
           <span class="sg-code"><?= e($status) ?></span>
         </div>
@@ -269,6 +272,26 @@ $health_statuses = [
         </span>
       </div>
       <p class="text-small">Small, medium and large come from <span class="sg-code">partials/avatar.php</span>; a member's tint is chosen from their username.</p>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-plant-cards">
+      <h2 class="label" id="sg-plant-cards">Plant card</h2>
+      <div class="sg-cards">
+        <?php foreach ($mock_plants as $plant): ?>
+          <?php partial('plant-card', ['plant' => $plant]); ?>
+        <?php endforeach; ?>
+      </div>
+      <p class="text-small sg-note">The hint is terracotta when care is due today and red when it is overdue. Photos are placeholder drawings until real ones are added.</p>
+    </section>
+
+    <section class="sg-card" aria-labelledby="sg-listing-cards">
+      <h2 class="label" id="sg-listing-cards">Listing card</h2>
+      <div class="sg-cards sg-cards-wide">
+        <?php foreach ($mock_listings as $listing): ?>
+          <?php partial('listing-card', ['listing' => $listing]); ?>
+        <?php endforeach; ?>
+      </div>
+      <p class="text-small sg-note">Contact details never appear on a card. Cards link to pages that are built in weeks 3 and 4.</p>
     </section>
   </main>
 </body>
