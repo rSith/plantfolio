@@ -1,0 +1,277 @@
+/* Shared components from wireframe p7: base styles, buttons, badges (CORE-05). */
+/* Every value is a token from variables.css, which must be loaded before this file. */
+
+/* ── Base ───────────────────────────────────────────── */
+
+/* Padding and borders count inside an element's width, so a 100% wide box never overflows */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--space-8);
+  line-height: 1.25;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  color: var(--color-forest);
+}
+
+h1 { font-size: var(--text-h1); }
+h2 { font-size: var(--text-h2); }
+
+h3 {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+}
+
+p {
+  margin: 0 0 var(--space-12);
+}
+
+a {
+  color: var(--color-leaf);
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-leaf-dark);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Only appears for keyboard users (Tab), not on mouse clicks */
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  color: var(--color-forest);
+}
+
+/* font-family is set because a label is often a heading element, which would otherwise be Lora */
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-leaf);
+}
+
+.text-small {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.scientific-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: var(--weight-regular);
+  color: var(--color-muted);
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+/* Use .btn plus one look (.btn-primary …) and optionally one size (.btn-sm, .btn-lg) */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: 44px;   /* touch target */
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  font-family: inherit;   /* buttons do not inherit the page font by default */
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.btn-primary {
+  background: var(--color-leaf);
+  color: var(--color-white);
+}
+
+.btn-primary:hover {
+  background: var(--color-leaf-dark);
+  color: var(--color-white);
+}
+
+.btn-primary:active {
+  background: var(--color-forest);
+}
+
+.btn-secondary {
+  background: var(--color-white);
+  border-color: var(--color-line);
+  color: var(--color-forest);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-leaf);
+  color: var(--color-forest);
+}
+
+.btn-secondary:active {
+  background: var(--color-sage);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-forest);
+}
+
+.btn-ghost:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.btn-accent {
+  background: var(--color-terracotta);
+  color: var(--color-white);
+}
+
+.btn-accent:hover,
+.btn-accent:active {
+  background: var(--color-terracotta-dark);
+  color: var(--color-white);
+}
+
+.btn-danger {
+  background: var(--color-white);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-danger:hover,
+.btn-danger:active {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.btn-sm {
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--text-small);
+}
+
+.btn-lg {
+  min-height: 52px;
+  padding: var(--space-12) var(--space-24);
+  font-size: var(--text-body);
+}
+
+/* A mouse does not need a 44px target, so small buttons can be compact from tablet up */
+@media (min-width: 768px) {
+  .btn-sm {
+    min-height: 36px;
+  }
+}
+
+/* Placed last so it wins over every look above. aria-disabled is for <a class="btn"> links. */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--color-disabled-bg);
+  border-color: transparent;
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+/* ── Badges ─────────────────────────────────────────── */
+/* Use .badge plus one modifier. The word is always in the HTML — colour is never the only signal. */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px var(--space-12);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  line-height: 1.6;
+  white-space: nowrap;
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+}
+
+/* Health status — class names match the database values (needs_attention → needs-attention) */
+.badge-thriving {
+  background: var(--status-thriving-bg);
+  color: var(--status-thriving-text);
+}
+
+.badge-stable {
+  background: var(--status-stable-bg);
+  color: var(--status-stable-text);
+}
+
+.badge-needs-attention {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.badge-sick {
+  background: var(--status-sick-bg);
+  color: var(--status-sick-text);
+}
+
+/* The dot in front of a health status; currentColor means "same as the text colour" */
+.badge-thriving::before,
+.badge-stable::before,
+.badge-needs-attention::before,
+.badge-sick::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-tag {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.badge-due {
+  background: var(--color-terracotta-tint);
+  color: var(--color-terracotta-dark);
+}
+
+.badge-warning {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.badge-neutral {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+}

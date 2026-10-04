@@ -27,6 +27,19 @@
   --color-danger: var(--status-sick-text);
   --color-danger-bg: var(--status-sick-bg);
 
+  /* Estimated from wireframe p7 (p6 gives no hex for these) — confirm against Figma */
+  --color-leaf-dark: #3D5E37;         /* hover and pressed: primary button, links */
+  --color-terracotta-dark: #8F3F1F;   /* hover: accent button; text on the terracotta tint (5.8:1) */
+  --color-terracotta-tint: #F6E1D6;   /* "Due today" background */
+  --color-neutral-bg: #ECE8DD;        /* "Neutral" tag background */
+  --color-neutral-text: #5A584F;      /* Muted is only 4.3:1 on the neutral background, this is 5.8:1 */
+  --color-disabled-bg: #E6E0D2;
+  --color-disabled-text: #9A968A;
+
+  /* Interaction */
+  --focus-outline: 2px solid var(--color-leaf);   /* keyboard focus, shown by :focus-visible */
+  --transition-fast: 150ms ease;
+
   /* Fonts — the names after the first are fallbacks if Google Fonts fails to load */
   --font-display: 'Lora', Georgia, serif;             /* names, headings, scientific names */
   --font-body: 'Poppins', system-ui, sans-serif;      /* buttons, labels, forms, numbers */
@@ -42,6 +55,7 @@
   --text-label: 0.75rem;      /* 12px, used in capitals */
 
   --weight-regular: 400;
+  --weight-medium: 500;
   --weight-semibold: 600;
 
   --leading-display: 1.1;
