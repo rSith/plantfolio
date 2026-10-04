@@ -1,6 +1,11 @@
 <?php
 // Temporary placeholder — replaced by the real Landing page (P01, task CORE-27) in week 2.
-// Its only job right now: prove the repo is cloned and Apache/PHP serve /public.
+// Its only job right now: prove the repo is cloned, Apache/PHP serve /public and the shared files load.
+
+// config.php returns an array, so it uses plain require (require_once would return true the second time).
+$config = require __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/mock-data.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -21,7 +26,8 @@
   <main>
     <h1>PlantFolio 🌿</h1>
     <p>Where your plants tell their story.</p>
-    <p><small>Setup works — PHP <?= htmlspecialchars(PHP_VERSION) ?> is running.</small></p>
+    <p><small>Setup works — PHP <?= e(PHP_VERSION) ?> is running.</small></p>
+    <p><small>Mock data loaded — signed in as @<?= e($current_user['username']) ?> (<?= e($config['app_env']) ?>).</small></p>
   </main>
 </body>
 </html>
