@@ -13,7 +13,7 @@ Each partial expects one row-shaped array (e.g. `$plant`, `$listing`) so it work
 | `rating.php` | Stars, average and count, e.g. ★ 4.9 (23) | P10, P11, P13, P14 | CORE-05 |
 | `avatar.php` | Member photo, or initials on a tinted circle; sizes `sm` and `lg` | Header, listing cards, P13, P14 | CORE-05 |
 | `empty-state.php` | Illustration, one-line message and one clear next step (state S1) | P03, P04, P09, P10 | CORE-25 |
-| `modal.php` | Dialog shell for S4 Rate, S5 Log update, S6 Confirm delete | P05, P13, all deletes | CORE-05 |
+| `modal.php` | Dialog shell for S4 Rate, S5 Log update, S6 Confirm delete | P05, P13, all deletes | Week 5 · COM-12, CORE-19, CORE-20 (built with its JavaScript, as in the roadmap) |
 
 Render a partial with the `partial()` helper from `includes/helpers.php`, naming the variable it expects:
 

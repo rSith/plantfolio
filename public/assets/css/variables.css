@@ -27,7 +27,7 @@
   --color-danger: var(--status-sick-text);
   --color-danger-bg: var(--status-sick-bg);
 
-  /* Estimated from wireframe p7 (p6 gives no hex for these) — confirm against Figma */
+  /* Not listed on p6: chosen by eye from wireframe p7 and kept as the project's values */
   --color-leaf-dark: #3D5E37;         /* hover and pressed: primary button, links */
   --color-terracotta-dark: #8F3F1F;   /* hover: accent button; text on the terracotta tint (5.8:1) */
   --color-terracotta-tint: #F6E1D6;   /* "Due today" background */
