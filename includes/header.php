@@ -1,6 +1,7 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs.
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 
 $is_member = !empty($current_user);
@@ -43,6 +44,9 @@ if ($is_member) {
   <link rel="stylesheet" href="<?= e(url('assets/css/variables.css')) ?>">
   <link rel="stylesheet" href="<?= e(url('assets/css/components.css')) ?>">
   <link rel="stylesheet" href="<?= e(url('assets/css/layout.css')) ?>">
+  <?php if (!empty($page_css)): ?>
+    <link rel="stylesheet" href="<?= e(url('assets/css/' . $page_css)) ?>">
+  <?php endif; ?>
 </head>
 <body<?= $is_member ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>
