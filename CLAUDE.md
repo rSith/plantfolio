@@ -226,6 +226,53 @@ Until `docs/conventions.md` (task DES-11) is written, follow these:
 
 ---
 
+## Obsidian notes (my study vault)
+
+I keep a progress log and study notes for PlantFolio in my Obsidian vault, so I can review what I built and
+explain it in the viva. Keeping them current is part of finishing a step. *(This section applies on my
+machine only: the notes are outside the repo, so teammates can ignore it.)*
+
+**Notes folder:** `C:\Users\User\Documents\Code Vault\CS_Vault\05. Projects\plantfolio`
+
+Create and edit notes only in that folder. The rest of the vault (`CS_Vault`) is mine: read it to find notes
+to link to, but don't create, edit, move or delete anything there, and never run git commands in the vault.
+
+| Note | Holds | Update |
+|---|---|---|
+| `PlantFolio - Project Home.md` | Goal, stage plan, links, dated one-line log | Add a log line at the end of each session; tick a week when its tasks are finished |
+| `00. PlantFolio Overview.md` | Map of every lesson, summary and week note | Add a row when a lesson note is added |
+| `02. Progress/PlantFolio Week NN - <Title>.md` | One roadmap week: its tasks, "done when" and a work log | After each committed step, add that step's section to the work log, before starting the next step |
+| `01. Lessons/NN. <Title>/NN.MM <Topic>.md` | Study notes: `NN.00` overview, `NN.01` onwards topic notes, `NN.99` summary | Add a topic note with the next free number when a step needs something no note covers; list it in `NN.00` and the map |
+
+**A work-log step** has, in order: a `> [!important] Goal` callout with the task ID · **What was done** (date,
+branch, commit hash) · **Why this way** · the few lines of code that matter · **Problems and fixes** (only if
+there were any) · a `> [!tip] What to remember` callout · **Check yourself**, two or three viva-style questions
+with the answers in a collapsed `> [!success]- Answers` callout. `PlantFolio Week 01 - Foundation.md` is the model.
+
+**A topic note** explains one topic from the beginning in simple English, in numbered sections: definition ·
+why PlantFolio uses it · how it works · syntax · a worked example in this project's style · common mistakes ·
+"Exam and viva focus" · a "Related" line of links. Any topic note in `01. Lessons` is a model.
+
+**One source of truth.** Before writing a topic note, search the whole vault. General concepts live in
+`04. Concepts`; web theory is in my CMIS 3124 course notes (`02. University`); several tools are already
+explained in the lessons of my dengue project. If a note exists, link to it with `[[Note name]]` and write only
+what is specific to PlantFolio. Never write a second note on the same concept, and never edit a note outside
+the PlantFolio folder.
+
+**Rules**
+- Read a note before changing it. I edit them too: keep my text and add to it.
+- Record what actually happened, including failed attempts. Tick a task only when it is verified, and say
+  "UI built" or "wired", as on the Task Sheet.
+- Never copy secrets (`config/config.php` values, passwords) into a note.
+- Examples in notes follow this project's locked stack and conventions (plain PHP, PDO, vanilla JS, `e()`).
+- Note names must be unique across the vault. Frontmatter: week notes use `type: project-note`,
+  `project: PlantFolio` and `status: stub`, then `draft`, then `done`; lesson notes use
+  `type: lesson | concept | summary`, `project: PlantFolio`, `lesson: L<N>`, `priority`, `status: complete`
+  and `tags: [plantfolio, plantfolio/L<N>]`.
+- After updating notes, tell me which notes changed.
+
+---
+
 ## Testing
 
 - **Stage F:** compare each page with its wireframe page and the Figma prototype; check 375, 768 and
@@ -260,3 +307,4 @@ Until `docs/conventions.md` (task DES-11) is written, follow these:
 | Tables and fields | [`database/README.md`](database/README.md) |
 | ML API contract | [`ml-service/README.md`](ml-service/README.md) |
 | Branches, commits, PRs | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Progress log and study notes | My Obsidian vault, see "Obsidian notes" above (outside the repo) |
