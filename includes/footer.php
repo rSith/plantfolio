@@ -2,11 +2,11 @@
 // Page frame, bottom half: closes <main>, then prints the footer and the phone bottom bar (CORE-06).
 // Included last by every page. It reuses $is_member, $area and $profile_url, which includes/header.php set.
 
-// The three links are named on wireframe p4, but no page exists for them yet: '#' is a placeholder.
+// The three links named on wireframe p4. They are the three sections of one page, about.php.
 $footer_links = [
-    ['label' => 'About',                'href' => '#'],
-    ['label' => 'Community guidelines', 'href' => '#'],
-    ['label' => 'Contact',              'href' => '#'],
+    ['label' => 'About',                'href' => 'about.php#about'],
+    ['label' => 'Community guidelines', 'href' => 'about.php#guidelines'],
+    ['label' => 'Contact',              'href' => 'about.php#contact'],
 ];
 
 // The phone bar, left and right of the round "+" button (wireframe p23).
@@ -39,7 +39,7 @@ if ($is_member) {
       </div>
       <nav class="footer-links" aria-label="Footer">
         <?php foreach ($footer_links as $link): ?>
-          <a href="<?= e($link['href']) ?>"><?= e($link['label']) ?></a>
+          <a href="<?= e(url($link['href'])) ?>"><?= e($link['label']) ?></a>
         <?php endforeach; ?>
       </nav>
       <p class="footer-note text-small">&copy; <?= e(date('Y')) ?> PlantFolio · Group coursework, Wayamba University of Sri Lanka</p>

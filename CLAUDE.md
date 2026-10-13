@@ -106,6 +106,10 @@ Don't add top-level folders or move files without asking — teammates' READMEs 
 | P13 | My Exchanges | `my-exchanges.php` | Login | p20 | Functional |
 | P14 | Public Profile | `user.php?u=` | Public | p21 | Warm |
 | P15 | Settings | `settings.php` | Login | p22 | Functional |
+| — | About · Community guidelines · Contact | `about.php` | Public | not in the wireframes | Warm |
+
+`about.php` is an extra page: the footer links (wireframe p4) and the sign-up checkbox (p9) need somewhere to
+lead. It has three sections, `#about`, `#guidelines` and `#contact`. Its contact details are samples until final delivery.
 
 Shared states S1–S6 (empty garden, analysing, low confidence, rate modal, log-update modal,
 confirm + toast) are on wireframe p24; mobile layouts on p23.
