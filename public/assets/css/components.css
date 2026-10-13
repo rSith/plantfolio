@@ -226,6 +226,135 @@ img {
   cursor: not-allowed;
 }
 
+/* A round button that shows only an icon (search, notifications, menu). Always give it an aria-label. */
+.icon-btn {
+  position: relative;   /* the anchor for the notification dot */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-forest);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.icon-btn:hover {
+  border-color: var(--color-leaf);
+  color: var(--color-forest);
+}
+
+.icon-btn:active {
+  background: var(--color-sage);
+}
+
+.icon-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* "Something new": terracotta, because red is kept for overdue care */
+.icon-btn-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+  background: var(--color-terracotta);
+}
+
+/* ── Dropdown menu ──────────────────────────────────── */
+/* <details class="menu"> with a <summary> to click and a .menu-panel of .menu-item links.
+   The browser opens and closes <details> itself, so the menu needs no JavaScript. */
+
+.menu {
+  position: relative;   /* the panel is placed against this box */
+}
+
+/* Remove the small triangle browsers draw in front of a <summary> */
+.menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + var(--space-8));
+  left: 0;
+  z-index: 60;
+  min-width: 220px;
+  padding: var(--space-8);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+}
+
+/* For a menu near the right edge of the screen: line the panel up with the button's right side */
+.menu-panel-right {
+  right: 0;
+  left: auto;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-input);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.menu-item:hover,
+.menu-item[aria-current="page"] {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.menu-item .icon {
+  color: var(--color-leaf);
+}
+
+/* Who is signed in, at the top of the account menu */
+.menu-head {
+  display: grid;
+  margin-bottom: var(--space-8);
+  padding: var(--space-8) var(--space-12) var(--space-12);
+  border-bottom: 1px solid var(--color-line);
+  line-height: 1.4;
+}
+
+.menu-divider {
+  height: 1px;
+  margin: var(--space-8) 0;
+  border: 0;
+  background: var(--color-line);
+}
+
+.menu-chevron {
+  display: inline-flex;
+  transition: transform var(--transition-fast);
+}
+
+.menu[open] .menu-chevron {
+  transform: rotate(180deg);
+}
+
 /* ── Badges ─────────────────────────────────────────── */
 /* Use .badge plus one modifier. The word is always in the HTML — colour is never the only signal. */
 

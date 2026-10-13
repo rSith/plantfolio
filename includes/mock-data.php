@@ -32,7 +32,14 @@ $current_user = [
     'swap_count'       => 12,
     'rating_avg'       => 4.9,
     'rating_count'     => 23,
+    'new_interest_count' => 4,   // people newly interested in her listings (p10): the dot on the header bell
 ];
+
+// Preview switch: add ?guest to any address to see the page as a visitor who is not logged in.
+// A visitor has no users row, so $current_user is null — exactly what the session will give in stage B.
+if (isset($_GET['guest'])) {
+    $current_user = null;
+}
 
 // Nimali's plants — rows of `plants` (wireframe p11), each joined with:
 //   plant_species  → scientific_name, common_name

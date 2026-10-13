@@ -40,6 +40,37 @@ function url($path = '')
     return rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
 }
 
+/** The file name of the page the browser asked for, e.g. "garden.php". */
+function current_page()
+{
+    return basename($_SERVER['SCRIPT_NAME']);
+}
+
+/**
+ * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'exchange' …
+ * The navigation highlights a whole area, so "My Garden" stays lit on a plant's profile and on the plant form.
+ * Returns '' for pages outside every area (landing, sign up, log in).
+ */
+function current_area()
+{
+    $areas = [
+        'dashboard' => ['dashboard.php'],
+        'garden'    => ['garden.php', 'plant.php', 'plant-form.php'],
+        'tools'     => ['identify.php', 'health-check.php'],
+        'explore'   => ['explore.php'],
+        'exchange'  => ['exchange.php', 'listing.php', 'listing-form.php', 'my-exchanges.php'],
+        'profile'   => ['user.php', 'settings.php'],
+    ];
+
+    foreach ($areas as $area => $pages) {
+        if (in_array(current_page(), $pages, true)) {
+            return $area;
+        }
+    }
+
+    return '';
+}
+
 /**
  * Return a Lucide icon as inline SVG, e.g. icon('droplet'). Print it without e(): it is our own file, not user text.
  * Inline SVG (instead of <img>) lets the icon take the colour of the text around it.

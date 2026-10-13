@@ -1,0 +1,362 @@
+/* Page frame: top bar, footer, phone bottom bar and the content column (CORE-06). */
+/* Styles the HTML printed by includes/header.php and includes/footer.php. Loaded after components.css. */
+
+/* ── Page ───────────────────────────────────────────── */
+
+/* A link to #how-it-works stops below the sticky top bar instead of underneath it */
+html {
+  scroll-padding-top: calc(var(--header-height) + var(--space-16));
+}
+
+/* A column as tall as the screen: <main> takes the spare room, so the footer sits at the bottom on short pages */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-main {
+  flex: 1;
+}
+
+/* The centred content column: 1040px of content plus a gutter each side (design system) */
+.container {
+  width: 100%;
+  max-width: calc(var(--content-width) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-right: var(--space-16);
+  padding-left: var(--space-16);
+}
+
+/* Top and bottom room for an ordinary page: <div class="container page"> */
+.page {
+  padding-top: var(--space-24);
+  padding-bottom: var(--space-48);
+}
+
+/* First thing the Tab key reaches: jumps past the navigation. Off-screen until it has focus. */
+.skip-link {
+  position: absolute;
+  top: var(--space-8);
+  left: var(--space-16);
+  z-index: 200;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-forest);
+  color: var(--color-white);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  color: var(--color-white);
+  transform: none;
+}
+
+/* ── Top bar ────────────────────────────────────────── */
+
+/* sticky: scrolls with the page until it reaches the top edge, then stays there */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  height: var(--header-height);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: 1.25rem;   /* 20px, as on wireframe p7 */
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+}
+
+.logo:hover {
+  color: var(--color-forest);
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-input);
+  background: var(--color-leaf);
+  color: var(--color-white);
+}
+
+/* On a phone the links live in the bottom bar (members) or behind the menu button (visitors) */
+.site-nav {
+  display: none;
+}
+
+/* As tall as the bar, so the line under the current link sits on the bar's bottom edge */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--header-height);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--color-ink);
+}
+
+.nav-link:focus-visible {
+  outline-offset: -2px;
+}
+
+.nav-link.is-active {
+  color: var(--color-forest);
+  box-shadow: inset 0 -2px 0 var(--color-leaf);
+}
+
+/* margin-left: auto takes all the spare room, pushing the buttons to the right edge */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-left: auto;
+}
+
+.header-add,
+.header-login {
+  display: none;
+}
+
+/* A round target around the avatar that opens the account menu */
+.avatar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+
+.site-footer {
+  border-top: 1px solid var(--color-line);
+  background: var(--color-white);
+}
+
+.site-footer-inner {
+  display: grid;
+  gap: var(--space-12);
+  padding-top: var(--space-24);
+  padding-bottom: var(--space-24);
+}
+
+.footer-brand p,
+.footer-note {
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-24);
+}
+
+.footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+/* ── Phone bottom bar ───────────────────────────────── */
+/* Members only (wireframe p23): Home, Garden, +, Exchange, Profile */
+
+/* fixed: stays at the bottom of the screen while the page scrolls underneath */
+.bottom-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);   /* five equal columns */
+  height: var(--bottom-bar-height);
+  border-top: 1px solid var(--color-line);
+  background: var(--color-white);
+}
+
+.bottom-bar-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.bottom-bar-link .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.bottom-bar-link:focus-visible {
+  outline-offset: -2px;
+}
+
+.bottom-bar-link.is-active {
+  color: var(--color-forest);
+  font-weight: var(--weight-semibold);
+}
+
+.bottom-bar-add {
+  display: flex;
+  justify-content: center;
+}
+
+/* The round button rises above the bar; the white ring separates it from the page behind */
+.bottom-bar-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-top: calc(var(--space-24) * -1);
+  border-radius: 50%;
+  background: var(--color-leaf);
+  color: var(--color-white);
+  box-shadow: 0 0 0 4px var(--color-white), var(--shadow-card);
+  transition: background-color var(--transition-fast);
+}
+
+.bottom-bar-plus .icon {
+  width: 24px;
+  height: 24px;
+  transition: transform var(--transition-fast);
+}
+
+/* Open: the + turns into a ×, which reads as "close" */
+.bottom-bar-add[open] .bottom-bar-plus {
+  background: var(--color-forest);
+}
+
+.bottom-bar-add[open] .bottom-bar-plus .icon {
+  transform: rotate(45deg);
+}
+
+/* Its menu opens upward as a sheet across the screen, just above the bar */
+.menu-panel-sheet {
+  position: fixed;
+  top: auto;
+  right: var(--space-16);
+  bottom: calc(var(--bottom-bar-height) + var(--space-32));
+  left: var(--space-16);
+}
+
+/* Room at the end of the page, so the fixed bar and its raised button never cover the footer text.
+   The room is inside the footer, so its white background runs down to the bar. */
+.has-bottom-bar .site-footer {
+  padding-bottom: calc(var(--bottom-bar-height) + var(--space-16));
+}
+
+.has-bottom-bar .toast-region {
+  bottom: calc(var(--bottom-bar-height) + var(--space-32));
+}
+
+/* ── Tablet and up ──────────────────────────────────── */
+/* The top bar has room for the navigation, so the bottom bar is no longer needed */
+
+@media (min-width: 768px) {
+  .container {
+    padding-right: var(--gutter);
+    padding-left: var(--gutter);
+  }
+
+  .page {
+    padding-top: var(--space-32);
+  }
+
+  .site-nav {
+    display: flex;
+    gap: var(--space-12);
+  }
+
+  .header-add,
+  .header-login {
+    display: inline-flex;
+  }
+
+  .header-menu-mobile,
+  .bottom-bar {
+    display: none;
+  }
+
+  .has-bottom-bar .site-footer {
+    padding-bottom: 0;
+  }
+
+  .has-bottom-bar .toast-region {
+    bottom: var(--space-16);
+  }
+
+  /* A tablet is too narrow for five links, four buttons and the name: the logo mark and the + stand alone.
+     Both links keep their name for screen readers through aria-label. */
+  .site-header-member .logo-text,
+  .header-add-label {
+    display: none;
+  }
+
+  .site-footer-inner {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .footer-note {
+    grid-column: 1 / -1;   /* from the first grid line to the last: the full width */
+  }
+}
+
+/* ── Desktop ────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .site-header-inner {
+    gap: var(--space-32);
+  }
+
+  .site-nav {
+    gap: var(--space-24);
+  }
+
+  .site-header-member .logo-text,
+  .header-add-label {
+    display: inline;
+  }
+}

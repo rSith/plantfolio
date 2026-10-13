@@ -93,8 +93,17 @@
   /* Layout */
   --content-width: 1040px;
   --gutter: 24px;
+  --header-height: 56px;       /* top bar on a phone; grows at the tablet breakpoint below */
+  --bottom-bar-height: 64px;   /* phone navigation, fixed to the bottom of the screen */
 
   /* Breakpoints (mobile-first). CSS cannot use var() inside @media, so type these numbers directly:
      tablet  @media (min-width: 768px)
      desktop @media (min-width: 1024px) */
+}
+
+/* A token can change at a breakpoint: everything that reads it follows without its own media query */
+@media (min-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
 }
