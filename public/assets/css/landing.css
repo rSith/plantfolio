@@ -1,0 +1,240 @@
+/* Landing page only (P01, wireframe p8, CORE-27). Loaded by header.php when index.php sets $page_css. */
+/* Mobile-first: the base rules are the phone layout; the media queries add the tablet and desktop changes. */
+
+/* ── Hero ───────────────────────────────────────────── */
+
+.hero {
+  padding: var(--space-32) 0 var(--space-48);
+  overflow: hidden;   /* the collage's chips may lean past the edge on small phones; never a sideways scroll */
+}
+
+/* Phone: text first, collage below. Desktop: two columns side by side. */
+.hero-inner {
+  display: grid;
+  gap: var(--space-48);
+  align-items: center;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-16);
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* 46px is too wide for a phone (three words per line at most), so the title starts at H1 size */
+.hero-title {
+  margin-bottom: var(--space-16);
+  font-size: var(--text-h1);
+}
+
+/* The one accent word, as on p8. Lora is loaded in italic 400 only, so the weight follows. */
+.hero-title em {
+  font-weight: var(--weight-regular);
+  color: var(--color-terracotta);
+}
+
+.hero-lead {
+  max-width: 34em;   /* about 10 words a line: easy to read in one pass */
+  margin-bottom: var(--space-24);
+  color: var(--color-muted);
+  font-size: var(--text-body);
+}
+
+/* Phone: full-width buttons, stacked, easy to hit with a thumb */
+.hero-actions {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.hero-proof {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-top: var(--space-24);
+}
+
+.hero-proof p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.hero-proof strong {
+  color: var(--color-ink);
+}
+
+/* The stack's white rings would vanish on the cream page, so they take the page colour instead */
+.hero-proof .avatar-stack .avatar {
+  border-color: var(--color-cream);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: var(--space-48) 0;
+  }
+
+  /* Narrow enough to break into three short lines, as on p8 */
+  .hero-title {
+    max-width: 8.5em;
+    font-size: var(--text-display);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    padding: var(--space-48) 0 calc(var(--space-48) * 1.5);
+  }
+
+  /* Text a little wider than the collage, as on p8 */
+  .hero-inner {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+/* ── Collage ────────────────────────────────────────── */
+/* Two cards and two chips placed on a fixed-shape stage. Positions are percentages of the stage, */
+/* so the whole picture shrinks evenly on a phone instead of reflowing. */
+
+.collage {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 11 / 10;
+  margin: 0 auto;
+}
+
+.collage-card {
+  position: absolute;
+  box-shadow: var(--shadow-card);
+}
+
+.collage-card .card-media img {
+  display: block;
+}
+
+/* Monty: the large card, top left, tilted slightly */
+.collage-card-main {
+  top: 0;
+  left: 4%;
+  width: 60%;
+  transform: rotate(-2deg);
+}
+
+.collage-card-main .plant-card-name {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  color: var(--color-forest);
+  line-height: 1.25;
+}
+
+.collage-card-main .scientific-name {
+  font-size: var(--text-small);
+}
+
+/* Another member's plant: overlaps Monty's card at the bottom right, tilted the other way */
+.collage-card-side {
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  transform: rotate(3deg);
+}
+
+/* Photo inset with its own rounded corners, like the "community" card on p8 */
+.collage-card-side .card-media {
+  margin: var(--space-8) var(--space-8) 0;
+  border-radius: calc(var(--radius-card) - var(--space-4));
+  overflow: hidden;
+}
+
+.collage-card-owner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12) var(--space-12);
+  font-size: var(--text-label);
+}
+
+.collage-username {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collage-likes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+/* Floating labels: white pills with a soft shadow */
+.collage-chip {
+  position: absolute;
+  z-index: 1;   /* above both cards */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px var(--space-12);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+  color: var(--color-ink);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+/* AI result: top right, leaning over Monty's card */
+.collage-chip-ai {
+  top: 24%;
+  right: 0;
+}
+
+.collage-chip-ai .icon {
+  color: var(--color-leaf);
+}
+
+/* Reminder: under Monty's card, bottom left */
+.collage-chip-care {
+  bottom: 12%;
+  left: 0;
+}
+
+/* The droplet takes the care colours from the design system: terracotta for today, red for overdue */
+.collage-chip-due .icon {
+  color: var(--color-terracotta);
+}
+
+.collage-chip-overdue .icon {
+  color: var(--color-danger);
+}
+
+.collage-chip-upcoming .icon {
+  color: var(--color-leaf);
+}
+
+@media (min-width: 768px) {
+  .collage-chip,
+  .collage-card-owner {
+    font-size: var(--text-small);
+  }
+}
+
