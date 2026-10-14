@@ -379,3 +379,40 @@
     gap: var(--gutter);
   }
 }
+
+/* Fresh on the exchange: heading on the left, "See all" on the right (stacked on a phone) */
+.fresh-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.fresh-head h2 {
+  margin: 0;
+}
+
+.fresh-head .label {
+  margin-bottom: var(--space-8);
+}
+
+/* Breakpoints from wireframe p23: 1 card column on a phone, 2 on a tablet, 4 on a desktop */
+.fresh-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .fresh-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gutter);
+  }
+}
+
+@media (min-width: 1024px) {
+  .fresh-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

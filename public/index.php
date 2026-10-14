@@ -27,6 +27,10 @@ $disease_result = $mock_predictions[array_search('disease', array_column($mock_p
 $species_plant  = $mock_plants[array_search($species_result['plant_id'], array_column($mock_plants, 'id'))];
 $disease_plant  = $mock_plants[array_search($disease_result['plant_id'], array_column($mock_plants, 'id'))];
 
+// "Fresh on the exchange": the four newest open listings (wireframe p8, UX notes).
+// Stage B: … WHERE status = 'open' ORDER BY created_at DESC LIMIT 4. The mock array is already newest first.
+$fresh_listings = array_slice($mock_listings, 0, 4);
+
 // "How it works": three steps that mirror the product, add → track → swap (wireframe p8, element 4).
 $steps = [
     ['icon' => 'camera',  'title' => 'Add your plants',
@@ -152,6 +156,23 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <a class="tool-link" href="<?= e(url('health-check.php')) ?>">Try Health Check <?= icon('arrow-right') ?></a>
       </article>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section fresh" aria-labelledby="fresh-title">
+  <div class="container">
+    <div class="fresh-head">
+      <div>
+        <p class="label">Fresh on the exchange</p>
+        <h2 id="fresh-title">Plants looking for a new home</h2>
+      </div>
+      <a class="tool-link" href="<?= e(url('exchange.php')) ?>">See all <?= e($mock_site_stats['open_listing_count']) ?> listings <?= icon('arrow-right') ?></a>
+    </div>
+    <div class="fresh-grid">
+      <?php foreach ($fresh_listings as $listing): ?>
+        <?php partial('listing-card', ['listing' => $listing]); ?>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
