@@ -37,7 +37,7 @@ include __DIR__ . '/../includes/header.php';
 <div class="container page">
   <h1>Style guide</h1>
   <p class="sg-intro">Every shared component, built once and reused on all pages. Compare with wireframes p6 and p7.
-    The top navigation from p7 is the real header of this page; add <span class="sg-code">?guest</span> to the address to see the visitor version.</p>
+    The top navigation from p7 is the real header of this page; add <span class="sg-code">?guest</span> to the address to see the visitor version, and <span class="sg-code">?member</span> to switch back.</p>
 
   <section class="sg-card" aria-labelledby="sg-colours">
     <h2 class="label" id="sg-colours">Brand palette</h2>
