@@ -5,9 +5,7 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
-// Stage B, in this order:
-//   a signed-in member is sent to their Dashboard: if ($current_user) { header('Location: ' . url('dashboard.php')); exit; }
-//   on POST: check the CSRF token, find the user by email or username, password_verify(),
+// Stage B, on POST: check the CSRF token, find the user by email or username, password_verify(),
 //   session_regenerate_id(true), then go to the Dashboard. Every failure shows the same message,
 //   "Email or password is incorrect", and 5 failures lock the account for 15 minutes (CORE-12).
 
@@ -17,9 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mock_log_in_and_go('dashboard.php');
 }
 
-// Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
-// the Landing page, and every page after this one is seen as a visitor until you log in (or add ?member).
-$current_user = mock_become_visitor();
+// A logged-in member does not need this page: they go to their Dashboard, as stage B will do (wireframe p8).
+if ($current_user) {
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
 
 $page_title = 'Log in';
 $page_css   = 'auth.css';

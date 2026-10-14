@@ -5,9 +5,7 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
-// Stage B, in this order:
-//   a signed-in member is sent to their Dashboard: if ($current_user) { header('Location: ' . url('dashboard.php')); exit; }
-//   on POST: check the CSRF token, validate every field, check that username and email are free,
+// Stage B, on POST: check the CSRF token, validate every field, check that username and email are free,
 //   save the row with password_hash(), log the member in and open the empty Dashboard (wireframe p9, UX notes).
 
 // Stage F: Create account "logs in" without saving anything and opens the empty Dashboard (state S1),
@@ -16,9 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mock_log_in_and_go('dashboard.php', true);
 }
 
-// Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
-// the Landing page, and every page after this one is seen as a visitor until you log in (or add ?member).
-$current_user = mock_become_visitor();
+// A logged-in member does not need this page: they go to their Dashboard, as stage B will do (wireframe p8).
+if ($current_user) {
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
 
 $page_title = 'Sign up';
 $page_css   = 'auth.css';

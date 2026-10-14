@@ -41,11 +41,16 @@ $current_user = [
     'new_interest_count' => 4,   // people newly interested in her listings (p10): the dot on the header bell
 ];
 
-// Preview switch: add ?guest to any address to browse as a visitor who is not logged in, ?member to be Nimali again.
-// The choice is kept in the session, so it lasts from page to page, the way a real login does in stage B.
+// Who is logged in. The preview works like a real login, kept in the session from page to page:
+// a new browser starts as a visitor; Log in (or Create account) makes it Nimali; Log out makes it a visitor again.
+// Nothing else changes it: opening the Landing page never logs anyone out.
+// Shortcuts for testing: ?member jumps straight to Nimali, ?guest to a visitor.
 // A visitor has no users row, so $current_user is null — exactly what the session will give in stage B.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+if (!isset($_SESSION['preview_visitor'])) {
+    $_SESSION['preview_visitor'] = true;   // a new browser has not logged in yet
 }
 if (isset($_GET['guest'])) {
     $_SESSION['preview_visitor'] = true;
@@ -58,7 +63,7 @@ if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
 }
 
-/** Mock-only: switch the preview to visitor mode, for pages only visitors use (Log in, Sign up). Returns null for $current_user. */
+/** Mock-only: log out, i.e. switch the preview to visitor mode (logout.php). Returns null for $current_user. */
 function mock_become_visitor()
 {
     $_SESSION['preview_visitor'] = true;

@@ -27,13 +27,14 @@ include __DIR__ . '/../includes/header.php';
 
 ## Previewing in stage F
 
-`mock-data.php` pretends Nimali (`@nimali.grows`) is logged in. Three switches change that; add them to any address:
+The preview works like a real login, kept in the session: a new browser starts as a **visitor**. Press **Log in**
+(no checks yet) to become Nimali (`@nimali.grows`), **Create account** to become a brand-new member with no plants,
+and **Log out** (account menu) to be a visitor again. A logged-in member who opens the Landing page, Log in or
+Sign up is sent to the Dashboard, as on the real site. Shortcuts, added to any address:
 
 | Add | You see | Lasts |
 |---|---|---|
-| `?guest` | The site as a visitor who is not logged in | Until `?member`: the choice is kept in the session, like a real login |
-| `?member` | Nimali again | Until `?guest` |
+| `?member` | Nimali, logged in | Until Log out or `?guest` |
+| `?guest` | The site as a visitor who is not logged in | Until Log in or `?member` |
 | `?empty` | Nimali as a brand-new member with no plants yet (state S1) | Until `?member` or Log in. Create account turns it on |
-
-Opening Log in or Sign up switches to visitor mode by itself, because only visitors use those pages.
 In stage B the session holds the real login and these switches are deleted with `mock-data.php`.

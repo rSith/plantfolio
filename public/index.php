@@ -5,11 +5,12 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
-// Stage B: a signed-in member skips this page and goes to their Dashboard (wireframe p8):
-//   if ($current_user) { header('Location: ' . url('dashboard.php')); exit; }
-// Stage F: the mock data starts with Nimali logged in, which would show the member header here. The Landing page
-// is for visitors, so it switches the preview to visitor mode, like Log in and Sign up. Log in leads back in.
-$current_user = mock_become_visitor();
+// A logged-in member does not need this page: they go to their Dashboard, as stage B will do (wireframe p8).
+// To see this page as a visitor, log out first.
+if ($current_user) {
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
 
 // "1,200+": rounded down to the hundred, so the claim stays true however many members there are.
 $member_count = $mock_site_stats['member_count'];
