@@ -1,11 +1,14 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
-// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs.
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
+// and $simple_header = true for a bar with only the logo (sign up, log in: nothing pulls the visitor away from the form).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 
-$is_member = !empty($current_user);
-$area      = current_area();
+$is_member       = !empty($current_user);
+$area            = current_area();
+$simple_header   = !empty($simple_header);
+$show_bottom_bar = $is_member && !$simple_header;   // footer.php prints the phone bar when this is true
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
 $nav_links = $is_member
@@ -48,16 +51,17 @@ if ($is_member) {
     <link rel="stylesheet" href="<?= e(url('assets/css/' . $page_css)) ?>">
   <?php endif; ?>
 </head>
-<body<?= $is_member ? ' class="has-bottom-bar"' : '' ?>>
+<body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header<?= $is_member ? ' site-header-member' : '' ?>">
+  <header class="site-header<?= $show_bottom_bar ? ' site-header-member' : '' ?>">
     <div class="container site-header-inner">
       <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : '')) ?>" aria-label="PlantFolio home">
         <span class="logo-mark"><?= icon('leaf') ?></span>
         <span class="logo-text">PlantFolio</span>
       </a>
 
+      <?php if (!$simple_header): ?>
       <nav class="site-nav" aria-label="Main">
         <?php foreach ($nav_links as $link): ?>
           <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= $link['href'] === current_page() ? ' aria-current="page"' : '' ?>><?= e($link['label']) ?></a>
@@ -115,6 +119,7 @@ if ($is_member) {
           </details>
         <?php endif; ?>
       </div>
+      <?php endif; ?>
     </div>
   </header>
 
