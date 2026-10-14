@@ -45,42 +45,74 @@ if (isset($_GET['guest'])) {
 //   plant_species  → scientific_name, common_name
 //   collections    → collection_name
 //   care_reminders → task, interval_days, next_due of the plant's soonest reminder
+//   health_logs    → last_logged_at, the date of the plant's newest log (My Garden's "Recently updated" sort)
+// The order is the order of wireframe p11.
 $mock_plants = [
     ['id' => 42, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 1, 'nickname' => 'Monty',
      'photo' => 'mock/monty.svg', 'acquired_on' => '2025-03-20', 'health_status' => 'thriving', 'is_public' => 1,
      'scientific_name' => 'Monstera deliciosa', 'common_name' => 'Swiss cheese plant',
      'collection_name' => 'Living room',
-     'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(0)],
+     'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(0),
+     'last_logged_at' => mock_date(-5) . ' 18:20:00'],
 
     ['id' => 43, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 2, 'nickname' => 'Goldie',
      'photo' => 'mock/goldie.svg', 'acquired_on' => '2025-04-02', 'health_status' => 'needs_attention', 'is_public' => 1,
      'scientific_name' => 'Epipremnum aureum', 'common_name' => 'Golden pothos',
      'collection_name' => 'Living room',
-     'task' => 'water', 'interval_days' => 5, 'next_due' => mock_date(-2)],
+     'task' => 'water', 'interval_days' => 5, 'next_due' => mock_date(-2),
+     'last_logged_at' => mock_date(-3) . ' 18:10:00'],
 
     ['id' => 44, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 3, 'nickname' => 'Sergeant',
      'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-05-11', 'health_status' => 'thriving', 'is_public' => 1,
      'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
      'collection_name' => 'Living room',
-     'task' => 'fertilise', 'interval_days' => 30, 'next_due' => mock_date(0)],
+     'task' => 'fertilise', 'interval_days' => 30, 'next_due' => mock_date(0),
+     'last_logged_at' => mock_date(-12) . ' 09:00:00'],
 
     ['id' => 45, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 4, 'nickname' => 'Figgy',
      'photo' => 'mock/figgy.svg', 'acquired_on' => '2025-06-18', 'health_status' => 'stable', 'is_public' => 1,
      'scientific_name' => 'Ficus lyrata', 'common_name' => 'Fiddle-leaf fig',
      'collection_name' => 'Living room',
-     'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(3)],
+     'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(3),
+     'last_logged_at' => mock_date(-9) . ' 17:30:00'],
+
+    ['id' => 48, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 7, 'nickname' => 'Lily',
+     'photo' => 'mock/lily.svg', 'acquired_on' => '2025-09-02', 'health_status' => 'stable', 'is_public' => 1,
+     'scientific_name' => 'Spathiphyllum wallisii', 'common_name' => 'Peace lily',
+     'collection_name' => 'Living room',
+     'task' => 'water', 'interval_days' => 4, 'next_due' => mock_date(1),
+     'last_logged_at' => mock_date(-15) . ' 08:40:00'],
 
     ['id' => 46, 'user_id' => 1, 'collection_id' => 3, 'species_id' => 5, 'nickname' => 'Vera',
      'photo' => 'mock/vera.svg', 'acquired_on' => '2025-07-06', 'health_status' => 'thriving', 'is_public' => 0,
      'scientific_name' => 'Aloe vera', 'common_name' => 'Aloe vera',
      'collection_name' => 'Succulents',
-     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(9)],
+     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(9),
+     'last_logged_at' => mock_date(-20) . ' 16:00:00'],
 
     ['id' => 47, 'user_id' => 1, 'collection_id' => 2, 'species_id' => 6, 'nickname' => 'Tommy',
      'photo' => 'mock/tommy.svg', 'acquired_on' => '2025-08-23', 'health_status' => 'sick', 'is_public' => 1,
      'scientific_name' => 'Solanum lycopersicum', 'common_name' => 'Tomato',
      'collection_name' => 'Balcony',
-     'task' => 'water', 'interval_days' => 2, 'next_due' => mock_date(1)],
+     'task' => 'water', 'interval_days' => 2, 'next_due' => mock_date(1),
+     'last_logged_at' => mock_date(-1) . ' 07:46:00'],   // the Health Check on the Dashboard
+
+    // Pearl is in the private Succulents collection, so she is private too, like Vera
+    ['id' => 49, 'user_id' => 1, 'collection_id' => 3, 'species_id' => 8, 'nickname' => 'Pearl',
+     'photo' => 'mock/pearl.svg', 'acquired_on' => '2025-09-27', 'health_status' => 'thriving', 'is_public' => 0,
+     'scientific_name' => 'Echeveria elegans', 'common_name' => 'Mexican snowball',
+     'collection_name' => 'Succulents',
+     'task' => 'water', 'interval_days' => 10, 'next_due' => mock_date(6),
+     'last_logged_at' => mock_date(-26) . ' 10:15:00'],
+];
+
+// Nimali's collections — rows of `collections` (wireframe p11, element 2), plus plant_count,
+// a COUNT() on plants. A collection with is_public = 0 is private: the page shows a lock and hides it from others.
+// The counts are her whole garden (18 plants, as on p11 and the Dashboard); $mock_plants holds only a sample of 8.
+$mock_collections = [
+    ['id' => 1, 'user_id' => 1, 'name' => 'Living room', 'is_public' => 1, 'plant_count' => 7],
+    ['id' => 2, 'user_id' => 1, 'name' => 'Balcony',     'is_public' => 1, 'plant_count' => 6],
+    ['id' => 3, 'user_id' => 1, 'name' => 'Succulents',  'is_public' => 0, 'plant_count' => 5],
 ];
 
 // Care that is due today or overdue — rows of `care_reminders` (wireframe p10), each joined with:
@@ -240,6 +272,7 @@ if (isset($_GET['empty']) && $current_user && current_page() !== 'index.php') {
     $current_user['new_interest_count'] = 0;
 
     $mock_plants        = [];
+    $mock_collections   = [];
     $mock_reminders     = [];
     $mock_attention     = [];
     $mock_new_interests = [];
