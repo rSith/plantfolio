@@ -193,13 +193,13 @@ $mock_listings = [
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 4, 'distance_km' => 3],
 
-    ['id' => 8, 'user_id' => 5, 'plant_id' => null, 'title' => 'Aloe vera pups (4)',
+    ['id' => 8, 'user_id' => 5, 'plant_id' => 61, 'title' => 'Aloe vera pups (4)',
      'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kurunegala',
      'status' => 'open', 'photo' => 'mock/vera.svg', 'created_at' => mock_date(-3) . ' 17:40:00',
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
      'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 2, 'distance_km' => 5],
 
-    ['id' => 9, 'user_id' => 4, 'plant_id' => null, 'title' => "Snake plant 'Laurentii'",
+    ['id' => 9, 'user_id' => 4, 'plant_id' => 59, 'title' => "Snake plant 'Laurentii'",
      'type' => 'swap', 'looking_for' => 'any fern', 'location' => 'Kuliyapitiya',
      'status' => 'open', 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
@@ -346,6 +346,25 @@ $mock_species = [
           'light' => 'Bright, some direct sun', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Low',
           'pet_safe' => 1, 'water_interval_days' => 10, 'fertilise_interval_days' => 60,
           'notes' => 'Water the soil, never into the rosette. A stretched, leaning stem means it wants more light.'],
+
+    // Species of other members' plants, for Explore (P09). The Thai Constellation is a cultivar of
+    // Monstera deliciosa with its own row, because wireframe p16 prints its own scientific name on the card.
+    9 => ['id' => 9, 'common_name' => 'Thai Constellation monstera', 'scientific_name' => "Monstera 'Thai Constellation'",
+          'light' => 'Bright, indirect', 'water' => 'When the top 5 cm of soil are dry', 'humidity' => '60%+ preferred',
+          'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
+          'notes' => 'The cream patches cannot make food, so it grows slower than a green monstera and needs more light.'],
+    10 => ['id' => 10, 'common_name' => 'Swiss cheese vine', 'scientific_name' => 'Monstera adansonii',
+          'light' => 'Bright, indirect', 'water' => 'When the top 3 cm of soil are dry', 'humidity' => '60%+ preferred',
+          'pet_safe' => 0, 'water_interval_days' => 6, 'fertilise_interval_days' => 30,
+          'notes' => 'A climber or a trailer: give it a pole or let it hang. The holes appear as the leaves mature.'],
+    11 => ['id' => 11, 'common_name' => 'Chinese money plant', 'scientific_name' => 'Pilea peperomioides',
+          'light' => 'Bright, indirect', 'water' => 'When the top half of the soil is dry', 'humidity' => '40%+',
+          'pet_safe' => 1, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
+          'notes' => 'Turn the pot a quarter each week so it grows straight. Its baby plants are easy to share.'],
+    12 => ['id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
+          'light' => 'Low to bright, indirect', 'water' => 'When the top 3 cm of soil are dry', 'humidity' => '40%+',
+          'pet_safe' => 0, 'water_interval_days' => 6, 'fertilise_interval_days' => 30,
+          'notes' => 'Pale new leaves mean it wants more light. Pinch the tips to keep it bushy.'],
 ];
 
 // Every reminder of Nimali's plants — rows of `care_reminders`. $mock_reminders above holds only today's three;
@@ -450,10 +469,87 @@ $mock_plant_photos = [
 // Members as other people see them — users rows keyed by id, public columns only (never email or phone),
 // plus the counts stage B calculates (plant_count, rating_avg, rating_count). The Plant Profile joins its owner
 // from here, so the owner card still shows Nimali while you preview the page as a visitor.
+// Towns and the counts of Amaya, Kavindi and Dinesh are from wireframe p16; Ruwan's and every created_at are invented.
 $mock_users = [
     1 => ['id' => 1, 'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
           'location' => 'Kurunegala', 'created_at' => '2025-03-14 09:00:00',
           'plant_count' => 18, 'rating_avg' => 4.9, 'rating_count' => 23],
+    2 => ['id' => 2, 'username' => 'aroid.amaya', 'full_name' => 'Amaya Madushani', 'avatar' => null,
+          'location' => 'Colombo', 'created_at' => '2024-11-02 19:30:00',
+          'plant_count' => 42, 'rating_avg' => 4.8, 'rating_count' => 14],
+    3 => ['id' => 3, 'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+          'location' => 'Kandy', 'created_at' => '2024-08-21 07:15:00',
+          'plant_count' => 64, 'rating_avg' => 5.0, 'rating_count' => 11],
+    4 => ['id' => 4, 'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
+          'location' => 'Negombo', 'created_at' => '2025-01-09 12:00:00',
+          'plant_count' => 37, 'rating_avg' => 4.7, 'rating_count' => 15],
+    5 => ['id' => 5, 'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
+          'location' => 'Kurunegala', 'created_at' => '2025-05-27 18:45:00',
+          'plant_count' => 21, 'rating_avg' => 4.6, 'rating_count' => 9],
+];
+
+// ── Explore (P09, COM-01 to COM-03) ─────────────────────
+
+// Other members' plants — rows of `plants` joined with plant_species (scientific_name, common_name) and
+// collections (collection_name), shaped like $mock_plants but without reminders: those are the owner's own business.
+// Searching "monstera" finds the six monsteras of wireframe p16 (Thai Con, Big Momma, Swiss, Monty, Leafy, Holey);
+// the rest give the filters something to filter. Pip is the Landing page's featured plant. Whose Leafy and Holey are,
+// the collections, dates and the plants after Holey are invented. Photos are placeholder drawings.
+$mock_community_plants = [
+    ['id' => 51, 'user_id' => 2, 'collection_id' => 21, 'species_id' => 11, 'nickname' => 'Pip',
+     'photo' => 'mock/pip.svg', 'acquired_on' => '2025-02-14', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Pilea peperomioides', 'common_name' => 'Chinese money plant',
+     'collection_name' => 'Windowsill', 'last_logged_at' => mock_date(-4) . ' 08:30:00'],
+
+    ['id' => 52, 'user_id' => 3, 'collection_id' => 31, 'species_id' => 9, 'nickname' => 'Thai Con',
+     'photo' => 'mock/monty.svg', 'acquired_on' => '2025-01-05', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => "Monstera 'Thai Constellation'", 'common_name' => 'Thai Constellation monstera',
+     'collection_name' => 'Aroids', 'last_logged_at' => mock_date(-2) . ' 17:10:00'],
+
+    ['id' => 53, 'user_id' => 2, 'collection_id' => 22, 'species_id' => 1, 'nickname' => 'Big Momma',
+     'photo' => 'mock/monty.svg', 'acquired_on' => '2024-11-20', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Monstera deliciosa', 'common_name' => 'Swiss cheese plant',
+     'collection_name' => 'Living room', 'last_logged_at' => mock_date(-6) . ' 19:00:00'],
+
+    ['id' => 54, 'user_id' => 4, 'collection_id' => 41, 'species_id' => 10, 'nickname' => 'Swiss',
+     'photo' => 'mock/monty.svg', 'acquired_on' => '2025-03-02', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Monstera adansonii', 'common_name' => 'Swiss cheese vine',
+     'collection_name' => 'Hallway', 'last_logged_at' => mock_date(-8) . ' 07:50:00'],
+
+    ['id' => 55, 'user_id' => 5, 'collection_id' => 51, 'species_id' => 1, 'nickname' => 'Leafy',
+     'photo' => 'mock/monty.svg', 'acquired_on' => '2025-06-30', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Monstera deliciosa', 'common_name' => 'Swiss cheese plant',
+     'collection_name' => 'Verandah', 'last_logged_at' => mock_date(-11) . ' 16:20:00'],
+
+    ['id' => 56, 'user_id' => 2, 'collection_id' => 22, 'species_id' => 10, 'nickname' => 'Holey',
+     'photo' => 'mock/monty.svg', 'acquired_on' => '2025-08-11', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Monstera adansonii', 'common_name' => 'Swiss cheese vine',
+     'collection_name' => 'Living room', 'last_logged_at' => mock_date(-3) . ' 12:40:00'],
+
+    ['id' => 57, 'user_id' => 3, 'collection_id' => 31, 'species_id' => 12, 'nickname' => 'Hugo',
+     'photo' => 'mock/goldie.svg', 'acquired_on' => '2025-04-18', 'health_status' => 'stable', 'is_public' => 1,
+     'scientific_name' => 'Philodendron hederaceum', 'common_name' => 'Heartleaf philodendron',
+     'collection_name' => 'Aroids', 'last_logged_at' => mock_date(-14) . ' 09:30:00'],
+
+    ['id' => 58, 'user_id' => 5, 'collection_id' => 51, 'species_id' => 2, 'nickname' => 'Marble',
+     'photo' => 'mock/goldie.svg', 'acquired_on' => '2025-07-22', 'health_status' => 'needs_attention', 'is_public' => 1,
+     'scientific_name' => 'Epipremnum aureum', 'common_name' => 'Golden pothos',
+     'collection_name' => 'Verandah', 'last_logged_at' => mock_date(-2) . ' 18:00:00'],
+
+    ['id' => 59, 'user_id' => 4, 'collection_id' => 41, 'species_id' => 3, 'nickname' => 'Spike',
+     'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-02-01', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
+     'collection_name' => 'Hallway', 'last_logged_at' => mock_date(-5) . ' 10:10:00'],
+
+    ['id' => 60, 'user_id' => 3, 'collection_id' => 32, 'species_id' => 8, 'nickname' => 'Rosie',
+     'photo' => 'mock/pearl.svg', 'acquired_on' => '2025-05-09', 'health_status' => 'stable', 'is_public' => 1,
+     'scientific_name' => 'Echeveria elegans', 'common_name' => 'Mexican snowball',
+     'collection_name' => 'Succulent shelf', 'last_logged_at' => mock_date(-18) . ' 15:00:00'],
+
+    ['id' => 61, 'user_id' => 5, 'collection_id' => 52, 'species_id' => 5, 'nickname' => 'Mother Aloe',
+     'photo' => 'mock/vera.svg', 'acquired_on' => '2024-12-12', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Aloe vera', 'common_name' => 'Aloe vera',
+     'collection_name' => 'Garden', 'last_logged_at' => mock_date(-3) . ' 17:40:00'],
 ];
 
 // ── Add a plant: the AI suggestion (P06, ML-13) ─────────
@@ -485,7 +581,11 @@ $mock_species_result_unsure = array_merge($mock_species_result, [
 
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
-$mock_like_counts = [42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5];
+// Thai Con 87, Big Momma 48, Swiss 31, Monty 12, Leafy 9, Holey 7 are from wireframe p16; Pip's 48 from the Landing page.
+$mock_like_counts = [
+    42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5,
+    51 => 48, 52 => 87, 53 => 48, 54 => 31, 55 => 9, 56 => 7, 57 => 22, 58 => 5, 59 => 14, 60 => 11, 61 => 6,
+];
 
 // Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
 // Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
@@ -499,12 +599,13 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $current_user['collection_count']   = 0;
     $current_user['new_interest_count'] = 0;
 
+    // Only her plants' likes go; other members' plants keep theirs. This line must run before $mock_plants is emptied.
+    $mock_like_counts   = array_diff_key($mock_like_counts, array_flip(array_column($mock_plants, 'id')));
     $mock_plants        = [];
     $mock_collections   = [];
     $mock_plant_reminders = [];
     $mock_health_logs   = [];
     $mock_plant_photos  = [];
-    $mock_like_counts   = [];
     $mock_reminders     = [];
     $mock_attention     = [];
     $mock_new_interests = [];
@@ -517,5 +618,29 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_listings = array_values(array_filter($mock_listings, fn ($listing) => $listing['user_id'] !== $current_user['id']));
     $mock_users[$current_user['id']] = array_merge($mock_users[$current_user['id']], [
         'plant_count' => 0, 'rating_avg' => 0, 'rating_count' => 0,
+    ]);
+}
+
+// Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,
+// each joined with its owner (users: username, full_name, avatar, location), plus two calculated columns:
+//   like_count  — COUNT(*) on plant_likes
+//   on_exchange — 1 when an open exchange listing offers this plant (EXISTS on exchange_listings)
+// Built here, after the ?empty switch, so a brand-new Nimali has no plants in it. Stage B: one query with
+// WHERE plants.is_public = 1, so a private plant can never reach the page.
+$listed_plant_ids = array_column(array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open'), 'plant_id');
+
+$mock_public_plants = [];
+foreach (array_merge($mock_plants, $mock_community_plants) as $plant) {
+    if (!$plant['is_public']) {
+        continue;
+    }
+    $owner = $mock_users[$plant['user_id']];
+    $mock_public_plants[] = array_merge($plant, [
+        'username'    => $owner['username'],
+        'full_name'   => $owner['full_name'],
+        'avatar'      => $owner['avatar'],
+        'location'    => $owner['location'],
+        'like_count'  => $mock_like_counts[$plant['id']] ?? 0,
+        'on_exchange' => in_array($plant['id'], $listed_plant_ids, true) ? 1 : 0,
     ]);
 }

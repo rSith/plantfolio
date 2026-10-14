@@ -10,9 +10,10 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // ── Which plant ─────────────────────────────────────────
 // Stage B: SELECT plants.*, plant_species.*, collections.name … WHERE plants.id = ? (one prepared query).
 
+// The mock rows are split in two (Nimali's plants and other members'); the plants table holds them all.
 $plant_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $plant    = null;
-foreach ($mock_plants as $row) {
+foreach (array_merge($mock_plants, $mock_community_plants) as $row) {
     if ($row['id'] === $plant_id) {
         $plant = $row;
         break;
@@ -225,6 +226,9 @@ include __DIR__ . '/../includes/header.php';
       <div class="tab-panel">
         <?php if ($tab === 'story'): ?>
           <?php // Plant story (p12, element 6): newest first; an AI entry carries a sparkle and its confidence ?>
+          <?php if (!$story): ?>
+            <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
+          <?php endif; ?>
           <ol class="story">
             <?php foreach ($story as $number => $log): ?>
               <?php $is_oldest = $number === count($story) - 1; ?>
