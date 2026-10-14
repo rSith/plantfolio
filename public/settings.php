@@ -12,6 +12,64 @@ if (!$current_user) {
     exit;
 }
 
+// ── Saving a card ───────────────────────────────────────
+// Every form sends a hidden field "form" naming its card. Stage F stores nothing: a card that passes its checks
+// comes back to Settings with a green message in that card (Post/Redirect/Get), like Save on the plant form.
+// Stage B, before any of this: check the CSRF token, then update the users row (password: password_verify() the
+// current one, then password_hash() the new one).
+
+$saved_messages = [
+    'profile'   => 'Profile saved.',
+    'email'     => 'Email updated.',
+    'password'  => 'Password updated.',
+    'privacy'   => 'Privacy saved.',
+    'reminders' => 'Reminder settings saved.',
+];
+$card_of = ['profile' => 'profile', 'email' => 'account', 'password' => 'account',
+            'privacy' => 'privacy', 'reminders' => 'reminders'];
+
+$errors = [];   // field name => message, printed under that field
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $form = $_POST['form'] ?? '';
+
+    if (array_key_exists($form, $saved_messages)) {
+        if ($form === 'password') {
+            // The same rules the browser checks, checked again here: the browser's checks can be switched off.
+            // Stage B also adds: password_verify() of the current password, else "Current password is incorrect".
+            $new     = (string) ($_POST['new_password'] ?? '');
+            $confirm = (string) ($_POST['confirm_password'] ?? '');
+
+            if (strlen($new) < 8 || !preg_match('/\d/', $new)) {
+                $errors['new_password'] = 'Use at least 8 characters, including a number.';
+            }
+            if ($new !== $confirm) {
+                $errors['confirm_password'] = "Passwords don't match";
+            }
+        }
+
+        if (!$errors) {
+            header('Location: ' . url('settings.php?saved=' . $form . '#' . $card_of[$form]));
+            exit;
+        }
+    }
+}
+
+// Which card just saved, from the redirect above; anything else in ?saved= is ignored
+$saved = $_GET['saved'] ?? '';
+if (!array_key_exists($saved, $saved_messages)) {
+    $saved = '';
+}
+
+/** The green "saved" message for one card, or nothing. role="status" makes a screen reader announce it. */
+function saved_message($forms, $saved, $saved_messages)
+{
+    if (!in_array($saved, $forms, true)) {
+        return '';
+    }
+    return '<p class="alert alert-success settings-alert" role="status">' . icon('check') . ' ' . e($saved_messages[$saved]) . '</p>';
+}
+
 // Section menu (p22, element 1): jump links to each card. The ids are the cards' id attributes.
 $sections = [
     'profile'   => ['label' => 'Profile',              'icon' => 'user'],
@@ -45,6 +103,7 @@ include __DIR__ . '/../includes/header.php';
       <section class="settings-card" id="profile" aria-labelledby="profile-title">
         <h2 class="settings-card-title" id="profile-title">Profile</h2>
         <p class="settings-card-intro">What other members see on your profile.</p>
+        <?= saved_message(['profile'], $saved, $saved_messages) ?>
 
         <form method="post" action="<?= e(url('settings.php#profile')) ?>" enctype="multipart/form-data">
           <input type="hidden" name="form" value="profile">
@@ -105,6 +164,7 @@ include __DIR__ . '/../includes/header.php';
         <?php // Account and security (p22, element 3): a new password needs the current one ?>
         <section class="settings-card" id="account" aria-labelledby="account-title">
           <h2 class="settings-card-title" id="account-title">Account and security</h2>
+          <?= saved_message(['email', 'password'], $saved, $saved_messages) ?>
 
           <?php // "Change email" opens a small form in place: <details> needs no JavaScript ?>
           <details class="settings-email">
@@ -129,15 +189,25 @@ include __DIR__ . '/../includes/header.php';
               <label class="field-label" for="current-password">Current password</label>
               <input class="input" type="password" id="current-password" name="current_password" autocomplete="current-password" required>
             </div>
+            <?php // An error is printed under its field and linked to it with aria-describedby, so a screen reader reads it
+                  // with the field. aria-invalid turns the border red. Passwords are never printed back into the form. ?>
             <div class="field">
               <label class="field-label" for="new-password">New password</label>
               <input class="input" type="password" id="new-password" name="new_password" autocomplete="new-password"
-                     minlength="8" pattern="(?=.*\d).{8,}" required aria-describedby="new-password-hint">
+                     minlength="8" pattern="(?=.*\d).{8,}" required
+                     aria-describedby="new-password-hint<?= isset($errors['new_password']) ? ' new-password-error' : '' ?>"<?= isset($errors['new_password']) ? ' aria-invalid="true"' : '' ?>>
               <span class="field-hint" id="new-password-hint">At least 8 characters, including a number.</span>
+              <?php if (isset($errors['new_password'])): ?>
+                <span class="field-error" id="new-password-error"><?= e($errors['new_password']) ?></span>
+              <?php endif; ?>
             </div>
             <div class="field">
               <label class="field-label" for="confirm-password">Confirm new password</label>
-              <input class="input" type="password" id="confirm-password" name="confirm_password" autocomplete="new-password" required>
+              <input class="input" type="password" id="confirm-password" name="confirm_password" autocomplete="new-password" required
+                     <?= isset($errors['confirm_password']) ? 'aria-invalid="true" aria-describedby="confirm-password-error"' : '' ?>>
+              <?php if (isset($errors['confirm_password'])): ?>
+                <span class="field-error" id="confirm-password-error"><?= e($errors['confirm_password']) ?></span>
+              <?php endif; ?>
             </div>
             <button class="btn btn-secondary settings-save" type="submit">Update password</button>
           </form>
@@ -147,6 +217,7 @@ include __DIR__ . '/../includes/header.php';
               // so stage B reads a missing value as 0. ?>
         <section class="settings-card" id="privacy" aria-labelledby="privacy-title">
           <h2 class="settings-card-title" id="privacy-title">Privacy</h2>
+          <?= saved_message(['privacy'], $saved, $saved_messages) ?>
           <form method="post" action="<?= e(url('settings.php#privacy')) ?>">
             <input type="hidden" name="form" value="privacy">
             <label class="toggle settings-toggle">
@@ -166,6 +237,7 @@ include __DIR__ . '/../includes/header.php';
             // never hidden and never faked (p22, UX notes). ?>
       <section class="settings-card" id="reminders" aria-labelledby="reminders-title">
         <h2 class="settings-card-title" id="reminders-title">Reminders</h2>
+        <?= saved_message(['reminders'], $saved, $saved_messages) ?>
         <form method="post" action="<?= e(url('settings.php#reminders')) ?>">
           <input type="hidden" name="form" value="reminders">
           <label class="toggle settings-toggle">
