@@ -33,7 +33,7 @@ include __DIR__ . '/../includes/header.php';
 |---|---|---|
 | `?guest` | The site as a visitor who is not logged in | Until `?member`: the choice is kept in the session, like a real login |
 | `?member` | Nimali again | Until `?guest` |
-| `?empty` | Nimali before her first plant (state S1) | That page only |
+| `?empty` | Nimali as a brand-new member with no plants yet (state S1) | Until `?member` or Log in. Create account turns it on |
 
 Opening Log in or Sign up switches to visitor mode by itself, because only visitors use those pages.
 In stage B the session holds the real login and these switches are deleted with `mock-data.php`.

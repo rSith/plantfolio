@@ -46,6 +46,7 @@ if (isset($_GET['guest'])) {
 }
 if (isset($_GET['member'])) {
     $_SESSION['preview_visitor'] = false;
+    $_SESSION['preview_empty']   = false;   // ?member is always Nimali with her full garden
 }
 if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
@@ -55,16 +56,19 @@ if (!empty($_SESSION['preview_visitor'])) {
 function mock_become_visitor()
 {
     $_SESSION['preview_visitor'] = true;
+    $_SESSION['preview_empty']   = false;
     return null;
 }
 
 /**
  * Mock-only: "log in" without checking anything, then open $page. Used by the Log in and Sign up forms, so a demo can
  * walk from the Landing page into the member pages. Stage B replaces it with the real checks and session_regenerate_id().
+ * $new_account = true (Sign up) starts the empty-garden preview, because a brand-new account has no plants yet.
  */
-function mock_log_in_and_go($page)
+function mock_log_in_and_go($page, $new_account = false)
 {
     $_SESSION['preview_visitor'] = false;
+    $_SESSION['preview_empty']   = $new_account;
     header('Location: ' . url($page));
     exit;
 }
@@ -445,15 +449,24 @@ $mock_users = [
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 $mock_like_counts = [42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5];
 
-// Preview switch: add ?empty to a member page to see Nimali's garden before her first plant (state S1).
+// Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
+// Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
+// stay empty until ?member or Log in brings her garden back. Create account turns it on.
 // It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
-if (isset($_GET['empty']) && $current_user && current_page() !== 'index.php') {
+if (isset($_GET['empty'])) {
+    $_SESSION['preview_empty'] = true;
+}
+if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'index.php') {
     $current_user['plant_count']        = 0;
     $current_user['collection_count']   = 0;
     $current_user['new_interest_count'] = 0;
 
     $mock_plants        = [];
     $mock_collections   = [];
+    $mock_plant_reminders = [];
+    $mock_health_logs   = [];
+    $mock_plant_photos  = [];
+    $mock_like_counts   = [];
     $mock_reminders     = [];
     $mock_attention     = [];
     $mock_new_interests = [];
@@ -461,4 +474,10 @@ if (isset($_GET['empty']) && $current_user && current_page() !== 'index.php') {
         'health_counts'  => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
         'upcoming_count' => 0,
     ];
+
+    // A new account has no listings yet, and nothing to count on its public profile
+    $mock_listings = array_values(array_filter($mock_listings, fn ($listing) => $listing['user_id'] !== $current_user['id']));
+    $mock_users[$current_user['id']] = array_merge($mock_users[$current_user['id']], [
+        'plant_count' => 0, 'rating_avg' => 0, 'rating_count' => 0,
+    ]);
 }

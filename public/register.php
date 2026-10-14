@@ -13,7 +13,7 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // Stage F: Create account "logs in" without saving anything and opens the empty Dashboard (state S1),
 // which is what a brand-new member sees (p9). The browser's own checks (required fields, pattern) run first.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    mock_log_in_and_go('dashboard.php?empty');
+    mock_log_in_and_go('dashboard.php', true);
 }
 
 // Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
