@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: golden pothos. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#F1E3D8"/>
+  <rect y="232" width="400" height="68" fill="#E8D5C6"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <g fill="none" stroke="#4E8A45" stroke-width="4" stroke-linecap="round">
+    <path d="M196 192Q186 156 170 136"/>
+    <path d="M200 192V134"/>
+    <path d="M204 192Q214 152 232 128"/>
+    <path d="M176 194Q128 190 122 238"/>
+    <path d="M224 194Q274 190 280 242"/>
+  </g>
+  <g fill="#5E9B4E">
+    <ellipse cx="168" cy="130" rx="17" ry="13" transform="rotate(-30 168 130)"/>
+    <ellipse cx="234" cy="122" rx="17" ry="13" transform="rotate(30 234 122)"/>
+    <ellipse cx="150" cy="162" rx="16" ry="12" transform="rotate(-15 150 162)"/>
+    <ellipse cx="250" cy="158" rx="16" ry="12" transform="rotate(15 250 158)"/>
+    <ellipse cx="114" cy="214" rx="14" ry="11" transform="rotate(-40 114 214)"/>
+    <ellipse cx="288" cy="218" rx="14" ry="11" transform="rotate(40 288 218)"/>
+    <ellipse cx="122" cy="244" rx="13" ry="10"/>
+    <ellipse cx="280" cy="248" rx="13" ry="10"/>
+  </g>
+  <g fill="#7DB36B">
+    <ellipse cx="200" cy="126" rx="17" ry="14"/>
+    <ellipse cx="182" cy="160" rx="15" ry="12" transform="rotate(-20 182 160)"/>
+    <ellipse cx="220" cy="162" rx="15" ry="12" transform="rotate(20 220 162)"/>
+    <ellipse cx="134" cy="204" rx="13" ry="10" transform="rotate(25 134 204)"/>
+    <ellipse cx="268" cy="208" rx="13" ry="10" transform="rotate(-25 268 208)"/>
+  </g>
+  <path d="M158 196h84l-9 66a6 6 0 0 1 -6 5h-54a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="152" y="186" width="96" height="16" rx="4" fill="#C4633C"/>
+</svg>

@@ -1,27 +1,28 @@
 <?php
 // Temporary placeholder — replaced by the real Landing page (P01, task CORE-27) in week 2.
-// Its only job right now: prove the repo is cloned and Apache/PHP serve /public.
+// Its job right now: the "blank page" that shows the page frame from CORE-06 — header, bottom bar and footer.
+
+require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/mock-data.php';
+
+$page_title = 'Welcome';
+
+include __DIR__ . '/../includes/header.php';
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PlantFolio</title>
-  <style>
-    /* Colours from the design system (wireframes p6): Cream, Ink, Forest, Muted */
-    body { font-family: system-ui, sans-serif; background: #F7F4EC; color: #2B2B28;
-           display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    main { text-align: center; padding: 16px; }
-    h1 { color: #2E4A2B; margin-bottom: .25rem; }
-    small { color: #6E6C62; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>PlantFolio 🌿</h1>
-    <p>Where your plants tell their story.</p>
-    <p><small>Setup works — PHP <?= htmlspecialchars(PHP_VERSION) ?> is running.</small></p>
-  </main>
-</body>
-</html>
+<div class="container page">
+  <h1>PlantFolio</h1>
+  <p>Where your plants tell their story.</p>
+
+  <?php if ($current_user): ?>
+    <p>You are seeing the frame as the member <strong>@<?= e($current_user['username']) ?></strong>.</p>
+    <p><a class="btn btn-secondary" href="<?= e(url('?guest')) ?>">View as a visitor</a></p>
+  <?php else: ?>
+    <p>You are seeing the frame as a <strong>visitor</strong> who is not logged in.</p>
+    <p><a class="btn btn-secondary" href="<?= e(url('')) ?>">View as a member</a></p>
+  <?php endif; ?>
+
+  <p class="text-small">Setup works — PHP <?= e(PHP_VERSION) ?> is running (<?= e(config('app_env')) ?>).
+    Most links in the frame lead to pages that are built from week 2 onward, so they show "Not Found" for now.
+    The components are in the <a href="<?= e(url('styleguide.php')) ?>">style guide</a>.</p>
+</div>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

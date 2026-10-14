@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: tomato plant. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#EEE8DB"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <path d="M216 194V52" fill="none" stroke="#B08A5A" stroke-width="4" stroke-linecap="round"/>
+  <g fill="none" stroke="#3C7C49" stroke-width="4" stroke-linecap="round">
+    <path d="M200 194Q194 142 206 102Q212 80 204 60"/>
+    <path d="M198 158L174 148M200 150L230 138M200 118L176 110M204 110L234 102M204 80L188 72M206 76L224 68"/>
+    <path d="M196 140L186 130M206 128L224 124M202 104L198 98"/>
+  </g>
+  <g fill="#3C7C49">
+    <ellipse cx="166" cy="146" rx="15" ry="9" transform="rotate(20 166 146)"/>
+    <ellipse cx="240" cy="134" rx="15" ry="9" transform="rotate(-20 240 134)"/>
+    <ellipse cx="168" cy="108" rx="14" ry="9" transform="rotate(18 168 108)"/>
+    <ellipse cx="180" cy="68" rx="13" ry="8" transform="rotate(25 180 68)"/>
+  </g>
+  <g fill="#4A8A55">
+    <ellipse cx="244" cy="98" rx="14" ry="9" transform="rotate(-18 244 98)"/>
+    <ellipse cx="232" cy="64" rx="13" ry="8" transform="rotate(-25 232 64)"/>
+    <ellipse cx="204" cy="50" rx="12" ry="8" transform="rotate(-70 204 50)"/>
+  </g>
+  <circle cx="182" cy="126" r="12" fill="#C9432E"/>
+  <circle cx="228" cy="122" r="10" fill="#C9432E"/>
+  <circle cx="196" cy="94" r="8" fill="#DC8A3A"/>
+  <g fill="#FFFFFF" opacity=".35">
+    <circle cx="178" cy="122" r="3.5"/><circle cx="225" cy="119" r="3"/>
+  </g>
+  <path d="M158 196h84l-9 66a6 6 0 0 1 -6 5h-54a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="152" y="186" width="96" height="16" rx="4" fill="#C4633C"/>
+</svg>

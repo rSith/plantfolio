@@ -30,7 +30,7 @@ The proposal defines **10 tables**. Task **DES-07** adds the fields the wirefram
 | `plants` | Each individual plant profile | id, user_id, collection_id, species_id, nickname, photo, acquired_on, health_status | is_public |
 | `health_logs` | Dated health timeline (the plant story) | id, plant_id, status, note, photo, source (manual / ML), logged_at | — |
 | `care_reminders` | Recurring care tasks | id, plant_id, task (water, fertilise), interval_days, last_done, next_due | — |
-| `exchange_listings` | Plants offered for exchange | id, user_id, plant_id, title, description, location, status (open, closed) | type (swap / free / either), looking_for, share_email, share_phone, approx_area, photo, exchanged_with |
+| `exchange_listings` | Plants offered for exchange | id, user_id, plant_id, title, description, location, status (open, closed) | type (swap / free / either), looking_for, share_email, share_phone, approx_area, photo, exchanged_with, created_at ("2 days ago" on cards, Newest sort) |
 | `listing_interests` | Interest expressed in a listing | id, listing_id, user_id, message, created_at | status (new / seen / withdrawn) |
 | `user_ratings` | Trust ratings between traders | id, rater_id, rated_id, listing_id, score (1–5), comment | UNIQUE (rater_id, listing_id) |
 | `ml_predictions` | Every recognition or diagnosis | id, user_id, plant_id, type, predicted_label, confidence, image_path, created_at | model_version (from the API contract, DES-10) |

@@ -87,6 +87,10 @@ because mock data uses their column names.
 | P03 Dashboard | CORE-24 (UI) | Greeting + counts, Today's care (due = terracotta, overdue = red), Needs attention, Quick actions, Garden at a glance | MOD-06 |
 | S1 Empty garden | CORE-25 (UI) | Shown on Dashboard and My Garden when the mock user has no plants | MOD-06 |
 
+Extra page, not in the wireframes: `about.php` (About, Community guidelines, Contact) — built early, on 13 Oct, so the
+footer links work. P02's "community guidelines" link points to `about.php#guidelines`. The contact details are
+samples; **replace them in week 16** (delivery).
+
 **Learn:** semantic HTML, page layout with grid, forms and labels (MDN).
 Also this week: DES-05 is complete — the Figma link is in the README; mark it Done.
 
