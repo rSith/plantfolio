@@ -258,3 +258,18 @@ function confidence_level($confidence)
 
     return ['key' => 'low', 'label' => 'Not sure'];
 }
+
+/**
+ * Words for an ML result. A species result already holds a name; a disease result holds the model's class name,
+ * "Tomato___Early_blight", which becomes "Early blight": the part after the plant name, underscores as spaces.
+ */
+function prediction_name($prediction)
+{
+    if ($prediction['type'] === 'species') {
+        return $prediction['common_name'] ?? $prediction['predicted_label'];
+    }
+
+    $parts = explode('___', $prediction['predicted_label']);
+
+    return ucfirst(strtolower(str_replace('_', ' ', end($parts))));
+}

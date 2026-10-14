@@ -29,7 +29,8 @@ $health_statuses = [
 
 // A member for the samples: the owner columns of a listing row (username, full_name, avatar, rating).
 // Not $current_user, which is null when the page is opened with ?guest.
-$sample_member = $mock_listings[0];
+// Found by id (Nimali's listing, 7), so adding listings to the mock data never changes the samples.
+$sample_member = $mock_listings[array_search(7, array_column($mock_listings, 'id'))];
 
 include __DIR__ . '/../includes/header.php';
 ?>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: Pilea peperomioides (Chinese money plant). Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#F3E6DC"/>
+  <rect y="232" width="400" height="68" fill="#EAD8CA"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <g fill="none" stroke="#5E8A4C" stroke-width="3" stroke-linecap="round">
+    <path d="M200 190V112"/>
+    <path d="M198 186Q170 160 140 150"/>
+    <path d="M202 186Q232 158 262 148"/>
+    <path d="M198 188Q160 182 122 186"/>
+    <path d="M202 188Q242 180 280 184"/>
+    <path d="M199 178Q184 132 168 108"/>
+    <path d="M201 178Q218 130 234 106"/>
+  </g>
+  <g fill="#6E9E58">
+    <circle cx="200" cy="96" r="20"/>
+    <circle cx="132" cy="146" r="18"/>
+    <circle cx="270" cy="144" r="18"/>
+    <circle cx="112" cy="186" r="15"/>
+    <circle cx="290" cy="184" r="15"/>
+  </g>
+  <g fill="#82B26A">
+    <circle cx="164" cy="100" r="17"/>
+    <circle cx="238" cy="98" r="17"/>
+  </g>
+  <g fill="#4F7A3E">
+    <circle cx="200" cy="96" r="2.5"/><circle cx="132" cy="146" r="2.5"/><circle cx="270" cy="144" r="2.5"/>
+    <circle cx="112" cy="186" r="2"/><circle cx="290" cy="184" r="2"/>
+    <circle cx="164" cy="100" r="2"/><circle cx="238" cy="98" r="2"/>
+  </g>
+  <path d="M164 196h72l-8 64a6 6 0 0 1 -6 5h-44a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="158" y="186" width="84" height="16" rx="4" fill="#C4633C"/>
+</svg>

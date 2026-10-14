@@ -100,12 +100,18 @@ $mock_reminders = [
      'nickname' => 'Sergeant', 'photo' => 'mock/sergeant.svg', 'common_name' => 'Snake plant'],
 ];
 
-// Open listings on the marketplace — rows of `exchange_listings` (wireframe p17), each joined with:
+// Open listings on the marketplace, newest first — rows of `exchange_listings` (wireframe p17), each joined with:
 //   users → username, full_name, avatar of the owner
 // and four calculated columns: rating_avg and rating_count (from user_ratings), interest_count
 // (from listing_interests) and distance_km (between the viewer's town and the listing's town).
 // Columns only the detail page needs (description, share_email, share_phone …) are added with that page.
 $mock_listings = [
+    ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
+     'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kandy',
+     'status' => 'open', 'photo' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 18:30:00',
+     'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 42],
+
     ['id' => 7, 'user_id' => 1, 'plant_id' => 43, 'title' => "Pothos 'Golden', 3 rooted cuttings",
      'type' => 'swap', 'looking_for' => 'succulents or a snake plant pup', 'location' => 'Kurunegala',
      'status' => 'open', 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00',
@@ -123,4 +129,49 @@ $mock_listings = [
      'status' => 'open', 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18],
+];
+
+// ── Landing page (P01, CORE-27) ─────────────────────────
+
+// Site-wide counts for the Landing page. The wireframe says they are read live, never typed into the page.
+// Stage B: SELECT COUNT(*) FROM users · SELECT COUNT(*) FROM exchange_listings WHERE status = 'open'
+$mock_site_stats = [
+    'member_count'       => 1248,   // shown rounded down: "1,200+"
+    'open_listing_count' => 37,
+];
+
+// The newest members, for the avatar row in the hero — users rows, newest first.
+// Stage B: SELECT id, username, full_name, avatar FROM users ORDER BY created_at DESC LIMIT 4
+$mock_recent_members = [
+    ['id' => 2, 'username' => 'aroid.amaya',   'full_name' => 'Amaya Madushani',     'avatar' => null],
+    ['id' => 4, 'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara',   'avatar' => null],
+    ['id' => 5, 'username' => 'ruwan.roots',   'full_name' => 'Ruwan Rathnayake',    'avatar' => null],
+    ['id' => 3, 'username' => 'kandy.jungle',  'full_name' => 'Kavindi Jayawardena', 'avatar' => null],
+];
+
+// A public plant from another member, for the hero collage — a plants row joined with
+// plant_species (scientific_name) and users (username, full_name, avatar), plus like_count,
+// a COUNT() on plant_likes (the optional COM-15 table).
+$mock_featured_plant = [
+    'id' => 51, 'user_id' => 2, 'nickname' => 'Pip', 'photo' => 'mock/pip.svg',
+    'health_status' => 'thriving', 'is_public' => 1,
+    'scientific_name' => 'Pilea peperomioides',
+    'username' => 'aroid.amaya', 'full_name' => 'Amaya Madushani', 'avatar' => null,
+    'like_count' => 48,
+];
+
+// Results from the ML service — rows of `ml_predictions`, one per type (wireframes p14, p15).
+// For a species, predicted_label is the scientific name and common_name is joined from plant_species on it.
+// For a disease, predicted_label is the model's class name, turned into words by prediction_name().
+// The Landing page uses them for the collage chip and the smart tools teaser.
+$mock_predictions = [
+    ['id' => 3, 'user_id' => 1, 'plant_id' => 44, 'type' => 'species',
+     'predicted_label' => 'Dracaena trifasciata', 'confidence' => 0.96,
+     'image_path' => 'mock/sergeant.svg', 'created_at' => mock_date(-40) . ' 10:20:00',
+     'common_name' => 'Snake plant'],
+
+    ['id' => 4, 'user_id' => 1, 'plant_id' => 47, 'type' => 'disease',
+     'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
+     'image_path' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 07:45:00',
+     'common_name' => null],
 ];
