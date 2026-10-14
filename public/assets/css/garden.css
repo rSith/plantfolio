@@ -1,0 +1,173 @@
+/* My Garden only (P04, wireframe p11, CORE-14 and CORE-15). Loaded by garden.php through $page_css. */
+/* Mobile-first: one card column on a phone, two on a tablet, four on a desktop (breakpoints on p23). */
+
+/* ── Header ─────────────────────────────────────────── */
+
+.garden-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.garden-title {
+  margin-bottom: var(--space-4);
+}
+
+.garden-summary {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.garden-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* ── Collection tabs ────────────────────────────────── */
+
+/* One line of chips. On a phone the line is wider than the screen, so it scrolls sideways on its own
+   instead of making the whole page scroll. The padding leaves room for the focus outline. */
+.collection-tabs {
+  display: flex;
+  gap: var(--space-8);
+  margin: 0 calc(var(--space-16) * -1) var(--space-16);
+  padding: var(--space-4) var(--space-16);
+  overflow-x: auto;
+  scrollbar-width: none;   /* the chips cut off at the edge already show there is more */
+}
+
+.collection-tabs .chip {
+  flex-shrink: 0;
+}
+
+/* The lock keeps the chip's text colour, so it turns white on the selected chip like the words */
+.collection-tabs .chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+@media (min-width: 768px) {
+  .collection-tabs {
+    flex-wrap: wrap;
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+    overflow: visible;
+  }
+}
+
+/* ── Search, filter, sort ───────────────────────────── */
+
+/* Phone: the search box with Apply beside it, then each list on its own full-width line
+   ("Sort: Recently updated" does not fit in half a phone). Week 6 moves these into a bottom sheet (p23). */
+.garden-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-8);
+  margin-bottom: var(--space-24);
+}
+
+.garden-apply {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.toolbar-select {
+  grid-column: 1 / -1;
+}
+
+/* A list with its name in front, "Status: All", drawn as one box like on p11.
+   The words are inside the <label>, so a click on them opens the list too. */
+.toolbar-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.toolbar-select-label {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  pointer-events: none;
+}
+
+.toolbar-select .input {
+  padding-left: calc(var(--space-48) + var(--space-8));
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+/* "Sort:" is shorter than "Status:" */
+.toolbar-select:nth-of-type(2) .input {
+  padding-left: var(--space-48);
+}
+
+@media (min-width: 768px) {
+  .garden-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* The search box takes whatever room the lists and Apply leave, so all four fit on one line */
+  .garden-search {
+    flex: 1 1 160px;
+  }
+
+  .toolbar-select .input {
+    width: auto;
+  }
+}
+
+/* A desktop has more room than the search needs; a 320px box matches p11 */
+@media (min-width: 1024px) {
+  .garden-search {
+    max-width: 320px;
+  }
+}
+
+/* "2 plants match · Clear filters" */
+.garden-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-16);
+  margin: calc(var(--space-8) * -1) 0 var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.garden-results a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  font-weight: var(--weight-medium);
+}
+
+/* ── Plant grid ─────────────────────────────────────── */
+
+.plant-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .plant-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .plant-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gutter);
+  }
+}

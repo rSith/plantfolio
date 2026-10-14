@@ -40,6 +40,19 @@ function url($path = '')
     return rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
 }
 
+/**
+ * Address of a page with a query string, leaving out empty values:
+ * query_url('garden.php', ['collection' => 2, 'q' => '']) gives …/garden.php?collection=2.
+ * Filters keep their choices in the address, so a filtered page can be bookmarked, shared and reloaded.
+ * http_build_query() URL-encodes each value, so a search like "snake plant" becomes q=snake+plant.
+ */
+function query_url($page, array $params)
+{
+    $params = array_filter($params, fn ($value) => $value !== null && $value !== '');
+
+    return url($page) . ($params ? '?' . http_build_query($params) : '');
+}
+
 /** The file name of the page the browser asked for, e.g. "garden.php". */
 function current_page()
 {
