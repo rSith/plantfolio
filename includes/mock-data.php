@@ -421,6 +421,15 @@ $mock_plant_photos = [
     ['id' => 211, 'plant_id' => 46, 'path' => 'mock/vera.svg',  'created_at' => mock_date(-20) . ' 16:00:00'],
 ];
 
+// Members as other people see them — users rows keyed by id, public columns only (never email or phone),
+// plus the counts stage B calculates (plant_count, rating_avg, rating_count). The Plant Profile joins its owner
+// from here, so the owner card still shows Nimali while you preview the page as a visitor.
+$mock_users = [
+    1 => ['id' => 1, 'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
+          'location' => 'Kurunegala', 'created_at' => '2025-03-14 09:00:00',
+          'plant_count' => 18, 'rating_avg' => 4.9, 'rating_count' => 23],
+];
+
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 $mock_like_counts = [42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5];

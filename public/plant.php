@@ -1,7 +1,8 @@
 <?php
 // Plant Profile (P05, wireframe p12): one page per plant that tells its story — photos, identity, care needs,
 // reminders and a dated health timeline (CORE-18, UI half). plant.php?id=42 shows Monty.
-// Logged in · public read: anyone may open a public plant; a private plant is "not found" to everyone but its owner.
+// Logged in · public read: anyone may open a public plant and sees it read-only, with an owner card and a like
+// button (CORE-21, UI half); a private plant is "not found" to everyone but its owner.
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
@@ -58,6 +59,10 @@ if (!$photos) {
 }
 $like_count = $mock_like_counts[$plant['id']] ?? 0;
 
+// The owner, joined from users (public columns only). Visitors see an owner card instead of the edit controls.
+$owner     = $mock_users[$plant['user_id']];
+$owner_url = url('user.php?u=' . urlencode($owner['username']));
+
 // The watering reminder fills two tiles of Care at a glance (p12, element 5): "Every 7 days" and "Next watering"
 $water = null;
 foreach ($reminders as $reminder) {
@@ -76,6 +81,9 @@ $tabs = [
     'reminders' => 'Reminders',
     'photos'    => 'Photos',
 ];
+if (!$is_owner) {
+    unset($tabs['reminders']);   // reminders are the owner's to-do list, not part of the public story
+}
 $tab = $_GET['tab'] ?? 'story';
 if (!array_key_exists($tab, $tabs)) {
     $tab = 'story';
@@ -97,10 +105,16 @@ $page_css       = 'plant.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
+  <?php // The owner sees where the plant lives in their garden; anyone else sees whose plant it is ?>
   <nav aria-label="Breadcrumb">
     <ol class="breadcrumb plant-breadcrumb">
-      <li><a href="<?= e(url('garden.php')) ?>">My Garden</a></li>
-      <li><a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a></li>
+      <?php if ($is_owner): ?>
+        <li><a href="<?= e(url('garden.php')) ?>">My Garden</a></li>
+        <li><a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a></li>
+      <?php else: ?>
+        <li><a href="<?= e(url('explore.php')) ?>">Explore</a></li>
+        <li><a href="<?= e($owner_url) ?>">@<?= e($owner['username']) ?></a></li>
+      <?php endif; ?>
       <li><span aria-current="page"><?= e($plant['nickname']) ?></span></li>
     </ol>
   </nav>
@@ -130,7 +144,7 @@ include __DIR__ . '/../includes/header.php';
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
         <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
         <span><?= e($plant['collection_name']) ?></span>
-        <span>With you since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
+        <span><?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
       </p>
 
       <?php if ($is_owner): ?>
@@ -141,6 +155,16 @@ include __DIR__ . '/../includes/header.php';
           <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
           <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
           <?php partial('plant-menu', ['plant' => $plant]); ?>
+        </div>
+      <?php else: ?>
+        <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
+        <div class="plant-actions">
+          <?php if ($current_user): ?>
+            <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
+            <button type="button" class="btn btn-secondary" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
+          <?php else: ?>
+            <a class="btn btn-secondary" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
+          <?php endif; ?>
         </div>
       <?php endif; ?>
 
@@ -158,17 +182,23 @@ include __DIR__ . '/../includes/header.php';
           <span class="care-tile-icon"><?= icon('droplets') ?></span>
           <span><span class="care-tile-label">Humidity</span><span class="care-tile-value"><?= e($species['humidity'] ?? 'Not known') ?></span></span>
         </div>
-        <?php if ($water): ?>
+        <?php if ($water && $is_owner): ?>
           <div class="care-tile care-tile-<?= e($water_due['state']) ?>">
             <span class="care-tile-icon"><?= icon('calendar') ?></span>
             <span>
               <span class="care-tile-label">Next watering</span>
               <span class="care-tile-value"><?= e($water_due['state'] === 'due' ? 'Today' : $water_due['text']) ?></span>
-              <?php if ($is_owner && $water_due['state'] !== 'upcoming'): ?>
+              <?php if ($water_due['state'] !== 'upcoming'): ?>
                 <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
                 <button type="button" class="care-tile-action">Mark watered</button>
               <?php endif; ?>
             </span>
+          </div>
+        <?php elseif ($species): ?>
+          <?php // A visitor has no use for the owner's next watering; pet safety helps someone thinking of a swap ?>
+          <div class="care-tile">
+            <span class="care-tile-icon"><?= icon('paw-print') ?></span>
+            <span><span class="care-tile-label">Pets</span><span class="care-tile-value"><?= $species['pet_safe'] ? 'Pet-safe' : 'Not pet-safe' ?></span></span>
           </div>
         <?php endif; ?>
       </div>
@@ -305,6 +335,24 @@ include __DIR__ . '/../includes/header.php';
             <li><?= icon('heart') ?> <?= e($like_count) ?> <?= $like_count === 1 ? 'like' : 'likes' ?> from the community</li>
           <?php endif; ?>
         </ul>
+      </aside>
+    <?php else: ?>
+      <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
+      <aside class="panel plant-side owner-card" aria-labelledby="owner-title">
+        <h2 class="label" id="owner-title">Grown by</h2>
+        <div class="owner-card-member">
+          <?php partial('avatar', ['member' => $owner]); ?>
+          <span>
+            <strong><?= e($owner['full_name']) ?></strong>
+            <span class="text-small">@<?= e($owner['username']) ?> · <?= e($owner['location']) ?></span>
+          </span>
+        </div>
+        <ul class="plant-facts">
+          <li><?= icon('leaf') ?> <?= e($owner['plant_count']) ?> plants · member since <?= e(date('M Y', strtotime($owner['created_at']))) ?></li>
+          <li><?php partial('rating', ['rating' => $owner]); ?> as a trader</li>
+          <li><?= icon('heart') ?> <?= e($like_count) ?> <?= $like_count === 1 ? 'like' : 'likes' ?> from the community</li>
+        </ul>
+        <a class="btn btn-secondary owner-card-btn" href="<?= e($owner_url) ?>">View profile</a>
       </aside>
     <?php endif; ?>
   </div>
