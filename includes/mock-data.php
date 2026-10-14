@@ -445,6 +445,33 @@ $mock_users = [
           'plant_count' => 18, 'rating_avg' => 4.9, 'rating_count' => 23],
 ];
 
+// ── Add a plant: the AI suggestion (P06, ML-13) ─────────
+
+// What the Flask service answers for an uploaded photo (POST /predict/species, ml-service/README.md):
+// the model version and the top 3 species, most likely first. Stage M: includes/ml-client.php receives this
+// from cURL, json_decode()s it into exactly this shape, and stores the top result in ml_predictions.
+// upload_name and upload_size describe the photo that was sent; they come from $_FILES, not from Flask.
+$mock_species_result = [
+    'model_version' => 'species-mobilenetv2-v1',
+    'upload_name'   => 'monty.jpg',
+    'upload_size'   => 2516582,   // bytes: 2.4 MB
+    'image_path'    => 'mock/monty.svg',
+    'predictions'   => [
+        ['label' => 'Monstera deliciosa',          'confidence' => 0.91],
+        ['label' => 'Philodendron bipinnatifidum', 'confidence' => 0.06],
+        ['label' => 'Epipremnum pinnatum',         'confidence' => 0.02],
+    ],
+];
+
+// The same photo when the model is not sure (state S3, wireframe p24): below 60% it is never shown as an answer.
+$mock_species_result_unsure = array_merge($mock_species_result, [
+    'predictions' => [
+        ['label' => 'Philodendron bipinnatifidum', 'confidence' => 0.48],
+        ['label' => 'Monstera deliciosa',          'confidence' => 0.31],
+        ['label' => 'Epipremnum pinnatum',         'confidence' => 0.12],
+    ],
+]);
+
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 $mock_like_counts = [42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5];

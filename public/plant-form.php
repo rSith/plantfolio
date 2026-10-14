@@ -1,6 +1,8 @@
 <?php
 // Add or Edit Plant (P06, wireframe p13): a new plant in under a minute, photo first (CORE-16, UI half).
 // plant-form.php adds a plant; plant-form.php?id=42 edits Monty with the same form, filled in (p13, UX notes).
+// Stage F preview: plant-form.php?ai shows the form after a photo was analysed (p13 as drawn, ML-13 UI half),
+// ?ai=unsure the same when the model is not sure (state S3).
 // Members only. A full page, not a modal: the form is long, and its own address lets a link open it directly.
 // Stage F only draws the form; stage B checks it, saves the photo (CORE-17) and the plants, care_reminders and
 // first health_logs rows, then opens the new plant's profile.
@@ -104,6 +106,54 @@ if ($is_edit) {
     $reminder_source = 'The current schedule for ' . $plant['nickname'] . '. Change it anytime.';
 }
 
+// ── The AI suggestion (add mode only) ───────────────────
+// Stage F: ?ai pretends a photo was uploaded and analysed, using the mock Flask answer. Stage M: the upload is
+// sent to Flask (includes/ml-client.php), and if Flask is offline this whole block is skipped: the form simply
+// stays manual, so adding a plant never depends on the ML service.
+// ?pick=1 or 2 applies an alternative, ?pick=none clears the species. They are links, so they work without
+// JavaScript; week 7 can apply a suggestion without reloading. Nothing is saved until Save plant (p13, UX notes).
+
+$ai = null;
+if (!$is_edit && isset($_GET['ai'])) {
+    $ai_mode = $_GET['ai'] === 'unsure' ? 'unsure' : 'sure';
+    $ai      = $ai_mode === 'unsure' ? $mock_species_result_unsure : $mock_species_result;
+
+    $top        = $ai['predictions'][0];
+    $top_level  = confidence_level($top['confidence']);
+    $is_unsure  = $top_level['key'] === 'low';   // below 60%: never shown as an answer (S3)
+
+    // Which suggestion fills the Species field: the top one if the model is sure, or the one the member picked
+    // Whitelist: "none" or the number of a suggestion. (int) 'abc' would be 0, so the text itself is compared.
+    $allowed = array_merge(['none'], array_map('strval', array_keys($ai['predictions'])));
+    $pick    = $_GET['pick'] ?? ($is_unsure ? 'none' : '0');
+    if (!in_array($pick, $allowed, true)) {
+        $pick = $is_unsure ? 'none' : '0';
+    }
+    $applied = $pick === 'none' ? null : (int) $pick;
+
+    // Species we know get their common name and their care guide; the model may also name species we have not
+    $species_by_name = array_column($mock_species, null, 'scientific_name');
+
+    $values['photo'] = $ai['image_path'];
+    if ($applied !== null) {
+        $chosen            = $ai['predictions'][$applied]['label'];
+        $values['species'] = $chosen;
+
+        if (isset($species_by_name[$chosen])) {
+            $guide = $species_by_name[$chosen];
+            $reminder_values['water']['interval_days']     = $guide['water_interval_days'];
+            $reminder_values['fertilise']['interval_days'] = $guide['fertilise_interval_days'];
+            $reminder_values['fertilise']['start']         = date('Y-m-d', strtotime('+' . $guide['fertilise_interval_days'] . ' days'));
+            $reminder_source = 'Suggested from the ' . $guide['common_name'] . ' care guide. Change them anytime.';
+        }
+    }
+
+    // Links that keep the preview: plant-form.php?ai&pick=1
+    $ai_url = function ($pick) use ($ai_mode) {
+        return url('plant-form.php?ai' . ($ai_mode === 'unsure' ? '=unsure' : '') . '&pick=' . $pick);
+    };
+}
+
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
 $form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
 
@@ -150,10 +200,60 @@ include __DIR__ . '/../includes/header.php';
           <?php endif; ?>
           <input class="visually-hidden" type="file" id="plant-photo" name="photo"
                  accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint">
-          <p class="field-hint photo-hint" id="photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
+          <?php if ($ai): ?>
+            <p class="field-hint photo-hint" id="photo-hint"><?= icon('image') ?> <?= e($ai['upload_name']) ?> · <?= e(number_format($ai['upload_size'] / 1048576, 1)) ?> MB · uploaded</p>
+          <?php else: ?>
+            <p class="field-hint photo-hint" id="photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
+          <?php endif; ?>
         </section>
 
-        <?php if (!$is_edit): ?>
+        <?php if ($ai): ?>
+          <?php // AI suggestion (p13, element 2): the top species with its confidence, two alternatives with Use,
+                // and the manual way out (element 3). The member decides; the AI only suggests. ?>
+          <section class="form-card ai-card" aria-labelledby="ai-title">
+            <h2 class="ai-title" id="ai-title"><?= icon('sparkles') ?> Suggested species</h2>
+
+            <?php if ($is_unsure): ?>
+              <?php // S3: below 60% the result is not presented as an answer, only as possibilities ?>
+              <p class="alert alert-warning ai-unsure"><?= icon('info') ?> <span><strong>Not sure.</strong> The photo did not match any species clearly. Choose the species yourself, or try a sharper photo in daylight.</span></p>
+            <?php endif; ?>
+
+            <ul class="ai-list">
+              <?php foreach ($ai['predictions'] as $number => $prediction): ?>
+                <?php
+                $known     = $species_by_name[$prediction['label']] ?? null;
+                $is_top    = $number === 0 && !$is_unsure;
+                $is_chosen = $number === $applied;
+                $percent   = round($prediction['confidence'] * 100);
+                ?>
+                <li class="ai-option<?= $is_top ? ' ai-option-top' : '' ?>">
+                  <div class="ai-option-head">
+                    <span>
+                      <span class="scientific-name ai-option-name"><?= e($prediction['label']) ?></span>
+                      <?php if ($known): ?><span class="text-small"><?= e($known['common_name']) ?></span><?php endif; ?>
+                    </span>
+                    <?php if ($is_chosen): ?>
+                      <span class="btn btn-primary btn-sm ai-applied"><?= icon('check') ?> Applied</span>
+                    <?php else: ?>
+                      <a class="btn btn-ghost btn-sm" href="<?= e($ai_url($number)) ?>">Use<span class="visually-hidden"> <?= e($prediction['label']) ?></span></a>
+                    <?php endif; ?>
+                  </div>
+                  <?php if ($is_top): ?>
+                    <?php partial('confidence-meter', ['prediction' => $prediction]); ?>
+                  <?php else: ?>
+                    <?php // Alternatives only show their number: the confidence word belongs to the top result ?>
+                    <div class="confidence-row ai-option-meter">
+                      <div class="meter" aria-hidden="true"><span class="meter-fill" style="width: <?= e($percent) ?>%"></span></div>
+                      <span class="confidence-value"><?= e($percent) ?>%</span>
+                    </div>
+                  <?php endif; ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+
+            <a class="ai-manual" href="<?= e($ai_url('none')) ?>#species">None of these? Choose the species manually</a>
+          </section>
+        <?php elseif (!$is_edit): ?>
           <?php // Until a photo is analysed, the suggestion card explains what will happen (p13, elements 2–3) ?>
           <section class="form-card ai-card ai-card-waiting" aria-labelledby="ai-title">
             <h2 class="ai-title" id="ai-title"><?= icon('sparkles') ?> Suggested species</h2>
@@ -175,9 +275,21 @@ include __DIR__ . '/../includes/header.php';
           <?php // A text box with a list of known species (<datalist>): typing suggests matches, but any name is allowed.
                 // Stage B looks the name up in plant_species and stores its species_id. ?>
           <div class="field">
-            <label class="field-label" for="species">Species <span class="field-optional">(optional)</span></label>
-            <input class="input species-input" type="text" id="species" name="species" value="<?= e($values['species']) ?>"
-                   list="species-list" placeholder="Start typing, e.g. Monstera" maxlength="120" autocomplete="off">
+            <div class="species-label">
+              <label class="field-label" for="species">Species <span class="field-optional">(optional)</span></label>
+              <?php if ($ai && $applied !== null): ?>
+                <?php // Filled-by-AI tag (p13, element 4): says which field the AI filled; Clear empties it for typing ?>
+                <span class="badge badge-tag ai-tag"><?= icon('sparkles') ?> Filled by AI</span>
+              <?php endif; ?>
+            </div>
+            <div class="species-box">
+              <input class="input species-input" type="text" id="species" name="species" value="<?= e($values['species']) ?>"
+                     list="species-list" placeholder="Start typing, e.g. Monstera" maxlength="120" autocomplete="off">
+              <?php if ($ai && $applied !== null): ?>
+                <?php // The × inside the field (p13, element 4) clears the AI's choice so the member can type their own ?>
+                <a class="ai-clear" href="<?= e($ai_url('none')) ?>#species" aria-label="Clear the species the AI filled in"><?= icon('x') ?></a>
+              <?php endif; ?>
+            </div>
             <datalist id="species-list">
               <?php foreach ($mock_species as $species): ?>
                 <option value="<?= e($species['scientific_name']) ?>"><?= e($species['common_name']) ?></option>
