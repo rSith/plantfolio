@@ -26,6 +26,12 @@ $current_user = [
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
     'created_at' => '2025-03-14 09:00:00',   // "Member since Mar 2025"
 
+    // Preferences from Settings (wireframe p22, cards 4 and 5). Not in the table plan yet: proposed users
+    // columns for DES-07, each a TINYINT 0/1. Names are my proposal.
+    'new_plants_public'   => 1,   // Privacy: new plants start Public on the Add Plant form
+    'show_listing_area'   => 1,   // Privacy: listings show the approximate area
+    'dashboard_reminders' => 1,   // Reminders: care tasks appear on the Dashboard
+
     // Not columns of `users`: stage B calculates these with COUNT() and AVG() on other tables.
     'plant_count'      => 18,
     'collection_count' => 3,

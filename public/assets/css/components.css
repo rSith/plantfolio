@@ -469,8 +469,10 @@ button.menu-item {
   border: 0;
 }
 
+/* align-content: start keeps the label and input at their natural height when a field sits beside a taller one */
 .field {
   display: grid;
+  align-content: start;
   gap: var(--space-4);
   margin-bottom: var(--space-16);
 }
@@ -583,6 +585,18 @@ textarea.input {
 @media (min-width: 768px) {
   .input {
     font-size: var(--text-body-sm);
+  }
+}
+
+/* Two fields side by side from tablet up. Moved here from plant-form.css: Settings uses it too. */
+.field-row {
+  display: grid;
+  gap: 0 var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

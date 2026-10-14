@@ -1,0 +1,253 @@
+/* Account Settings only (P15, wireframe p22, CORE-26). Loaded by settings.php through $page_css. */
+/* Functional style. Phone: the section menu as a list, then the cards one under another.
+   Desktop: the menu in a left column, the cards in two columns beside it. */
+
+.settings-title {
+  margin-bottom: var(--space-24);
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+
+.settings-grid {
+  display: grid;
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.settings-cards {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+  min-width: 0;
+}
+
+.settings-column {
+  display: grid;
+  gap: var(--space-16);
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .settings-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .settings-grid {
+    grid-template-columns: 220px 1fr;   /* wide enough for "Account and security" on one line */
+    gap: var(--space-32);
+  }
+
+  .settings-cards {
+    gap: var(--gutter);
+  }
+
+  .settings-column {
+    gap: var(--gutter);
+  }
+}
+
+/* ── Section menu ───────────────────────────────────── */
+
+.settings-menu ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  list-style: none;
+}
+
+.settings-menu li + li {
+  border-top: 1px solid var(--color-line);
+}
+
+.settings-menu a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 48px;
+  padding: 0 var(--space-16);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.settings-menu a:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.settings-menu .icon {
+  color: var(--color-muted);
+}
+
+.settings-menu-danger a,
+.settings-menu-danger .icon {
+  color: var(--color-danger);
+}
+
+/* Desktop: a quiet list in its own column that stays in view while the cards scroll */
+@media (min-width: 1024px) {
+  .settings-menu {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-24));
+  }
+
+  .settings-menu ul {
+    border: 0;
+    background: transparent;
+  }
+
+  .settings-menu li + li {
+    border-top: 0;
+  }
+
+  .settings-menu a {
+    min-height: 40px;
+    border-radius: var(--radius-input);
+  }
+
+  .settings-menu a:hover {
+    background: var(--color-white);
+  }
+
+  /* A line above Delete account keeps it apart, as on p22. "li.settings-menu-danger" is more specific than
+     "li + li" above, so this border wins without !important. */
+  .settings-menu li.settings-menu-danger {
+    margin-top: var(--space-8);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-line);
+  }
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+
+/* A card's top stays below the sticky header when the menu jumps to it */
+.settings-card {
+  min-width: 0;
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  scroll-margin-top: calc(var(--header-height) + var(--space-16));
+}
+
+@media (min-width: 768px) {
+  .settings-card {
+    padding: var(--space-24);
+  }
+}
+
+.settings-card-title {
+  margin-bottom: var(--space-4);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+.settings-card-intro {
+  margin-bottom: var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.settings-save {
+  width: 100%;
+}
+
+/* Photo row: the avatar, Change photo and Remove */
+.settings-photo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.settings-photo .avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: var(--text-h3);
+}
+
+.bio-count {
+  justify-self: end;
+}
+
+/* ── Change email ───────────────────────────────────── */
+
+.settings-email > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.settings-email > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-link {
+  color: var(--color-leaf);
+  font-weight: var(--weight-medium);
+}
+
+.settings-email > summary:hover .settings-link {
+  text-decoration: underline;
+}
+
+.settings-email-form {
+  margin-bottom: var(--space-24);
+  padding: var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+}
+
+/* ── Switches ───────────────────────────────────────── */
+
+/* Words on the left, switch on the right, as on p22 */
+.settings-toggle {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-4) 0;
+  font-size: var(--text-body-sm);
+}
+
+.settings-toggle > span {
+  display: grid;
+  gap: 2px;
+}
+
+.settings-toggle + .settings-save {
+  margin-top: var(--space-12);
+}
+
+/* An upcoming feature: visible and labelled, but clearly switched off (p22, UX notes) */
+.settings-toggle.is-disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.settings-toggle.is-disabled input {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.settings-later {
+  justify-self: start;
+  font-size: var(--text-label);
+}
+
+/* ── Delete account ─────────────────────────────────── */
+
+.settings-card-danger {
+  border-color: var(--color-danger);
+}
+
+.settings-card-danger .settings-card-title {
+  color: var(--color-danger);
+}
