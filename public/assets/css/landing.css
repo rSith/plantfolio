@@ -238,3 +238,144 @@
   }
 }
 
+
+/* ── Sections below the hero ────────────────────────── */
+
+.landing-section {
+  padding: var(--space-48) 0;
+}
+
+/* Centred heading block: label, H2 and an optional lead */
+.section-head {
+  max-width: 640px;
+  margin: 0 auto var(--space-32);
+  text-align: center;
+}
+
+.section-head .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-8);
+}
+
+.section-lead {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* "How it works" sits on white, so the cream step cards stand out (p8) */
+.how {
+  background: var(--color-white);
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* An <ol> because the order matters; the numbers are printed in the titles, so the list's own are hidden */
+.steps {
+  display: grid;
+  gap: var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  padding: var(--space-24);
+  border-radius: var(--radius-card);
+  background: var(--color-cream);
+}
+
+.step h3,
+.tool-card h3 {
+  margin: var(--space-16) 0 var(--space-4);
+}
+
+.step p,
+.tool-card > p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+/* Icon on a sage circle, shared by the steps and the tool cards */
+.step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-leaf);
+  font-size: var(--text-h3);
+}
+
+/* Smart tools: a sage band, so the AI features read as their own part of the page */
+.tools {
+  background: var(--color-sage);
+}
+
+.tool-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-24);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+/* A sample result, framed like the real result panel on p14 and p15 */
+.tool-example {
+  margin: var(--space-16) 0;
+  padding: var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+}
+
+.tool-example-name {
+  margin-bottom: var(--space-12);
+  font-size: var(--text-body-sm);
+}
+
+.tool-example-name .scientific-name {
+  display: block;
+  font-size: var(--text-small);
+}
+
+/* margin-top: auto pushes the link to the bottom, so both cards' links line up */
+.tool-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  align-self: flex-start;
+  min-height: 44px;   /* touch target */
+  margin-top: auto;
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.tool-link:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .landing-section {
+    padding: calc(var(--space-48) * 1.5) 0;
+  }
+
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gutter);
+  }
+
+  .tool-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gutter);
+  }
+}

@@ -20,7 +20,22 @@ $collage_plant = $mock_plants[array_search(42, array_column($mock_plants, 'id'))
 $collage_care  = $mock_reminders[array_search(42, array_column($mock_reminders, 'plant_id'))]; // Monty's watering
 $collage_due   = care_due($collage_care['next_due']);
 $collage_when  = $collage_due['state'] === 'due' ? 'today' : '· ' . $collage_due['text'];   // "Water Monty today"
-$prediction_percent = round($mock_prediction['confidence'] * 100);
+
+// One ML result of each type: the species result feeds the collage chip, both feed the smart tools teaser.
+$species_result = $mock_predictions[array_search('species', array_column($mock_predictions, 'type'))];
+$disease_result = $mock_predictions[array_search('disease', array_column($mock_predictions, 'type'))];
+$species_plant  = $mock_plants[array_search($species_result['plant_id'], array_column($mock_plants, 'id'))];
+$disease_plant  = $mock_plants[array_search($disease_result['plant_id'], array_column($mock_plants, 'id'))];
+
+// "How it works": three steps that mirror the product, add → track → swap (wireframe p8, element 4).
+$steps = [
+    ['icon' => 'camera',  'title' => 'Add your plants',
+     'text' => 'Snap a photo and PlantFolio suggests the species and fills in its care guide.'],
+    ['icon' => 'droplet', 'title' => 'Track their care',
+     'text' => 'See what to water today and keep a health story for every plant.'],
+    ['icon' => 'repeat',  'title' => 'Share and swap',
+     'text' => 'Show off your collection and trade cuttings with people nearby.'],
+];
 
 $page_title = 'Plant care & exchange community';
 $page_css   = 'landing.css';
@@ -74,11 +89,69 @@ include __DIR__ . '/../includes/header.php';
       </div>
 
       <p class="collage-chip collage-chip-ai">
-        <?= icon('sparkles') ?> Identified: <?= e($mock_prediction['common_name']) ?> · <?= e($prediction_percent) ?>%
+        <?= icon('sparkles') ?> Identified: <?= e(prediction_name($species_result)) ?> · <?= e(round($species_result['confidence'] * 100)) ?>%
       </p>
       <p class="collage-chip collage-chip-care collage-chip-<?= e($collage_due['state']) ?>">
         <?= icon(task_icon($collage_care['task'])) ?> <?= e(task_label($collage_care['task'])) ?> <?= e($collage_care['nickname']) ?> <?= e($collage_when) ?>
       </p>
+    </div>
+  </div>
+</section>
+
+<?php // The header's "How it works" link jumps here (index.php#how-it-works) ?>
+<section class="landing-section how" id="how-it-works" aria-labelledby="how-title">
+  <div class="container">
+    <div class="section-head">
+      <p class="label">How it works</p>
+      <h2 id="how-title">Three simple habits for happier plants</h2>
+    </div>
+    <ol class="steps">
+      <?php foreach ($steps as $number => $step): ?>
+        <li class="step">
+          <span class="step-icon"><?= icon($step['icon']) ?></span>
+          <h3><?= e($number + 1) ?> · <?= e($step['title']) ?></h3>
+          <p><?= e($step['text']) ?></p>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+  </div>
+</section>
+
+<section class="landing-section tools" aria-labelledby="tools-title">
+  <div class="container">
+    <div class="section-head">
+      <p class="label"><?= icon('sparkles') ?> Smart tools</p>
+      <h2 id="tools-title">A second opinion when you need one</h2>
+      <p class="section-lead">Two helpers built on machine learning. They suggest, you decide: nothing is saved until you press Save,
+        and when the model is not sure, it says so.</p>
+    </div>
+    <div class="tool-grid">
+      <article class="tool-card">
+        <span class="step-icon"><?= icon('sparkles') ?></span>
+        <h3>Plant Identifier</h3>
+        <p>Not sure what you brought home? Take a photo and get the three most likely species, each with how sure the model is.</p>
+        <div class="tool-example">
+          <p class="tool-example-name">
+            <?= e($species_plant['nickname']) ?> looks like a <strong><?= e(prediction_name($species_result)) ?></strong>
+            <span class="scientific-name"><?= e($species_result['predicted_label']) ?></span>
+          </p>
+          <?php partial('confidence-meter', ['prediction' => $species_result]); ?>
+        </div>
+        <a class="tool-link" href="<?= e(url('identify.php')) ?>">Try Plant Identifier <?= icon('arrow-right') ?></a>
+      </article>
+
+      <article class="tool-card">
+        <span class="step-icon"><?= icon('activity') ?></span>
+        <h3>Health Check</h3>
+        <p>Spots or yellow leaves? Get the likely cause and simple care steps, then add the result to your plant's story.</p>
+        <div class="tool-example">
+          <p class="tool-example-name">
+            <?= e($disease_plant['nickname']) ?> the <?= e(strtolower($disease_plant['common_name'])) ?>: <strong><?= e(prediction_name($disease_result)) ?></strong> found
+          </p>
+          <?php partial('confidence-meter', ['prediction' => $disease_result]); ?>
+        </div>
+        <a class="tool-link" href="<?= e(url('health-check.php')) ?>">Try Health Check <?= icon('arrow-right') ?></a>
+      </article>
     </div>
   </div>
 </section>

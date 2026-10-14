@@ -160,11 +160,18 @@ $mock_featured_plant = [
     'like_count' => 48,
 ];
 
-// One plant recognition result, for the AI chip in the collage — an ml_predictions row.
-// predicted_label holds the scientific name; common_name is joined from plant_species on that name.
-$mock_prediction = [
-    'id' => 3, 'user_id' => 1, 'plant_id' => 44, 'type' => 'species',
-    'predicted_label' => 'Dracaena trifasciata', 'confidence' => 0.96,
-    'image_path' => 'mock/sergeant.svg', 'created_at' => mock_date(-40) . ' 10:20:00',
-    'common_name' => 'Snake plant',
+// Results from the ML service — rows of `ml_predictions`, one per type (wireframes p14, p15).
+// For a species, predicted_label is the scientific name and common_name is joined from plant_species on it.
+// For a disease, predicted_label is the model's class name, turned into words by prediction_name().
+// The Landing page uses them for the collage chip and the smart tools teaser.
+$mock_predictions = [
+    ['id' => 3, 'user_id' => 1, 'plant_id' => 44, 'type' => 'species',
+     'predicted_label' => 'Dracaena trifasciata', 'confidence' => 0.96,
+     'image_path' => 'mock/sergeant.svg', 'created_at' => mock_date(-40) . ' 10:20:00',
+     'common_name' => 'Snake plant'],
+
+    ['id' => 4, 'user_id' => 1, 'plant_id' => 47, 'type' => 'disease',
+     'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
+     'image_path' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 07:45:00',
+     'common_name' => null],
 ];
