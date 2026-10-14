@@ -4,8 +4,8 @@
 // Stage F preview: plant-form.php?ai shows the form after a photo was analysed (p13 as drawn, ML-13 UI half),
 // ?ai=unsure the same when the model is not sure (state S3).
 // Members only. A full page, not a modal: the form is long, and its own address lets a link open it directly.
-// Stage F only draws the form; stage B checks it, saves the photo (CORE-17) and the plants, care_reminders and
-// first health_logs rows, then opens the new plant's profile.
+// Stage F draws the form, and Save only moves on to the next page without saving. Stage B checks the form,
+// saves the photo (CORE-17) and the plants, care_reminders and first health_logs rows, then opens the plant's profile.
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
@@ -52,6 +52,15 @@ if ($plant_id !== null) {
     }
 }
 $is_edit = $plant !== null;
+
+// Stage F: Save moves on to the page stage B will open, without saving anything, so a demo can continue:
+// a new plant goes back to My Garden (it has no profile yet), an edited plant to its profile. It runs after the
+// ownership check above, so sending the form for someone else's plant still answers "not found".
+// Stage B replaces this with the real save, then redirects to plant.php?id= of the saved plant.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Location: ' . ($is_edit ? url('plant.php?id=' . $plant['id']) : url('garden.php')));
+    exit;
+}
 
 // ── The values the form starts with ─────────────────────
 // Every field reads from $values, so the add form (defaults) and the edit form (the plant's row)
