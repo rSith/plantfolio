@@ -103,6 +103,9 @@ $collection_url = url('garden.php?collection=' . $plant['collection_id']);
 $page_title     = $plant['nickname'];
 $page_css       = 'plant.css';
 
+// The navigation follows the breadcrumb: your own plant is part of My Garden, anyone else's is part of Explore
+$nav_area = $is_owner ? 'garden' : 'explore';
+
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">

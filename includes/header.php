@@ -6,7 +6,8 @@
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 
 $is_member       = !empty($current_user);
-$area            = current_area();
+// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
+$area            = $nav_area ?? current_area();
 $show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
