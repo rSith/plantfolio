@@ -90,10 +90,9 @@ function plant_matches_search($plant, $term)
 
 $found = array_filter($mock_public_plants, fn ($plant) => plant_matches_search($plant, $term));
 
-$plants = array_filter($found, function ($plant) use ($species_filter, $health, $location, $on_exchange) {
-    if ($species_filter && !in_array($plant['species_id'], $species_filter, true)) {
-        return false;
-    }
+// Two passes: first every filter except species, then species. The plants between the two passes are the ones
+// the species counts in the sidebar are made from (see "Species counts" below).
+$before_species = array_filter($found, function ($plant) use ($health, $location, $on_exchange) {
     if ($health !== '' && $plant['health_status'] !== $health) {
         return false;
     }
@@ -105,6 +104,8 @@ $plants = array_filter($found, function ($plant) use ($species_filter, $health, 
     }
     return true;
 });
+
+$plants = array_filter($before_species, fn ($plant) => !$species_filter || in_array($plant['species_id'], $species_filter, true));
 
 usort($plants, function ($a, $b) use ($sort) {
     switch ($sort) {
@@ -157,6 +158,38 @@ if ($on_exchange) {
 }
 $clear_filters_url = $explore_url(['species' => [], 'health' => '', 'location' => '', 'exchange' => '']);
 
+// ── Species counts for the sidebar (p16, element 3) ─────
+// Each species shows how many plants ticking it would give: the search and the other filters count, the species
+// filter itself does not (otherwise ticking Monstera would set every other species to 0).
+// Stage B: SELECT species_id, COUNT(*) … GROUP BY species_id with the same WHERE minus the species condition.
+// The most common species come first; the first five are shown and the rest fold under "+ N more".
+
+$species_counts = [];
+foreach ($before_species as $plant) {
+    $species_counts[$plant['species_id']] = ($species_counts[$plant['species_id']] ?? 0) + 1;
+}
+foreach ($species_filter as $species_id) {
+    $species_counts[$species_id] ??= 0;   // a ticked species stays in the list, even when nothing matches it any more
+}
+
+$species_list = [];
+foreach ($species_counts as $species_id => $count) {
+    $species_list[] = [
+        'id'      => $species_id,
+        'name'    => $mock_species[$species_id]['common_name'],
+        'count'   => $count,
+        'checked' => in_array($species_id, $species_filter, true),
+    ];
+}
+usort($species_list, fn ($a, $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
+
+$species_shown = array_slice($species_list, 0, 5);
+$species_more  = array_slice($species_list, 5);
+// Open "+ N more" when one of the folded species is ticked, so the tick is never hidden
+$more_open = in_array(true, array_column($species_more, 'checked'), true);
+
+$active_count = count($active_filters);
+
 $plant_count  = count($plants);
 $people_count = count($people);
 
@@ -201,49 +234,146 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<div class="container page explore-body">
+<div class="container page explore-body<?= $tab === 'plants' ? ' has-filters' : '' ?>">
   <?php if ($tab === 'plants'): ?>
-    <?php // Result count, active filter chips and the sort (p16, element 4) ?>
-    <div class="results-bar">
-      <h2 class="results-count" role="status"><?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?></h2>
+    <?php // Filters (p16, element 3). A <details> folds them behind a "Filters" button on a phone and a tablet
+          // (p23: "filters collapse behind a button"); explore.css keeps them open beside the results on a desktop.
+          // One GET form, so Apply puts every choice in the address. Week 6 applies them without the button. ?>
+    <details class="filter-panel">
+      <summary class="btn btn-secondary filter-toggle">
+        <?= icon('sliders-horizontal') ?> Filters
+        <?php if ($active_count > 0): ?>
+          <span class="filter-toggle-count"><?= e($active_count) ?><span class="visually-hidden"> active</span></span>
+        <?php endif; ?>
+      </summary>
 
-      <?php foreach ($active_filters as $filter): ?>
-        <a class="chip filter-chip" href="<?= e($filter['href']) ?>">
-          <?= e($filter['label']) ?> <?= icon('x') ?><span class="visually-hidden">: remove this filter</span>
-        </a>
-      <?php endforeach; ?>
-      <?php if (count($active_filters) > 1): ?>
-        <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
-      <?php endif; ?>
+      <form class="filter-form" method="get" action="<?= e(url('explore.php')) ?>" aria-labelledby="filters-title">
+        <?php // The search and the sort are chosen elsewhere on the page; hidden fields carry them through Apply ?>
+        <?php if ($q !== ''): ?>
+          <input type="hidden" name="q" value="<?= e($q) ?>">
+        <?php endif; ?>
+        <?php if ($filters['tab'] !== ''): ?>
+          <input type="hidden" name="tab" value="<?= e($tab) ?>">
+        <?php endif; ?>
+        <?php if ($filters['sort'] !== ''): ?>
+          <input type="hidden" name="sort" value="<?= e($sort) ?>">
+        <?php endif; ?>
 
-      <?php // A <details> dropdown of links: it opens without JavaScript, and each sort has its own address ?>
-      <details class="menu sort-menu">
-        <summary class="btn btn-secondary">Sort: <?= e($sort_options[$sort]) ?> <?= icon('chevron-down') ?></summary>
-        <div class="menu-panel menu-panel-right">
-          <?php foreach ($sort_options as $value => $label): ?>
-            <a class="menu-item" href="<?= e($explore_url(['sort' => $value === 'likes' ? '' : $value])) ?>"<?= $value === $sort ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+        <div class="filter-head">
+          <h2 class="filter-title" id="filters-title">Filters</h2>
+          <?php if ($active_count > 0): ?>
+            <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
+          <?php endif; ?>
+        </div>
+
+        <?php // Species: tick any number. The name species[] makes PHP collect every ticked box into one array. ?>
+        <fieldset class="filter-group">
+          <legend class="label">Species</legend>
+          <?php if (!$species_list): ?>
+            <p class="text-small">No species match this search.</p>
+          <?php endif; ?>
+          <?php foreach ($species_shown as $item): ?>
+            <label class="check filter-check">
+              <input type="checkbox" name="species[]" value="<?= e($item['id']) ?>"<?= $item['checked'] ? ' checked' : '' ?>>
+              <span class="filter-check-name"><?= e($item['name']) ?></span>
+              <span class="filter-check-count"><?= e($item['count']) ?></span>
+            </label>
+          <?php endforeach; ?>
+          <?php if ($species_more): ?>
+            <details class="filter-more"<?= $more_open ? ' open' : '' ?>>
+              <summary>+ <?= e(count($species_more)) ?> more</summary>
+              <?php foreach ($species_more as $item): ?>
+                <label class="check filter-check">
+                  <input type="checkbox" name="species[]" value="<?= e($item['id']) ?>"<?= $item['checked'] ? ' checked' : '' ?>>
+                  <span class="filter-check-name"><?= e($item['name']) ?></span>
+                  <span class="filter-check-count"><?= e($item['count']) ?></span>
+                </label>
+              <?php endforeach; ?>
+            </details>
+          <?php endif; ?>
+        </fieldset>
+
+        <?php // Health: one choice, so radio buttons drawn as chips (p16). "Any" is how a choice is taken back. ?>
+        <fieldset class="filter-group">
+          <legend class="label">Health</legend>
+          <div class="filter-chips">
+            <?php foreach (array_merge([''], $health_options) as $option): ?>
+              <label class="chip-choice">
+                <input type="radio" name="health" value="<?= e($option) ?>"<?= $option === $health ? ' checked' : '' ?>>
+                <span class="chip"><?= e($option === '' ? 'Any' : health_label($option)) ?></span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </fieldset>
+
+        <div class="filter-group">
+          <label class="label" for="filter-location">Location</label>
+          <div class="input-icon">
+            <?= icon('map-pin') ?>
+            <select class="input" id="filter-location" name="location">
+              <option value="">All locations</option>
+              <?php foreach ($locations as $town): ?>
+                <option value="<?= e($town) ?>"<?= $town === $location ? ' selected' : '' ?>><?= e($town) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="toggle">
+            <input type="checkbox" name="exchange" value="1"<?= $on_exchange ? ' checked' : '' ?>>
+            Available for exchange
+          </label>
+        </div>
+
+        <?php // Without JavaScript a form only sends when a button is pressed. Week 6 sends it on every change. ?>
+        <button type="submit" class="btn btn-primary filter-apply">Apply filters</button>
+      </form>
+    </details>
+
+    <div class="explore-results">
+      <?php // Result count, active filter chips and the sort (p16, element 4) ?>
+      <div class="results-bar">
+        <h2 class="results-count" role="status"><?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?></h2>
+
+        <?php foreach ($active_filters as $filter): ?>
+          <a class="chip filter-chip" href="<?= e($filter['href']) ?>">
+            <?= e($filter['label']) ?> <?= icon('x') ?><span class="visually-hidden">: remove this filter</span>
+          </a>
+        <?php endforeach; ?>
+        <?php if (count($active_filters) > 1): ?>
+          <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
+        <?php endif; ?>
+
+        <?php // A <details> dropdown of links: it opens without JavaScript, and each sort has its own address ?>
+        <details class="menu sort-menu">
+          <summary class="btn btn-secondary">Sort: <?= e($sort_options[$sort]) ?> <?= icon('chevron-down') ?></summary>
+          <div class="menu-panel menu-panel-right">
+            <?php foreach ($sort_options as $value => $label): ?>
+              <a class="menu-item" href="<?= e($explore_url(['sort' => $value === 'likes' ? '' : $value])) ?>"<?= $value === $sort ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+            <?php endforeach; ?>
+          </div>
+        </details>
+      </div>
+
+      <?php if ($plants): ?>
+        <div class="explore-grid">
+          <?php foreach ($plants as $plant): ?>
+            <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
           <?php endforeach; ?>
         </div>
-      </details>
+      <?php else: ?>
+        <section class="panel">
+          <?php partial('empty-state', [
+              'title'   => 'No plants match',
+              'text'    => 'Try another word, or remove a filter.',
+              'actions' => [
+                  ['label' => 'Show all plants', 'href' => 'explore.php', 'icon' => 'search'],
+              ],
+          ]); ?>
+        </section>
+      <?php endif; ?>
     </div>
-
-    <?php if ($plants): ?>
-      <div class="explore-grid">
-        <?php foreach ($plants as $plant): ?>
-          <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
-        <?php endforeach; ?>
-      </div>
-    <?php else: ?>
-      <section class="panel">
-        <?php partial('empty-state', [
-            'title'   => 'No plants match',
-            'text'    => 'Try another word, or remove a filter.',
-            'actions' => [
-                ['label' => 'Show all plants', 'href' => 'explore.php', 'icon' => 'search'],
-            ],
-        ]); ?>
-      </section>
-    <?php endif; ?>
   <?php else: ?>
     <?php // Step 4 of P09 fills the People tab: one card per member with rating and plant count ?>
     <section class="panel">

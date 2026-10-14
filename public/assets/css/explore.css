@@ -65,6 +65,150 @@
   }
 }
 
+/* ── Filters (p16, element 3) ───────────────────────── */
+/* Phone and tablet: a "Filters" button; pressing it opens the form below it as a white panel.
+   Desktop: a column on the left, always open, with no button (see the 1024px rule at the end). */
+
+.filter-panel {
+  margin-bottom: var(--space-16);
+}
+
+/* The <summary> is drawn as a button: remove the triangle browsers put in front of it */
+.filter-panel > summary {
+  list-style: none;
+}
+
+.filter-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-toggle .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* How many filters are on, in a small leaf-green circle */
+.filter-toggle-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf);
+  color: var(--color-white);
+  font-size: var(--text-label);
+}
+
+.filter-form {
+  margin-top: var(--space-12);
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.filter-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* A <fieldset> comes with a border, padding and a minimum width; none of them suit a sidebar */
+.filter-group {
+  min-width: 0;
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  border: 0;
+}
+
+.filter-group > .label,
+.filter-group > legend {
+  display: block;
+  margin-bottom: var(--space-8);
+  padding: 0;
+}
+
+/* One species per line: the box, the name, and its count pushed to the right */
+.filter-check {
+  display: flex;
+  width: 100%;
+  font-size: var(--text-body-sm);
+}
+
+.filter-check-name {
+  flex: 1;
+}
+
+.filter-check-count {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* "+ 3 more" opens the rest of the species list in place */
+.filter-more > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-leaf);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  list-style: none;
+  cursor: pointer;
+}
+
+.filter-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-more[open] > summary {
+  display: none;   /* once open, the list itself is the answer; nothing to close */
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* Health chips are radio buttons. The radio stays in the page for the keyboard and screen readers, only the
+   chip after it is seen; "+" picks the chip that comes straight after a checked or focused radio. */
+.chip-choice {
+  position: relative;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-choice input:checked + .chip {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip-choice input:focus-visible + .chip {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.filter-apply {
+  width: 100%;
+}
+
 /* ── Results bar: count, active filters, sort ───────── */
 
 .results-bar {
@@ -129,5 +273,46 @@
 @media (min-width: 1024px) {
   .explore-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Desktop: filters beside the results ────────────── */
+/* minmax(0, 1fr) lets the results column shrink below its content's width instead of pushing the page wider */
+
+@media (min-width: 1024px) {
+  .explore-body.has-filters {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-32);
+  }
+
+  /* A closed <details> hides everything except its <summary>. ::details-content is the box holding the rest,
+     so making it visible keeps the filters open without the button, and without JavaScript.
+     @supports checks the browser knows it first: an older browser keeps the Filters button instead. */
+  @supports selector(::details-content) {
+    .filter-panel > summary {
+      display: none;
+    }
+
+    .filter-panel::details-content {
+      content-visibility: visible;
+    }
+
+    .filter-panel {
+      margin-bottom: 0;
+    }
+
+    /* On the desktop the sidebar sits straight on the page, as on p16: no white panel around it */
+    .filter-form {
+      margin-top: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .filter-check {
+      min-height: 32px;
+    }
   }
 }
