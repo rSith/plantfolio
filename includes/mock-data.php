@@ -175,3 +175,13 @@ $mock_predictions = [
      'image_path' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 07:45:00',
      'common_name' => null],
 ];
+
+// ── Sign up and Log in (P02, CORE-07 and CORE-09) ───────
+
+// The member quoted in the community panel (wireframe p9) — a users row plus plant_count, a COUNT() on plants.
+// The quote itself is page text, not data: there is no testimonials table.
+$mock_quote_member = [
+    'id' => 3, 'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+    'location' => 'Kandy',
+    'plant_count' => 64,
+];

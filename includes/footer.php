@@ -1,6 +1,6 @@
 <?php
 // Page frame, bottom half: closes <main>, then prints the footer and the phone bottom bar (CORE-06).
-// Included last by every page. It reuses $is_member, $area and $profile_url, which includes/header.php set.
+// Included last by every page. It reuses $show_bottom_bar, $area and $profile_url, which includes/header.php set.
 
 // The three links named on wireframe p4. They are the three sections of one page, about.php.
 $footer_links = [
@@ -10,7 +10,7 @@ $footer_links = [
 ];
 
 // The phone bar, left and right of the round "+" button (wireframe p23).
-if ($is_member) {
+if ($show_bottom_bar) {
     $bar_links_left = [
         ['label' => 'Home',   'href' => url('dashboard.php'), 'icon' => 'house', 'area' => 'dashboard'],
         ['label' => 'Garden', 'href' => url('garden.php'),    'icon' => 'leaf',  'area' => 'garden'],
@@ -46,7 +46,7 @@ if ($is_member) {
     </div>
   </footer>
 
-  <?php if ($is_member): ?>
+  <?php if ($show_bottom_bar): ?>
     <!-- Phones only: layout.css hides this bar from 768px, where the top navigation takes over -->
     <nav class="bottom-bar" aria-label="Main">
       <?php foreach ($bar_links_left as $link): ?>

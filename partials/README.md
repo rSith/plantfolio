@@ -12,6 +12,8 @@ Each partial expects one row-shaped array (e.g. `$plant`, `$listing`) so it work
 | `confidence-meter.php` | Labelled bar: High ≥ 80 % · Medium 60–79 % · Not sure < 60 % | P06, P07, P08 | CORE-05 |
 | `rating.php` | Stars, average and count, e.g. ★ 4.9 (23) | P10, P11, P13, P14 | CORE-05 |
 | `avatar.php` | Member photo, or initials on a tinted circle; sizes `sm` and `lg` | Header, listing cards, P13, P14 | CORE-05 |
+| `auth-tabs.php` | The Sign up · Log in switch: two links drawn like the segmented control, the current page pressed | P02 (`register.php`, `login.php`) | CORE-07, CORE-09 |
+| `auth-panel.php` | Community panel beside the form: a member's quote, their town and plant count, a plant picture | P02 (`register.php`, `login.php`) | CORE-07 |
 | `empty-state.php` | Illustration, one-line message and one clear next step (state S1) | P03, P04, P09, P10 | CORE-25 |
 | `modal.php` | Dialog shell for S4 Rate, S5 Log update, S6 Confirm delete | P05, P13, all deletes | Week 5 · COM-12, CORE-19, CORE-20 (built with its JavaScript, as in the roadmap) |
 

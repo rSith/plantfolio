@@ -543,6 +543,16 @@ textarea.input {
   padding-left: calc(var(--space-32) + var(--space-8));
 }
 
+/* A character in place of the icon, e.g. the "@" before a username: <span class="input-prefix">@</span> */
+.input-icon .input-prefix {
+  position: absolute;
+  top: 50%;
+  left: var(--space-16);
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
 @media (min-width: 768px) {
   .input {
     font-size: var(--text-body-sm);
