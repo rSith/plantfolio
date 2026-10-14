@@ -1,5 +1,6 @@
 <?php
 // Add or Edit Plant (P06, wireframe p13): a new plant in under a minute, photo first (CORE-16, UI half).
+// plant-form.php adds a plant; plant-form.php?id=42 edits Monty with the same form, filled in (p13, UX notes).
 // Members only. A full page, not a modal: the form is long, and its own address lets a link open it directly.
 // Stage F only draws the form; stage B checks it, saves the photo (CORE-17) and the plants, care_reminders and
 // first health_logs rows, then opens the new plant's profile.
@@ -16,8 +17,42 @@ if (!$current_user) {
 // Stage B, on POST: check the CSRF token; validate every field again on the server (the browser's checks can be
 // switched off); check the photo with finfo (JPG/PNG, 5 MB) and resize it to 1600 px; save; redirect to plant.php?id=.
 
+// ── Add or edit ─────────────────────────────────────────
+// With ?id= the form edits that plant. Only its owner may: anyone else gets "not found", like on the plant's
+// profile, so the form never reveals a private plant. Stage B checks ownership again when saving.
+
+$plant    = null;
+$plant_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if ($plant_id !== null) {
+    foreach ($mock_plants as $row) {
+        if ($row['id'] === $plant_id && $row['user_id'] === $current_user['id']) {
+            $plant = $row;
+            break;
+        }
+    }
+    if (!$plant) {
+        http_response_code(404);
+        $page_title = 'Plant not found';
+        include __DIR__ . '/../includes/header.php';
+        ?>
+        <div class="container page">
+          <section class="panel">
+            <?php partial('empty-state', [
+                'title'   => 'Plant not found',
+                'text'    => 'This plant does not exist, or it is not yours to edit.',
+                'actions' => [['label' => 'Back to My Garden', 'href' => 'garden.php', 'icon' => 'leaf']],
+            ]); ?>
+          </section>
+        </div>
+        <?php
+        include __DIR__ . '/../includes/footer.php';
+        exit;
+    }
+}
+$is_edit = $plant !== null;
+
 // ── The values the form starts with ─────────────────────
-// Every field reads from $values, so the add form (defaults) and, later, the edit form (the plant's row)
+// Every field reads from $values, so the add form (defaults) and the edit form (the plant's row)
 // share one piece of HTML.
 
 $values = [
@@ -38,43 +73,93 @@ $reminder_values = [
 ];
 $reminder_source = 'Pick a species to use its care guide. Change them anytime.';
 
+if ($is_edit) {
+    $values = [
+        'nickname'      => $plant['nickname'],
+        'species'       => $plant['scientific_name'],
+        'collection_id' => $plant['collection_id'],
+        'acquired_on'   => $plant['acquired_on'],
+        'health_status' => $plant['health_status'],
+        'is_public'     => $plant['is_public'],
+        'photo'         => $plant['photo'],
+    ];
+
+    // The plant's own reminders. A task it has no reminder for starts switched off, with the species' interval.
+    $species = $mock_species[$plant['species_id']] ?? null;
+    foreach (array_keys($reminder_values) as $task) {
+        $reminder_values[$task]['enabled'] = false;
+        if ($species) {
+            $reminder_values[$task]['interval_days'] = $species[$task . '_interval_days'];
+        }
+    }
+    foreach ($mock_plant_reminders as $reminder) {
+        if ($reminder['plant_id'] === $plant['id']) {
+            $reminder_values[$reminder['task']] = [
+                'enabled'       => true,
+                'interval_days' => $reminder['interval_days'],
+                'start'         => $reminder['next_due'],   // "starting" = the next time it is due
+            ];
+        }
+    }
+    $reminder_source = 'The current schedule for ' . $plant['nickname'] . '. Change it anytime.';
+}
+
+$plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
+$form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
+
 $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
 
-$page_title      = 'Add a plant';
+$page_title      = $is_edit ? 'Edit ' . $plant['nickname'] : 'Add a plant';
 $page_css        = 'plant-form.css';
 $hide_bottom_bar = true;   // the sticky save bar takes the bottom of a phone screen instead (p23)
 
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
-  <a class="back-link" href="<?= e(url('garden.php')) ?>"><?= icon('arrow-left') ?> Back to My Garden</a>
-  <h1 class="form-title"><?= e($page_title) ?></h1>
-  <p class="form-intro">Start with a photo. We'll suggest the species and a care schedule.</p>
+  <?php if ($is_edit): ?>
+    <a class="back-link" href="<?= e($plant_url) ?>"><?= icon('arrow-left') ?> Back to <?= e($plant['nickname']) ?></a>
+    <h1 class="form-title"><?= e($page_title) ?></h1>
+    <p class="form-intro">Change the details, photo, collection or care schedule.</p>
+  <?php else: ?>
+    <a class="back-link" href="<?= e(url('garden.php')) ?>"><?= icon('arrow-left') ?> Back to My Garden</a>
+    <h1 class="form-title"><?= e($page_title) ?></h1>
+    <p class="form-intro">Start with a photo. We'll suggest the species and a care schedule.</p>
+  <?php endif; ?>
 
   <?php // multipart/form-data: the only form encoding that can carry a file ?>
-  <form class="plant-form" method="post" action="<?= e(url('plant-form.php')) ?>" enctype="multipart/form-data">
+  <form class="plant-form" method="post" action="<?= e($form_action) ?>" enctype="multipart/form-data">
     <div class="plant-form-grid">
       <div class="plant-form-side">
         <?php // Photo upload (p13, element 1). The <label> is the drop area: a click anywhere on it opens the file
               // picker, because clicking a label activates its input. capture="environment" offers the rear camera. ?>
         <section class="form-card" id="photo" aria-labelledby="photo-title">
           <h2 class="visually-hidden" id="photo-title">Photo</h2>
+          <?php if ($values['photo']): ?>
+            <?php // A photo is already there: show it, with Change photo as another label of the same file input ?>
+            <div class="photo-current">
+              <img src="<?= e(photo_url($values['photo'])) ?>" alt="Current photo of <?= e($values['nickname']) ?>">
+              <label class="btn btn-secondary btn-sm photo-change" for="plant-photo"><?= icon('camera') ?> Change photo</label>
+            </div>
+          <?php else: ?>
           <label class="dropzone" for="plant-photo">
             <span class="dropzone-icon"><?= icon('image-up') ?></span>
             <span class="dropzone-title">Add a photo of your plant</span>
             <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
             <span class="btn btn-secondary btn-sm"><?= icon('camera') ?> Choose photo</span>
           </label>
+          <?php endif; ?>
           <input class="visually-hidden" type="file" id="plant-photo" name="photo"
                  accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint">
           <p class="field-hint photo-hint" id="photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
         </section>
 
-        <?php // Until a photo is analysed, the suggestion card explains what will happen (p13, elements 2–3) ?>
-        <section class="form-card ai-card ai-card-waiting" aria-labelledby="ai-title">
-          <h2 class="ai-title" id="ai-title"><?= icon('sparkles') ?> Suggested species</h2>
-          <p class="text-small">Add a photo and PlantFolio suggests the species, with how sure it is. You can always type the species yourself.</p>
-        </section>
+        <?php if (!$is_edit): ?>
+          <?php // Until a photo is analysed, the suggestion card explains what will happen (p13, elements 2–3) ?>
+          <section class="form-card ai-card ai-card-waiting" aria-labelledby="ai-title">
+            <h2 class="ai-title" id="ai-title"><?= icon('sparkles') ?> Suggested species</h2>
+            <p class="text-small">Add a photo and PlantFolio suggests the species, with how sure it is. You can always type the species yourself.</p>
+          </section>
+        <?php endif; ?>
       </div>
 
       <section class="form-card plant-form-main" aria-labelledby="details-title">
@@ -121,6 +206,7 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
+        <?php if (!$is_edit): ?>
         <?php // Current health (p13, element 5): four radio buttons drawn as one control; it becomes the first story entry ?>
         <fieldset class="field form-fieldset">
           <legend class="field-label">How is it doing right now?</legend>
@@ -131,6 +217,10 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </div>
         </fieldset>
+        <?php else: ?>
+          <?php // After the first day, health changes belong in the story, with a date: that is what Log update is for ?>
+          <p class="alert form-alert"><?= icon('info') ?> <span>To change the health status, use <a href="<?= e($plant_url) ?>">Log update</a> on the plant's page, so the change is dated in its story.</span></p>
+        <?php endif; ?>
 
         <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date ?>
         <?php // The line above a section is on a <div>: a <legend> always sits on its fieldset's border, so a border
@@ -179,10 +269,16 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Sticky save bar (p13, element 7): stays on screen on a long form; Cancel leads back without saving ?>
     <div class="save-bar">
-      <p class="save-bar-note"><?= icon('info') ?> You can change everything later.</p>
+      <?php if ($is_edit): ?>
+        <?php // Stage F: does nothing yet. Week 5 opens the confirmation that names the plant (S6); stage B deletes (CORE-20). ?>
+        <?php // On a phone only the bin is shown, so the button's full name lives in aria-label ?>
+        <button type="button" class="btn btn-ghost save-bar-delete" aria-label="Delete plant"><?= icon('trash-2') ?> <span class="save-bar-delete-label">Delete plant</span></button>
+      <?php else: ?>
+        <p class="save-bar-note"><?= icon('info') ?> You can change everything later.</p>
+      <?php endif; ?>
       <div class="save-bar-actions">
-        <a class="btn btn-ghost" href="<?= e(url('garden.php')) ?>">Cancel</a>
-        <button class="btn btn-primary btn-lg" type="submit">Save plant</button>
+        <a class="btn btn-ghost" href="<?= e($is_edit ? $plant_url : url('garden.php')) ?>">Cancel</a>
+        <button class="btn btn-primary btn-lg" type="submit"><?= $is_edit ? 'Save changes' : 'Save plant' ?></button>
       </div>
     </div>
   </form>
