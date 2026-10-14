@@ -1024,6 +1024,38 @@ textarea.input {
   white-space: nowrap;
 }
 
+/* Community plant card (p16): likes on the photo's top-right corner, the owner along the bottom */
+.card-media .plant-card-likes {
+  left: auto;
+  right: var(--space-12);
+  background: var(--color-white);
+  color: var(--color-ink);
+}
+
+/* margin-top: auto keeps the owner rows level across cards whose names wrap differently */
+.plant-card-owner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: auto;
+  padding-top: var(--space-8);
+  font-size: var(--text-small);
+}
+
+.plant-card-username {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plant-card-town {
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
 /* Next-care hint: terracotta when due today, red when overdue (design system rule) */
 .care-hint {
   display: inline-flex;

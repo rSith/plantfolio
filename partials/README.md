@@ -5,7 +5,7 @@ Each partial expects one row-shaped array (e.g. `$plant`, `$listing`) so it work
 
 | File | Shows | Used by | Task |
 |---|---|---|---|
-| `plant-card.php` | Photo (4:3), health badge, nickname (Lora), species (italic), next-care hint, collection | P04 My Garden, P09 Explore, P14 Public Profile | CORE-05 |
+| `plant-card.php` | Photo (4:3), health badge, nickname (Lora), species (italic), next-care hint, collection. With `'community' => true` (Explore): likes on the photo, owner and town instead of care and collection | P04 My Garden, P09 Explore, P14 Public Profile | CORE-05 |
 | `listing-card.php` | Photo, Swap/Free badge, title, town · distance · age, Looking for, owner + rating, interest count | P10 Exchange, P12 preview, P14 Public Profile | CORE-05 |
 | `status-badge.php` | Health status chip — colour **and** word (Thriving, Stable, Needs attention, Sick) | Everywhere | CORE-05 |
 | `care-row.php` | Plant thumbnail, task and interval, due/overdue tag, Mark done | P03 Dashboard, P05 Reminders | CORE-05 |

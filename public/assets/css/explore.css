@@ -1,0 +1,133 @@
+/* Explore and Search only (P09, wireframe p16, COM-01 to COM-03). Loaded by explore.php through $page_css. */
+/* Mobile-first: one card column on a phone, two on a tablet, three beside the filters on a desktop (p23). */
+
+/* ── Top band: title, search, tabs ──────────────────── */
+
+/* White, so the search reads as the start of the page; the results sit on the cream background below it */
+.explore-top {
+  padding-top: var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-white);
+}
+
+.explore-title {
+  margin-bottom: var(--space-16);
+}
+
+/* The box takes all the room the Search button leaves */
+.explore-search {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.explore-search-box {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The two tabs drawn like the segmented control of the design system (p16, element 2) */
+.explore-tabs {
+  display: inline-flex;
+  gap: var(--space-4);
+  margin: var(--space-16) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+}
+
+.explore-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 40px;
+  padding: var(--space-4) var(--space-16);
+  border-radius: calc(var(--radius-input) - var(--space-4));
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.explore-tab:hover {
+  color: var(--color-ink);
+}
+
+.explore-tab[aria-current="page"] {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .explore-top {
+    padding-top: var(--space-32);
+  }
+}
+
+/* ── Results bar: count, active filters, sort ───────── */
+
+.results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.results-count {
+  margin: 0 var(--space-4) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* An active filter: tinted sage, with an × that removes it */
+.filter-chip {
+  border-color: var(--color-sage);
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.filter-chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.results-clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* margin-left: auto pushes the sort to the right end of the row, as on p16 */
+.sort-menu {
+  margin-left: auto;
+}
+
+.sort-menu > summary .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Plant grid ─────────────────────────────────────── */
+
+.explore-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .explore-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .explore-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
