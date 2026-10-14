@@ -1,0 +1,371 @@
+/* Dashboard only (P03, wireframe p10, CORE-24 and CORE-25). Loaded by dashboard.php through $page_css. */
+/* Functional style: compact white panels with clear headings, so the page is scanned, not read. */
+
+/* ── Greeting ───────────────────────────────────────── */
+
+.dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.dash-title {
+  margin-bottom: var(--space-8);
+}
+
+/* Date and chips on one line, wrapping on a phone */
+.dash-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+}
+
+.dash-date {
+  margin-right: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+/* ── Columns ────────────────────────────────────────── */
+/* Phone and tablet: one column, main sections first. Desktop: main column and a narrower side column. */
+
+.dash-grid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.dash-main,
+.dash-side {
+  display: grid;
+  gap: var(--space-16);
+  min-width: 0;   /* a grid item refuses to shrink below its content without this */
+}
+
+@media (min-width: 1024px) {
+  .dash-grid {
+    grid-template-columns: 2fr 1fr;
+    gap: var(--gutter);
+  }
+
+  .dash-main,
+  .dash-side {
+    gap: var(--gutter);
+  }
+}
+
+/* ── Panels ─────────────────────────────────────────── */
+/* A white box with a heading row; every Dashboard section is one */
+
+.panel {
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-8);
+}
+
+/* Functional pages use Poppins for section headings (H3 style on p6), not the Lora used on warm pages */
+.panel-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+.panel-link,
+.panel-count {
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+.panel-link {
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.panel-link:hover {
+  text-decoration: underline;
+}
+
+.panel-count {
+  color: var(--color-muted);
+}
+
+.panel-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: var(--space-8) 0;
+  color: var(--color-muted);
+}
+
+/* The last row of a panel, as a link: "Coming up this week · 5 tasks  >" */
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;   /* touch target */
+  margin: var(--space-8) calc(var(--space-16) * -1) calc(var(--space-16) * -1);
+  padding: 0 var(--space-16);
+  border-top: 1px solid var(--color-line);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  background: var(--color-cream);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-decoration: none;
+}
+
+.panel-foot:hover {
+  color: var(--color-ink);
+}
+
+.panel-foot strong {
+  color: var(--color-ink);
+}
+
+@media (min-width: 768px) {
+  .panel {
+    padding: var(--space-24);
+  }
+
+  .panel-foot {
+    margin: var(--space-8) calc(var(--space-24) * -1) calc(var(--space-24) * -1);
+    padding: 0 var(--space-24);
+  }
+}
+
+/* ── Needs attention ────────────────────────────────── */
+
+.attention-item {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: var(--space-12) var(--space-16);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.attention-item:first-child {
+  border-top: 0;
+  padding-top: var(--space-8);
+}
+
+/* Square on a phone, 4:3 from tablet up, as on p10 */
+.attention-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.attention-body {
+  min-width: 0;
+}
+
+.attention-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+}
+
+/* The badge sits inside the Lora heading but keeps the Poppins of every other badge */
+.attention-name .badge {
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+}
+
+.attention-name a {
+  color: var(--color-forest);
+  text-decoration: none;
+}
+
+.attention-name a:hover {
+  text-decoration: underline;
+}
+
+.attention-meta {
+  margin: 0 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.attention-reason {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 var(--space-12);
+  font-size: var(--text-body-sm);
+}
+
+.attention-reason .icon {
+  margin-top: 0.2em;
+  color: var(--color-muted);
+}
+
+.attention-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .attention-item {
+    grid-template-columns: 136px 1fr;
+  }
+
+  .attention-photo {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* ── Quick actions ──────────────────────────────────── */
+
+/* Four tiles, two by two (p10, element 5) */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.quick-action {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  min-height: 88px;
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.quick-action:hover {
+  background: var(--color-sage);
+  color: var(--color-ink);
+}
+
+.quick-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-leaf);
+}
+
+/* ── Garden at a glance ─────────────────────────────── */
+
+.glance-total {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: 0 0 var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+
+.glance-total strong {
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+/* One bar split into the four statuses; dashboard.php sets each part's width */
+.health-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-line);
+}
+
+.health-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4) var(--space-16);
+  margin: var(--space-12) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-small);
+}
+
+.health-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.health-legend strong {
+  margin-left: auto;
+}
+
+.health-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* The status colours: the strong text colour of each health badge. Needs attention uses the amber of
+   the rating stars, because its brown text colour is too close to Sick's red in a thin bar. */
+.health-bar-thriving { background: var(--status-thriving-text); }
+.health-bar-stable { background: var(--status-stable-text); }
+.health-bar-needs-attention { background: var(--color-amber); }
+.health-bar-sick { background: var(--status-sick-text); }
+
+/* ── Exchange activity ──────────────────────────────── */
+
+.exchange-news {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: var(--space-12) 0;
+}
+
+.exchange-news p {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
+}
+
+.exchange-btn {
+  width: 100%;
+}
+
+/* Tablet: the side panels sit two by two under the main column */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dash-side {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

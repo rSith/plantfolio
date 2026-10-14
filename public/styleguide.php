@@ -317,5 +317,17 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </div>
   </section>
+
+  <section class="sg-card" aria-labelledby="sg-empty">
+    <h2 class="label" id="sg-empty">Empty state (S1)</h2>
+    <?php partial('empty-state', [
+        'title'   => 'Your garden is waiting',
+        'text'    => 'Add your first plant to start its story.',
+        'actions' => [
+            ['label' => 'Add a plant',           'href' => '#sg-empty', 'icon' => 'plus'],
+            ['label' => 'Identify from a photo', 'href' => '#sg-empty', 'icon' => 'sparkles'],
+        ],
+    ]); ?>
+  </section>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

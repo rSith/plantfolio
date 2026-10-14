@@ -25,6 +25,6 @@ Render a partial with the `partial()` helper from `includes/helpers.php`, naming
 <?php endforeach; ?>
 ```
 
-Every partial starts with a comment saying which variable it expects. All of them can be seen in `public/styleguide.php`.
+Every partial starts with a comment saying which variable it expects. The shared ones can all be seen in `public/styleguide.php`; `auth-tabs` and `auth-panel` belong to one page pair and are seen on `register.php`.
 
 Add a new partial only when the same markup appears on two or more pages; otherwise keep it in the page.
