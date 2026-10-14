@@ -1,12 +1,13 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
-// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs.
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
+// and $hide_bottom_bar = true to leave out the phone bottom bar: inner pages with their own action bar (p23).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 
 $is_member       = !empty($current_user);
 $area            = current_area();
-$show_bottom_bar = $is_member;   // footer.php prints the phone bar when this is true
+$show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
 $nav_links = $is_member

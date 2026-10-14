@@ -480,6 +480,12 @@ button.menu-item {
   font-weight: var(--weight-semibold);
 }
 
+/* "(optional)" after a label: quieter than the label itself. Moved here from auth.css: the plant form uses it too. */
+.field-optional {
+  color: var(--color-muted);
+  font-weight: var(--weight-regular);
+}
+
 .field-hint,
 .field-error {
   font-size: var(--text-small);
