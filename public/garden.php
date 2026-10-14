@@ -13,7 +13,7 @@ if (!$current_user) {
 }
 
 // ── What the member chose, read from the address ────────
-// garden.php?collection=1&q=pothos&status=sick&sort=name. Anyone can type anything into the address bar,
+// garden.php?collection=1&q=pothos&status=sick&sort=name&view=list. Anyone can type anything into the address bar,
 // so every value is checked against what is allowed and falls back to the default.
 
 $collection_ids = array_column($mock_collections, 'id');
@@ -41,6 +41,9 @@ if (!array_key_exists($sort, $sort_options)) {
     $sort = 'updated';
 }
 
+// Cards, or a table for large gardens (p11, UX notes). Week 5 switches without a reload; for now it is a link.
+$view = ($_GET['view'] ?? '') === 'list' ? 'list' : 'grid';
+
 // The choices that differ from the defaults. Links on the page start from these, so changing one filter keeps
 // the others; query_url() leaves out the empty ones, so the plain page stays plain "garden.php".
 $filters = [
@@ -48,6 +51,12 @@ $filters = [
     'q'          => $q,
     'status'     => $status,
     'sort'       => $sort === 'updated' ? '' : $sort,
+    'view'       => $view === 'grid' ? '' : $view,
+];
+
+$view_links = [
+    'grid' => ['label' => 'Grid view', 'icon' => 'layout-grid'],
+    'list' => ['label' => 'List view', 'icon' => 'list'],
 ];
 $is_filtered = $q !== '' || $status !== '';
 
@@ -151,8 +160,12 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Search, filter, sort (p11, element 3): a GET form, so the choices land in the address like the tabs ?>
     <form class="garden-toolbar" method="get" action="<?= e(url('garden.php')) ?>" role="search">
+      <?php // Hidden fields carry the choices made outside the form, so Apply does not lose them ?>
       <?php if ($collection_id !== null): ?>
         <input type="hidden" name="collection" value="<?= e($collection_id) ?>">
+      <?php endif; ?>
+      <?php if ($view === 'list'): ?>
+        <input type="hidden" name="view" value="list">
       <?php endif; ?>
 
       <div class="input-icon garden-search">
@@ -182,21 +195,68 @@ include __DIR__ . '/../includes/header.php';
 
       <?php // Without JavaScript a <select> cannot send the form by itself. Week 6 submits on change and hides this. ?>
       <button type="submit" class="btn btn-secondary garden-apply">Apply</button>
+
+      <?php // Links, not buttons: each view has its own address, like the tabs ?>
+      <div class="view-toggle" role="group" aria-label="View">
+        <?php foreach ($view_links as $key => $link): ?>
+          <a class="view-toggle-btn<?= $key === $view ? ' is-active' : '' ?>"
+             href="<?= e(query_url('garden.php', array_merge($filters, ['view' => $key === 'grid' ? '' : $key]))) ?>"
+             aria-label="<?= e($link['label']) ?>"<?= $key === $view ? ' aria-current="true"' : '' ?>><?= icon($link['icon']) ?></a>
+        <?php endforeach; ?>
+      </div>
     </form>
 
     <?php if ($is_filtered): ?>
       <p class="garden-results" role="status">
         <?= e(count($plants)) ?> <?= count($plants) === 1 ? 'plant matches' : 'plants match' ?>
-        <a href="<?= e(query_url('garden.php', ['collection' => $collection_id])) ?>"><?= icon('x') ?> Clear filters</a>
+        <a href="<?= e(query_url('garden.php', ['collection' => $collection_id, 'view' => $filters['view']])) ?>"><?= icon('x') ?> Clear filters</a>
       </p>
     <?php endif; ?>
 
-    <?php if ($plants): ?>
+    <?php if ($plants && $view === 'grid'): ?>
       <div class="plant-grid">
         <?php foreach ($plants as $plant): ?>
-          <?php partial('plant-card', ['plant' => $plant]); ?>
+          <?php partial('plant-card', ['plant' => $plant, 'menu' => true]); ?>
         <?php endforeach; ?>
       </div>
+    <?php elseif ($plants): ?>
+      <?php // List view: the same plants as a table (photo, name, collection, status, next care). On a phone
+            // garden.css turns each row into a compact stacked block, because five columns do not fit. ?>
+      <table class="garden-table">
+        <caption class="visually-hidden">Your plants</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Photo</span></th>
+            <th scope="col">Plant</th>
+            <th scope="col">Collection</th>
+            <th scope="col">Status</th>
+            <th scope="col">Next care</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($plants as $plant): ?>
+            <?php $due = care_hint($plant); ?>
+            <tr>
+              <td class="cell-photo"><img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt=""></td>
+              <td class="cell-name">
+                <a class="garden-table-name" href="<?= e(url('plant.php?id=' . $plant['id'])) ?>"><?= e($plant['nickname']) ?></a>
+                <span class="scientific-name"><?= e($plant['scientific_name']) ?></span>
+              </td>
+              <td class="cell-collection"><?= e($plant['collection_name']) ?></td>
+              <td class="cell-status"><?php partial('status-badge', ['status' => $plant['health_status']]); ?></td>
+              <td class="cell-care">
+                <?php if ($due): ?>
+                  <span class="care-hint care-hint-<?= e($due['state']) ?>"><?= icon(task_icon($plant['task'])) ?> <?= e($due['text']) ?></span>
+                <?php else: ?>
+                  <span class="text-small">No reminder</span>
+                <?php endif; ?>
+              </td>
+              <td class="cell-menu"><?php partial('plant-menu', ['plant' => $plant]); ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     <?php else: ?>
       <section class="panel">
         <?php partial('empty-state', [

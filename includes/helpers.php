@@ -222,6 +222,25 @@ function care_due($next_due)
     return ['state' => 'upcoming', 'text' => 'In ' . $days . ' days'];
 }
 
+/**
+ * The next-care hint for a plant (wireframe p11, element 6), from its soonest reminder: next_due and task.
+ * The same as care_due(), except that a task due today names the job: "Water today", not "Due today".
+ * Returns null for a plant that has no reminder yet. Used by the plant card and My Garden's list view.
+ */
+function care_hint($plant)
+{
+    if (empty($plant['next_due'])) {
+        return null;
+    }
+
+    $due = care_due($plant['next_due']);
+    if ($due['state'] === 'due') {
+        $due['text'] = task_label($plant['task']) . ' today';
+    }
+
+    return $due;
+}
+
 /** How long ago something happened, in the wireframes' wording: "Today", "2 days ago", "1 week ago". */
 function time_ago($datetime)
 {

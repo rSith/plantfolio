@@ -330,6 +330,27 @@ img {
   color: var(--color-leaf);
 }
 
+/* A menu item that acts on this page (Delete) is a <button>: undo the browser's button look */
+button.menu-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Destructive: red, the colour kept for overdue care and destructive actions */
+.menu-item-danger,
+.menu-item-danger .icon {
+  color: var(--color-danger);
+}
+
+.menu-item-danger:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
 /* Who is signed in, at the top of the account menu */
 .menu-head {
   display: grid;
@@ -934,6 +955,29 @@ textarea.input {
 }
 
 /* Plant card (p11) */
+
+/* The ⋯ menu sits on the photo's top-right corner. z-index lifts it above the stretched card link,
+   so a click on it opens the menu instead of the plant's profile. */
+.plant-card .plant-menu {
+  position: absolute;
+  top: var(--space-8);
+  right: var(--space-8);
+  z-index: 1;
+}
+
+/* 44px on a phone (touch target); a mouse can use a smaller, quieter button */
+.plant-menu-btn {
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .plant-menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .plant-card-name {
   font-family: var(--font-display);
   color: var(--color-forest);
