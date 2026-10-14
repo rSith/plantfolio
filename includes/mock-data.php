@@ -185,3 +185,66 @@ $mock_quote_member = [
     'location' => 'Kandy',
     'plant_count' => 64,
 ];
+
+// ── Dashboard (P03, CORE-24 and CORE-25) ────────────────
+
+// Numbers for Nimali's whole garden, which the Dashboard cannot count from the short lists above.
+// Stage B: SELECT health_status, COUNT(*) FROM plants WHERE user_id = ? GROUP BY health_status
+//          SELECT COUNT(*) FROM care_reminders … WHERE next_due BETWEEN tomorrow AND 7 days from today
+$mock_garden_stats = [
+    'health_counts'  => ['thriving' => 13, 'stable' => 3, 'needs_attention' => 1, 'sick' => 1],   // adds up to 18 plants
+    'upcoming_count' => 5,   // "Coming up this week · 5 tasks"
+];
+
+// Plants marked Sick or Needs attention (wireframe p10, element 4) — plants rows joined with:
+//   plant_species  → common_name          collections → collection_name
+//   health_logs    → log_note, log_source, logged_at of the plant's newest entry
+//   ml_predictions → predicted_label, confidence, when that entry came from a Health Check (source 'ml')
+//   care_reminders → task, next_due of the plant's soonest reminder
+$mock_attention = [
+    ['id' => 47, 'nickname' => 'Tommy', 'photo' => 'mock/tommy.svg', 'health_status' => 'sick',
+     'common_name' => 'Tomato', 'collection_name' => 'Balcony',
+     'log_note' => 'Brown rings on the lower leaves.', 'log_source' => 'ml', 'logged_at' => mock_date(-1) . ' 07:46:00',
+     'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
+     'task' => 'water', 'next_due' => mock_date(1)],
+
+    ['id' => 43, 'nickname' => 'Goldie', 'photo' => 'mock/goldie.svg', 'health_status' => 'needs_attention',
+     'common_name' => 'Golden pothos', 'collection_name' => 'Living room',
+     'log_note' => 'Leaves may start to droop.', 'log_source' => 'manual', 'logged_at' => mock_date(-3) . ' 18:10:00',
+     'predicted_label' => null, 'confidence' => null,
+     'task' => 'water', 'next_due' => mock_date(-2)],
+];
+
+// New interest in Nimali's listings (wireframe p10, element 7) — listing_interests rows with status 'new',
+// joined with users (who is interested) and exchange_listings (title).
+$mock_new_interests = [
+    ['id' => 21, 'listing_id' => 7, 'user_id' => 4, 'status' => 'new', 'created_at' => mock_date(0) . ' 08:20:00',
+     'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
+     'title' => "Pothos 'Golden', 3 rooted cuttings"],
+    ['id' => 20, 'listing_id' => 7, 'user_id' => 2, 'status' => 'new', 'created_at' => mock_date(-1) . ' 19:05:00',
+     'username' => 'aroid.amaya', 'full_name' => 'Amaya Madushani', 'avatar' => null,
+     'title' => "Pothos 'Golden', 3 rooted cuttings"],
+    ['id' => 19, 'listing_id' => 7, 'user_id' => 5, 'status' => 'new', 'created_at' => mock_date(-1) . ' 11:30:00',
+     'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
+     'title' => "Pothos 'Golden', 3 rooted cuttings"],
+    ['id' => 18, 'listing_id' => 7, 'user_id' => 3, 'status' => 'new', 'created_at' => mock_date(-2) . ' 16:45:00',
+     'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+     'title' => "Pothos 'Golden', 3 rooted cuttings"],
+];
+
+// Preview switch: add ?empty to a member page to see Nimali's garden before her first plant (state S1).
+// It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
+if (isset($_GET['empty']) && $current_user && current_page() !== 'index.php') {
+    $current_user['plant_count']        = 0;
+    $current_user['collection_count']   = 0;
+    $current_user['new_interest_count'] = 0;
+
+    $mock_plants        = [];
+    $mock_reminders     = [];
+    $mock_attention     = [];
+    $mock_new_interests = [];
+    $mock_garden_stats  = [
+        'health_counts'  => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
+        'upcoming_count' => 0,
+    ];
+}
