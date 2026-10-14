@@ -24,3 +24,16 @@ include __DIR__ . '/../includes/header.php';
 <!-- page HTML -->
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 ```
+
+## Previewing in stage F
+
+`mock-data.php` pretends Nimali (`@nimali.grows`) is logged in. Three switches change that; add them to any address:
+
+| Add | You see | Lasts |
+|---|---|---|
+| `?guest` | The site as a visitor who is not logged in | Until `?member`: the choice is kept in the session, like a real login |
+| `?member` | Nimali again | Until `?guest` |
+| `?empty` | Nimali before her first plant (state S1) | That page only |
+
+Opening Log in or Sign up switches to visitor mode by itself, because only visitors use those pages.
+In stage B the session holds the real login and these switches are deleted with `mock-data.php`.

@@ -10,6 +10,10 @@ require_once __DIR__ . '/../includes/mock-data.php';
 //   on POST: check the CSRF token, validate every field, check that username and email are free,
 //   save the row with password_hash(), log the member in and open the empty Dashboard (wireframe p9, UX notes).
 
+// Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
+// the Landing page, and every page after this one is seen as a visitor until ?member.
+$current_user = mock_become_visitor();
+
 $page_title    = 'Sign up';
 $page_css      = 'auth.css';
 $simple_header = true;

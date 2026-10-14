@@ -11,6 +11,10 @@ require_once __DIR__ . '/../includes/mock-data.php';
 //   session_regenerate_id(true), then go to the Dashboard. Every failure shows the same message,
 //   "Email or password is incorrect", and 5 failures lock the account for 15 minutes (CORE-12).
 
+// Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
+// the Landing page, and every page after this one is seen as a visitor until ?member.
+$current_user = mock_become_visitor();
+
 $page_title    = 'Log in';
 $page_css      = 'auth.css';
 $simple_header = true;

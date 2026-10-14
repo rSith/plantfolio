@@ -35,10 +35,27 @@ $current_user = [
     'new_interest_count' => 4,   // people newly interested in her listings (p10): the dot on the header bell
 ];
 
-// Preview switch: add ?guest to any address to see the page as a visitor who is not logged in.
+// Preview switch: add ?guest to any address to browse as a visitor who is not logged in, ?member to be Nimali again.
+// The choice is kept in the session, so it lasts from page to page, the way a real login does in stage B.
 // A visitor has no users row, so $current_user is null — exactly what the session will give in stage B.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (isset($_GET['guest'])) {
+    $_SESSION['preview_visitor'] = true;
+}
+if (isset($_GET['member'])) {
+    $_SESSION['preview_visitor'] = false;
+}
+if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
+}
+
+/** Mock-only: switch the preview to visitor mode, for pages only visitors use (Log in, Sign up). Returns null for $current_user. */
+function mock_become_visitor()
+{
+    $_SESSION['preview_visitor'] = true;
+    return null;
 }
 
 // Nimali's plants — rows of `plants` (wireframe p11), each joined with:
