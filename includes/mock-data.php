@@ -58,6 +58,17 @@ function mock_become_visitor()
     return null;
 }
 
+/**
+ * Mock-only: "log in" without checking anything, then open $page. Used by the Log in and Sign up forms, so a demo can
+ * walk from the Landing page into the member pages. Stage B replaces it with the real checks and session_regenerate_id().
+ */
+function mock_log_in_and_go($page)
+{
+    $_SESSION['preview_visitor'] = false;
+    header('Location: ' . url($page));
+    exit;
+}
+
 // Nimali's plants — rows of `plants` (wireframe p11), each joined with:
 //   plant_species  → scientific_name, common_name
 //   collections    → collection_name

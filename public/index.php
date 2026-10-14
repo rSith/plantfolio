@@ -7,7 +7,9 @@ require_once __DIR__ . '/../includes/mock-data.php';
 
 // Stage B: a signed-in member skips this page and goes to their Dashboard (wireframe p8):
 //   if ($current_user) { header('Location: ' . url('dashboard.php')); exit; }
-// Until dashboard.php exists, members see the Landing page too.
+// Stage F: the mock data starts with Nimali logged in, which would show the member header here. The Landing page
+// is for visitors, so it switches the preview to visitor mode, like Log in and Sign up. Log in leads back in.
+$current_user = mock_become_visitor();
 
 // "1,200+": rounded down to the hundred, so the claim stays true however many members there are.
 $member_count = $mock_site_stats['member_count'];
@@ -160,7 +162,8 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<section class="landing-section fresh" aria-labelledby="fresh-title">
+<?php // id="fresh": the visitor header's Exchange link jumps here ?>
+<section class="landing-section fresh" id="fresh" aria-labelledby="fresh-title">
   <div class="container">
     <div class="fresh-head">
       <div>

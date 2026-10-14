@@ -11,13 +11,18 @@ require_once __DIR__ . '/../includes/mock-data.php';
 //   session_regenerate_id(true), then go to the Dashboard. Every failure shows the same message,
 //   "Email or password is incorrect", and 5 failures lock the account for 15 minutes (CORE-12).
 
+// Stage F: pressing Log in "logs in" as Nimali without checking anything, so a demo can go from the Landing page
+// into the member pages. The browser's own checks (required fields) still run first.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    mock_log_in_and_go('dashboard.php');
+}
+
 // Stage F: only visitors use this page, so it switches the preview to visitor mode. The logo then leads to
-// the Landing page, and every page after this one is seen as a visitor until ?member.
+// the Landing page, and every page after this one is seen as a visitor until you log in (or add ?member).
 $current_user = mock_become_visitor();
 
-$page_title    = 'Log in';
-$page_css      = 'auth.css';
-$simple_header = true;
+$page_title = 'Log in';
+$page_css   = 'auth.css';
 
 include __DIR__ . '/../includes/header.php';
 ?>

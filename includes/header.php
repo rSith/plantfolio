@@ -1,14 +1,12 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
-// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
-// and $simple_header = true for a bar with only the logo (sign up, log in: nothing pulls the visitor away from the form).
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs.
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 
 $is_member       = !empty($current_user);
 $area            = current_area();
-$simple_header   = !empty($simple_header);
-$show_bottom_bar = $is_member && !$simple_header;   // footer.php prints the phone bar when this is true
+$show_bottom_bar = $is_member;   // footer.php prints the phone bar when this is true
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
 $nav_links = $is_member
@@ -19,8 +17,10 @@ $nav_links = $is_member
         ['label' => 'Exchange',  'href' => 'exchange.php',  'area' => 'exchange'],
     ]
     : [
+        // A visitor's Exchange link shows the newest listings on the Landing page ("Fresh on the exchange"),
+        // as the team asked; from the "See all" link there they reach the full marketplace (exchange.php).
         ['label' => 'Explore',      'href' => 'explore.php',             'area' => 'explore'],
-        ['label' => 'Exchange',     'href' => 'exchange.php',            'area' => 'exchange'],
+        ['label' => 'Exchange',     'href' => 'index.php#fresh',         'area' => null],
         ['label' => 'How it works', 'href' => 'index.php#how-it-works',  'area' => null],
     ];
 
@@ -56,12 +56,12 @@ if ($is_member) {
 
   <header class="site-header<?= $show_bottom_bar ? ' site-header-member' : '' ?>">
     <div class="container site-header-inner">
-      <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : '')) ?>" aria-label="PlantFolio home">
+      <?php // A member's home is the Dashboard; a visitor's is the top of the Landing page ?>
+      <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : 'index.php')) ?>" aria-label="PlantFolio home">
         <span class="logo-mark"><?= icon('leaf') ?></span>
         <span class="logo-text">PlantFolio</span>
       </a>
 
-      <?php if (!$simple_header): ?>
       <nav class="site-nav" aria-label="Main">
         <?php foreach ($nav_links as $link): ?>
           <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= $link['href'] === current_page() ? ' aria-current="page"' : '' ?>><?= e($link['label']) ?></a>
@@ -119,7 +119,6 @@ if ($is_member) {
           </details>
         <?php endif; ?>
       </div>
-      <?php endif; ?>
     </div>
   </header>
 
