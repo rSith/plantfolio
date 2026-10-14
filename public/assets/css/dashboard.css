@@ -237,3 +237,135 @@
     aspect-ratio: 4 / 3;
   }
 }
+
+/* ── Quick actions ──────────────────────────────────── */
+
+/* Four tiles, two by two (p10, element 5) */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.quick-action {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  min-height: 88px;
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.quick-action:hover {
+  background: var(--color-sage);
+  color: var(--color-ink);
+}
+
+.quick-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-leaf);
+}
+
+/* ── Garden at a glance ─────────────────────────────── */
+
+.glance-total {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: 0 0 var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+
+.glance-total strong {
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+/* One bar split into the four statuses; dashboard.php sets each part's width */
+.health-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-line);
+}
+
+.health-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4) var(--space-16);
+  margin: var(--space-12) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-small);
+}
+
+.health-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.health-legend strong {
+  margin-left: auto;
+}
+
+.health-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* The status colours: the strong text colour of each health badge. Needs attention uses the amber of
+   the rating stars, because its brown text colour is too close to Sick's red in a thin bar. */
+.health-bar-thriving { background: var(--status-thriving-text); }
+.health-bar-stable { background: var(--status-stable-text); }
+.health-bar-needs-attention { background: var(--color-amber); }
+.health-bar-sick { background: var(--status-sick-text); }
+
+/* ── Exchange activity ──────────────────────────────── */
+
+.exchange-news {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: var(--space-12) 0;
+}
+
+.exchange-news p {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
+}
+
+.exchange-btn {
+  width: 100%;
+}
+
+/* Tablet: the side panels sit two by two under the main column */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dash-side {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

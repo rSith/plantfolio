@@ -22,6 +22,25 @@ $care_count      = count($mock_reminders);   // due today or overdue
 $attention_count = count($mock_attention);
 $has_plants      = $current_user['plant_count'] > 0;
 
+// The four most frequent jobs, both AI tools included (p10, element 5)
+$quick_actions = [
+    ['label' => 'Add a plant',       'href' => 'plant-form.php',   'icon' => 'plus'],
+    ['label' => 'Identify a plant',  'href' => 'identify.php',     'icon' => 'sparkles'],
+    ['label' => 'Health check',      'href' => 'health-check.php', 'icon' => 'activity'],
+    ['label' => 'List for exchange', 'href' => 'listing-form.php', 'icon' => 'repeat'],
+];
+
+// Garden at a glance: each status's share of the garden becomes the width of its part of the bar
+$health_counts = $mock_garden_stats['health_counts'];
+$plant_total   = array_sum($health_counts);
+
+// Exchange activity: "4 people are interested in your Pothos 'Golden' …", or "in 2 of your listings"
+$interest_count  = count($mock_new_interests);
+$interest_titles = array_unique(array_column($mock_new_interests, 'title'));
+$interest_target = count($interest_titles) === 1
+    ? 'your ' . reset($interest_titles)
+    : count($interest_titles) . ' of your listings';
+
 $page_title = 'Dashboard';
 $page_css   = 'dashboard.css';
 
@@ -132,6 +151,62 @@ include __DIR__ . '/../includes/header.php';
               </article>
             <?php endforeach; ?>
           </div>
+        </section>
+      <?php endif; ?>
+    </div>
+
+    <div class="dash-side">
+      <section class="panel" aria-labelledby="actions-title">
+        <h2 class="panel-title" id="actions-title">Quick actions</h2>
+        <div class="quick-actions">
+          <?php foreach ($quick_actions as $action): ?>
+            <a class="quick-action" href="<?= e(url($action['href'])) ?>">
+              <span class="quick-action-icon"><?= icon($action['icon']) ?></span>
+              <?= e($action['label']) ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <?php if ($has_plants): ?>
+        <section class="panel" aria-labelledby="glance-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="glance-title">Garden at a glance</h2>
+            <a class="panel-link" href="<?= e(url('garden.php')) ?>">My Garden</a>
+          </div>
+          <p class="glance-total">
+            <strong><?= e($current_user['plant_count']) ?></strong>
+            <span>plants in<br><?= e($current_user['collection_count']) ?> collections</span>
+          </p>
+
+          <?php // The bar repeats the numbers in the list below it, so screen readers skip it ?>
+          <div class="health-bar" aria-hidden="true">
+            <?php foreach ($health_counts as $status => $count): ?>
+              <?php if ($count > 0): ?>
+                <span class="health-bar-<?= e(str_replace('_', '-', $status)) ?>" style="width: <?= e(round($count / $plant_total * 100, 1)) ?>%"></span>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </div>
+          <ul class="health-legend">
+            <?php foreach ($health_counts as $status => $count): ?>
+              <li><span class="health-dot health-bar-<?= e(str_replace('_', '-', $status)) ?>"></span> <?= e(health_label($status)) ?> <strong><?= e($count) ?></strong></li>
+            <?php endforeach; ?>
+          </ul>
+        </section>
+      <?php endif; ?>
+
+      <?php if ($interest_count > 0): ?>
+        <section class="panel" aria-labelledby="exchange-title">
+          <h2 class="panel-title" id="exchange-title">Exchange activity</h2>
+          <div class="exchange-news">
+            <span class="avatar-stack">
+              <?php foreach (array_slice($mock_new_interests, 0, 3) as $interest): ?>
+                <?php partial('avatar', ['member' => $interest, 'size' => 'sm']); ?>
+              <?php endforeach; ?>
+            </span>
+            <p><strong><?= e($interest_count) ?> <?= $interest_count === 1 ? 'person is' : 'people are' ?></strong> interested in <?= e($interest_target) ?></p>
+          </div>
+          <a class="btn btn-secondary btn-sm exchange-btn" href="<?= e(url('my-exchanges.php')) ?>">View interests</a>
         </section>
       <?php endif; ?>
     </div>
