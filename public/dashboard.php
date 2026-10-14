@@ -68,90 +68,104 @@ include __DIR__ . '/../includes/header.php';
 
   <div class="dash-grid">
     <div class="dash-main">
-      <section class="panel" aria-labelledby="care-title">
-        <div class="panel-head">
-          <h2 class="panel-title" id="care-title">Today's care
-            <?php if ($care_count > 0): ?><span class="badge badge-neutral"><?= e($care_count) ?> due</span><?php endif; ?>
-          </h2>
-          <a class="panel-link" href="<?= e(url('garden.php')) ?>">All reminders</a>
-        </div>
-
-        <?php if ($care_count > 0): ?>
-          <div class="panel-list">
-            <?php foreach ($mock_reminders as $reminder): ?>
-              <?php partial('care-row', ['reminder' => $reminder]); ?>
-            <?php endforeach; ?>
-          </div>
-        <?php else: ?>
-          <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
-        <?php endif; ?>
-
-        <a class="panel-foot" href="<?= e(url('garden.php')) ?>">
-          <span>Coming up this week · <strong><?= e($mock_garden_stats['upcoming_count']) ?> <?= $mock_garden_stats['upcoming_count'] === 1 ? 'task' : 'tasks' ?></strong></span>
-          <?= icon('chevron-right') ?>
-        </a>
-      </section>
-
-      <?php if ($attention_count > 0): ?>
-        <section class="panel" aria-labelledby="attention-title">
-          <div class="panel-head">
-            <h2 class="panel-title" id="attention-title">Needs attention</h2>
-            <span class="panel-count"><?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant' : 'plants' ?></span>
-          </div>
-
-          <div class="panel-list">
-            <?php foreach ($mock_attention as $plant): ?>
-              <?php
-              // The reason, in order of importance: a Health Check result, else overdue care, else the newest note
-              $from_check = $plant['log_source'] === 'ml' && $plant['predicted_label'] !== null;
-              $due        = $plant['next_due'] ? care_due($plant['next_due']) : null;
-              $overdue    = $due && $due['state'] === 'overdue';
-              $late_days  = $overdue ? -days_until($plant['next_due']) : 0;
-              $late_text  = $late_days . ($late_days === 1 ? ' day' : ' days');   // "Watering is 2 days overdue"
-              $plant_url  = url('plant.php?id=' . $plant['id']);
-              // A Health Check result is always a disease prediction
-              $condition  = $from_check ? prediction_name(['type' => 'disease', 'predicted_label' => $plant['predicted_label']]) : '';
-              ?>
-              <article class="attention-item">
-                <img class="attention-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>">
-                <div class="attention-body">
-                  <h3 class="attention-name">
-                    <a href="<?= e($plant_url) ?>"><?= e($plant['nickname']) ?></a>
-                    <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-                  </h3>
-                  <p class="attention-meta"><?= e($plant['common_name']) ?> · <?= e($plant['collection_name']) ?></p>
-
-                  <p class="attention-reason">
-                    <?php if ($from_check): ?>
-                      <?= icon('sparkles') ?>
-                      <span>Health check found <strong><?= e(mb_strtolower($condition)) ?></strong>
-                        (<?= e(round($plant['confidence'] * 100)) ?>% confidence) on <?= e(format_day($plant['logged_at'])) ?>.</span>
-                    <?php elseif ($overdue): ?>
-                      <?= icon(task_icon($plant['task'])) ?>
-                      <span><?= e($plant['task'] === 'water' ? 'Watering' : 'Fertilising') ?> is <?= e($late_text) ?> overdue. <?= e($plant['log_note']) ?></span>
-                    <?php else: ?>
-                      <?= icon('info') ?>
-                      <span><?= e($plant['log_note']) ?></span>
-                    <?php endif; ?>
-                  </p>
-
-                  <div class="attention-actions">
-                    <?php if ($from_check): ?>
-                      <?php // The care plan lives on the plant's profile; "Log update" opens a modal there from week 5 ?>
-                      <a class="btn btn-primary btn-sm" href="<?= e($plant_url) ?>">View care plan</a>
-                      <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                    <?php elseif ($overdue): ?>
-                      <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
-                      <button type="button" class="btn btn-secondary btn-sm"><?= icon(task_icon($plant['task'])) ?> <?= e($plant['task'] === 'water' ? 'Mark watered' : 'Mark fertilised') ?></button>
-                    <?php else: ?>
-                      <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                    <?php endif; ?>
-                  </div>
-                </div>
-              </article>
-            <?php endforeach; ?>
-          </div>
+      <?php if (!$has_plants): ?>
+        <?php // S1, right after sign-up: one clear next step plus the AI shortcut, instead of empty lists (p24) ?>
+        <section class="panel">
+          <?php partial('empty-state', [
+              'title'   => 'Your garden is waiting',
+              'text'    => 'Add your first plant to start its story.',
+              'actions' => [
+                  ['label' => 'Add a plant',          'href' => 'plant-form.php', 'icon' => 'plus'],
+                  ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
+              ],
+          ]); ?>
         </section>
+      <?php else: ?>
+        <section class="panel" aria-labelledby="care-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="care-title">Today's care
+              <?php if ($care_count > 0): ?><span class="badge badge-neutral"><?= e($care_count) ?> due</span><?php endif; ?>
+            </h2>
+            <a class="panel-link" href="<?= e(url('garden.php')) ?>">All reminders</a>
+          </div>
+
+          <?php if ($care_count > 0): ?>
+            <div class="panel-list">
+              <?php foreach ($mock_reminders as $reminder): ?>
+                <?php partial('care-row', ['reminder' => $reminder]); ?>
+              <?php endforeach; ?>
+            </div>
+          <?php else: ?>
+            <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
+          <?php endif; ?>
+
+          <a class="panel-foot" href="<?= e(url('garden.php')) ?>">
+            <span>Coming up this week · <strong><?= e($mock_garden_stats['upcoming_count']) ?> <?= $mock_garden_stats['upcoming_count'] === 1 ? 'task' : 'tasks' ?></strong></span>
+            <?= icon('chevron-right') ?>
+          </a>
+        </section>
+
+        <?php if ($attention_count > 0): ?>
+          <section class="panel" aria-labelledby="attention-title">
+            <div class="panel-head">
+              <h2 class="panel-title" id="attention-title">Needs attention</h2>
+              <span class="panel-count"><?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant' : 'plants' ?></span>
+            </div>
+
+            <div class="panel-list">
+              <?php foreach ($mock_attention as $plant): ?>
+                <?php
+                // The reason, in order of importance: a Health Check result, else overdue care, else the newest note
+                $from_check = $plant['log_source'] === 'ml' && $plant['predicted_label'] !== null;
+                $due        = $plant['next_due'] ? care_due($plant['next_due']) : null;
+                $overdue    = $due && $due['state'] === 'overdue';
+                $late_days  = $overdue ? -days_until($plant['next_due']) : 0;
+                $late_text  = $late_days . ($late_days === 1 ? ' day' : ' days');   // "Watering is 2 days overdue"
+                $plant_url  = url('plant.php?id=' . $plant['id']);
+                // A Health Check result is always a disease prediction
+                $condition  = $from_check ? prediction_name(['type' => 'disease', 'predicted_label' => $plant['predicted_label']]) : '';
+                ?>
+                <article class="attention-item">
+                  <img class="attention-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>">
+                  <div class="attention-body">
+                    <h3 class="attention-name">
+                      <a href="<?= e($plant_url) ?>"><?= e($plant['nickname']) ?></a>
+                      <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+                    </h3>
+                    <p class="attention-meta"><?= e($plant['common_name']) ?> · <?= e($plant['collection_name']) ?></p>
+
+                    <p class="attention-reason">
+                      <?php if ($from_check): ?>
+                        <?= icon('sparkles') ?>
+                        <span>Health check found <strong><?= e(mb_strtolower($condition)) ?></strong>
+                          (<?= e(round($plant['confidence'] * 100)) ?>% confidence) on <?= e(format_day($plant['logged_at'])) ?>.</span>
+                      <?php elseif ($overdue): ?>
+                        <?= icon(task_icon($plant['task'])) ?>
+                        <span><?= e($plant['task'] === 'water' ? 'Watering' : 'Fertilising') ?> is <?= e($late_text) ?> overdue. <?= e($plant['log_note']) ?></span>
+                      <?php else: ?>
+                        <?= icon('info') ?>
+                        <span><?= e($plant['log_note']) ?></span>
+                      <?php endif; ?>
+                    </p>
+
+                    <div class="attention-actions">
+                      <?php if ($from_check): ?>
+                        <?php // The care plan lives on the plant's profile; "Log update" opens a modal there from week 5 ?>
+                        <a class="btn btn-primary btn-sm" href="<?= e($plant_url) ?>">View care plan</a>
+                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
+                      <?php elseif ($overdue): ?>
+                        <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
+                        <button type="button" class="btn btn-secondary btn-sm"><?= icon(task_icon($plant['task'])) ?> <?= e($plant['task'] === 'water' ? 'Mark watered' : 'Mark fertilised') ?></button>
+                      <?php else: ?>
+                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                </article>
+              <?php endforeach; ?>
+            </div>
+          </section>
+        <?php endif; ?>
       <?php endif; ?>
     </div>
 
