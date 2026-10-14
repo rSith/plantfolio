@@ -281,6 +281,150 @@ $mock_new_interests = [
      'title' => "Pothos 'Golden', 3 rooted cuttings"],
 ];
 
+// ── Plant Profile (P05, CORE-18 and CORE-21) ───────────
+
+// The species guide — rows of `plant_species`, keyed by id so a plant finds its row with $mock_species[$species_id].
+// light, water, humidity and notes come from the proposal; pet_safe and the two default intervals are the
+// DES-07 additions (column names are my proposal until DES-13 writes database/species.csv).
+// The default intervals fill in a new plant's reminders on the Add Plant form (P06).
+$mock_species = [
+    1 => ['id' => 1, 'common_name' => 'Swiss cheese plant', 'scientific_name' => 'Monstera deliciosa',
+          'light' => 'Bright, indirect', 'water' => 'When the top 5 cm of soil are dry', 'humidity' => '60%+ preferred',
+          'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
+          'notes' => 'Give it a moss pole to climb: the leaves grow bigger and split more as it climbs. Wipe the leaves now and then so they can take in light.'],
+    2 => ['id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
+          'light' => 'Low to bright, indirect', 'water' => 'When the top half of the soil is dry', 'humidity' => '40%+',
+          'pet_safe' => 0, 'water_interval_days' => 5, 'fertilise_interval_days' => 30,
+          'notes' => 'Drooping leaves are its way of asking for water. Cuttings root easily in a glass of water.'],
+    3 => ['id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata',
+          'light' => 'Low to bright', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Any',
+          'pet_safe' => 0, 'water_interval_days' => 14, 'fertilise_interval_days' => 30,
+          'notes' => 'Too much water is the usual way to lose one. Water less in the rainy season.'],
+    4 => ['id' => 4, 'common_name' => 'Fiddle-leaf fig', 'scientific_name' => 'Ficus lyrata',
+          'light' => 'Bright, indirect, some sun', 'water' => 'When the top 3 cm are dry', 'humidity' => '50%+',
+          'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
+          'notes' => 'Dislikes being moved: expect a dropped leaf or two after a change of place.'],
+    5 => ['id' => 5, 'common_name' => 'Aloe vera', 'scientific_name' => 'Aloe vera',
+          'light' => 'Bright, direct sun', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Low, dry air is fine',
+          'pet_safe' => 0, 'water_interval_days' => 14, 'fertilise_interval_days' => 60,
+          'notes' => 'Use a gritty, fast-draining mix and a pot with a hole. Pups can be potted up once they have roots.'],
+    6 => ['id' => 6, 'common_name' => 'Tomato', 'scientific_name' => 'Solanum lycopersicum',
+          'light' => 'Full sun, 6+ hours', 'water' => 'Keep the soil evenly moist', 'humidity' => 'Any',
+          'pet_safe' => 0, 'water_interval_days' => 2, 'fertilise_interval_days' => 14,
+          'notes' => 'Water the soil, not the leaves: wet leaves invite early blight. Remove the lowest leaves as the plant grows.'],
+    7 => ['id' => 7, 'common_name' => 'Peace lily', 'scientific_name' => 'Spathiphyllum wallisii',
+          'light' => 'Low to medium, indirect', 'water' => 'When the leaves just begin to droop', 'humidity' => '50%+',
+          'pet_safe' => 0, 'water_interval_days' => 4, 'fertilise_interval_days' => 45,
+          'notes' => 'Brown leaf tips usually mean dry air or tap water with a lot of chlorine.'],
+    8 => ['id' => 8, 'common_name' => 'Mexican snowball', 'scientific_name' => 'Echeveria elegans',
+          'light' => 'Bright, some direct sun', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Low',
+          'pet_safe' => 1, 'water_interval_days' => 10, 'fertilise_interval_days' => 60,
+          'notes' => 'Water the soil, never into the rosette. A stretched, leaning stem means it wants more light.'],
+];
+
+// Every reminder of Nimali's plants — rows of `care_reminders`. $mock_reminders above holds only today's three;
+// these are all of them, with the same ids, and each keeps next_due = last_done + interval_days.
+$mock_plant_reminders = [
+    ['id' => 11, 'plant_id' => 42, 'task' => 'water',     'interval_days' => 7,  'last_done' => mock_date(-7),  'next_due' => mock_date(0)],
+    ['id' => 14, 'plant_id' => 42, 'task' => 'fertilise', 'interval_days' => 30, 'last_done' => mock_date(-18), 'next_due' => mock_date(12)],
+    ['id' => 12, 'plant_id' => 43, 'task' => 'water',     'interval_days' => 5,  'last_done' => mock_date(-7),  'next_due' => mock_date(-2)],
+    ['id' => 13, 'plant_id' => 44, 'task' => 'fertilise', 'interval_days' => 30, 'last_done' => mock_date(-30), 'next_due' => mock_date(0)],
+    ['id' => 15, 'plant_id' => 44, 'task' => 'water',     'interval_days' => 14, 'last_done' => mock_date(-10), 'next_due' => mock_date(4)],
+    ['id' => 16, 'plant_id' => 45, 'task' => 'water',     'interval_days' => 7,  'last_done' => mock_date(-4),  'next_due' => mock_date(3)],
+    ['id' => 17, 'plant_id' => 45, 'task' => 'fertilise', 'interval_days' => 30, 'last_done' => mock_date(-20), 'next_due' => mock_date(10)],
+    ['id' => 18, 'plant_id' => 48, 'task' => 'water',     'interval_days' => 4,  'last_done' => mock_date(-3),  'next_due' => mock_date(1)],
+    ['id' => 19, 'plant_id' => 46, 'task' => 'water',     'interval_days' => 14, 'last_done' => mock_date(-5),  'next_due' => mock_date(9)],
+    ['id' => 20, 'plant_id' => 47, 'task' => 'water',     'interval_days' => 2,  'last_done' => mock_date(-1),  'next_due' => mock_date(1)],
+    ['id' => 21, 'plant_id' => 47, 'task' => 'fertilise', 'interval_days' => 14, 'last_done' => mock_date(-7),  'next_due' => mock_date(7)],
+    ['id' => 22, 'plant_id' => 49, 'task' => 'water',     'interval_days' => 10, 'last_done' => mock_date(-4),  'next_due' => mock_date(6)],
+];
+
+// The plant story — rows of `health_logs`, newest first (wireframe p12, element 6). An entry written by an AI tool
+// has source 'ml' and is joined with its ml_predictions row: prediction_type, predicted_label, confidence.
+// A plant's oldest entry is the day it was added to the garden. The newest date of each plant matches its
+// last_logged_at in $mock_plants, and Tommy's and Goldie's newest notes are the ones on the Dashboard.
+$mock_health_logs = [
+    ['id' => 101, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/monty.svg',
+     'note' => 'New leaf unfurled, the biggest one yet, with four splits.', 'logged_at' => mock_date(-5) . ' 18:20:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 95, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+     'note' => 'Repotted into a 25 cm terracotta pot with chunky aroid mix.', 'logged_at' => mock_date(-31) . ' 16:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 61, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/monty.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-03-20 10:00:00',
+     'prediction_type' => 'species', 'predicted_label' => 'Monstera deliciosa', 'confidence' => 0.91],
+
+    ['id' => 99, 'plant_id' => 43, 'status' => 'needs_attention', 'source' => 'manual', 'photo' => null,
+     'note' => 'Leaves may start to droop.', 'logged_at' => mock_date(-3) . ' 18:10:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 62, 'plant_id' => 43, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/goldie.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-04-02 11:30:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 93, 'plant_id' => 44, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+     'note' => 'Two new pups at the base.', 'logged_at' => mock_date(-12) . ' 09:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 88, 'plant_id' => 44, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/sergeant.svg',
+     'note' => 'Checked the species with the Plant Identifier.', 'logged_at' => mock_date(-40) . ' 10:20:00',
+     'prediction_type' => 'species', 'predicted_label' => 'Dracaena trifasciata', 'confidence' => 0.96],
+    ['id' => 63, 'plant_id' => 44, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/sergeant.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-05-11 15:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 96, 'plant_id' => 45, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+     'note' => 'Dropped one lower leaf after the move to the window.', 'logged_at' => mock_date(-9) . ' 17:30:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 64, 'plant_id' => 45, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/figgy.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-06-18 12:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 94, 'plant_id' => 48, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+     'note' => 'Drooped on Sunday, perked up an hour after watering.', 'logged_at' => mock_date(-15) . ' 08:40:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 70, 'plant_id' => 48, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/lily.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-09-02 10:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 91, 'plant_id' => 46, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
+     'note' => 'Four pups ready to pot up.', 'logged_at' => mock_date(-20) . ' 16:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 65, 'plant_id' => 46, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-07-06 09:30:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 102, 'plant_id' => 47, 'status' => 'sick', 'source' => 'ml', 'photo' => 'mock/tommy.svg',
+     'note' => 'Brown rings on the lower leaves.', 'logged_at' => mock_date(-1) . ' 07:46:00',
+     'prediction_type' => 'disease', 'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92],
+    ['id' => 98, 'plant_id' => 47, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+     'note' => 'Fruit setting on the first truss.', 'logged_at' => mock_date(-6) . ' 17:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 66, 'plant_id' => 47, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/tommy.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-08-23 08:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    ['id' => 90, 'plant_id' => 49, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+     'note' => 'Moved to the sunniest windowsill.', 'logged_at' => mock_date(-26) . ' 10:15:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 71, 'plant_id' => 49, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/pearl.svg',
+     'note' => 'Added to garden.', 'logged_at' => '2025-09-27 11:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+];
+
+// Extra photos for the gallery — rows of the optional `plant_photos` table, newest first.
+// Only placeholder drawings exist, so Monty's four photos are the same drawing; real photos replace them.
+$mock_plant_photos = [
+    ['id' => 204, 'plant_id' => 42, 'path' => 'mock/monty.svg', 'created_at' => mock_date(-5) . ' 18:20:00'],
+    ['id' => 203, 'plant_id' => 42, 'path' => 'mock/monty.svg', 'created_at' => mock_date(-31) . ' 16:00:00'],
+    ['id' => 202, 'plant_id' => 42, 'path' => 'mock/monty.svg', 'created_at' => '2026-01-10 09:00:00'],
+    ['id' => 201, 'plant_id' => 42, 'path' => 'mock/monty.svg', 'created_at' => '2025-03-20 10:00:00'],
+    ['id' => 210, 'plant_id' => 47, 'path' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 07:46:00'],
+    ['id' => 211, 'plant_id' => 46, 'path' => 'mock/vera.svg',  'created_at' => mock_date(-20) . ' 16:00:00'],
+];
+
+// Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
+// Private plants (Vera, Pearl) cannot be seen by others, so they have none.
+$mock_like_counts = [42 => 12, 43 => 3, 44 => 7, 45 => 2, 48 => 4, 47 => 5];
+
 // Preview switch: add ?empty to a member page to see Nimali's garden before her first plant (state S1).
 // It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
 if (isset($_GET['empty']) && $current_user && current_page() !== 'index.php') {
