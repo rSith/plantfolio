@@ -33,6 +33,8 @@ $current_user = [
     'dashboard_reminders' => 1,   // Reminders: care tasks appear on the Dashboard
 
     // Not columns of `users`: stage B calculates these with COUNT() and AVG() on other tables.
+    // Her own pages count everything, private plants and collections included. Other people see smaller,
+    // public-only numbers: those are in $mock_users below (13 plants, 2 collections).
     'plant_count'      => 18,
     'collection_count' => 3,
     'swap_count'       => 12,
@@ -149,13 +151,20 @@ $mock_plants = [
      'last_logged_at' => mock_date(-26) . ' 10:15:00'],
 ];
 
-// Nimali's collections — rows of `collections` (wireframe p11, element 2), plus plant_count,
-// a COUNT() on plants. A collection with is_public = 0 is private: the page shows a lock and hides it from others.
+// Nimali's collections — rows of `collections` (wireframe p11, element 2), plus two calculated columns:
+//   plant_count  — a COUNT() on plants
+//   cover_photos — the photos of up to three of its plants, most liked first: the collage on her Public Profile
+//                  (p21, element 5). Stage B: GROUP_CONCAT(plants.photo ORDER BY like_count DESC), split with explode().
+// A collection with is_public = 0 is private: the page shows a lock and hides it from others.
 // The counts are her whole garden (18 plants, as on p11 and the Dashboard); $mock_plants holds only a sample of 8.
+// So the Balcony collage borrows two placeholder drawings (aloe, snake plant) for Balcony plants that are not in the sample.
 $mock_collections = [
-    ['id' => 1, 'user_id' => 1, 'name' => 'Living room', 'is_public' => 1, 'plant_count' => 7],
-    ['id' => 2, 'user_id' => 1, 'name' => 'Balcony',     'is_public' => 1, 'plant_count' => 6],
-    ['id' => 3, 'user_id' => 1, 'name' => 'Succulents',  'is_public' => 0, 'plant_count' => 5],
+    ['id' => 1, 'user_id' => 1, 'name' => 'Living room', 'is_public' => 1, 'plant_count' => 7,
+     'cover_photos' => ['mock/monty.svg', 'mock/sergeant.svg', 'mock/lily.svg']],
+    ['id' => 2, 'user_id' => 1, 'name' => 'Balcony',     'is_public' => 1, 'plant_count' => 6,
+     'cover_photos' => ['mock/tommy.svg', 'mock/vera.svg', 'mock/sergeant.svg']],
+    ['id' => 3, 'user_id' => 1, 'name' => 'Succulents',  'is_public' => 0, 'plant_count' => 5,
+     'cover_photos' => ['mock/pearl.svg', 'mock/vera.svg', 'mock/pearl.svg']],
 ];
 
 // Care that is due today or overdue — rows of `care_reminders` (wireframe p10), each joined with:
@@ -204,6 +213,15 @@ $mock_listings = [
      'status' => 'open', 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18],
+
+    // Nimali's second open listing, from wireframe p17 ("Peace lily division · Kurunegala · 1 km · 1 week ago"),
+    // so her profile's "See listings (2)" matches p21. It offers her Lily (plant 48). looking_for is invented
+    // (cut off on p17). Id 6: it is older than listings 7 to 10.
+    ['id' => 6, 'user_id' => 1, 'plant_id' => 48, 'title' => 'Peace lily division',
+     'type' => 'swap', 'looking_for' => 'a fern or a calathea', 'location' => 'Kurunegala',
+     'status' => 'open', 'photo' => 'mock/lily.svg', 'created_at' => mock_date(-7) . ' 16:30:00',
+     'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
+     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 1, 'distance_km' => 1],
 ];
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -467,25 +485,38 @@ $mock_plant_photos = [
 ];
 
 // Members as other people see them — users rows keyed by id, public columns only (never email or phone),
-// plus the counts stage B calculates (plant_count, rating_avg, rating_count). The Plant Profile joins its owner
-// from here, so the owner card still shows Nimali while you preview the page as a visitor.
-// Towns and the counts of Amaya, Kavindi and Dinesh are from wireframe p16; Ruwan's and every created_at are invented.
+// plus the counts stage B calculates. The Plant Profile joins its owner from here, so the owner card still shows
+// Nimali while you preview the page as a visitor. The Public Profile (P14) reads every column.
+//   plant_count, collection_count — COUNT() of the member's PUBLIC plants and collections only: these numbers are
+//                    shown to other people, and private things must not be counted for them either.
+//                    Nimali has 18 plants in 3 collections; others see 13 in 2 (her Succulents are private).
+//   swap_count     — completed swaps: closed listings of type swap the member took part in, as owner or as exchanged_with
+//   rating_avg     — ROUND(AVG(score), 1) of the ratings the member received; rating_count — COUNT() of them.
+//                    Both match the score counts in $mock_rating_counts below. A free give-away can be rated too,
+//                    so a member can have more ratings than swaps.
+// Towns and the plant counts and ratings of Amaya, Kavindi and Dinesh are from wireframe p16; Nimali's numbers and
+// bio from p21. Ruwan's numbers, every swap_count and created_at, and the other bios are invented.
 $mock_users = [
     1 => ['id' => 1, 'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
+          'bio' => 'Balcony gardener growing aroids and far too many pothos. Always happy to swap cuttings.',
           'location' => 'Kurunegala', 'created_at' => '2025-03-14 09:00:00',
-          'plant_count' => 18, 'rating_avg' => 4.9, 'rating_count' => 23],
+          'plant_count' => 13, 'collection_count' => 2, 'swap_count' => 12, 'rating_avg' => 4.9, 'rating_count' => 23],
     2 => ['id' => 2, 'username' => 'aroid.amaya', 'full_name' => 'Amaya Madushani', 'avatar' => null,
+          'bio' => 'Collecting aroids one cutting at a time in a small Colombo flat. Ask me about pilea babies.',
           'location' => 'Colombo', 'created_at' => '2024-11-02 19:30:00',
-          'plant_count' => 42, 'rating_avg' => 4.8, 'rating_count' => 14],
+          'plant_count' => 42, 'collection_count' => 2, 'swap_count' => 10, 'rating_avg' => 4.8, 'rating_count' => 14],
     3 => ['id' => 3, 'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+          'bio' => 'Hill-country plant hoarder: aroids indoors, succulents on the shelf, tomato seedlings every season to give away.',
           'location' => 'Kandy', 'created_at' => '2024-08-21 07:15:00',
-          'plant_count' => 64, 'rating_avg' => 5.0, 'rating_count' => 11],
+          'plant_count' => 64, 'collection_count' => 2, 'swap_count' => 8, 'rating_avg' => 5.0, 'rating_count' => 11],
     4 => ['id' => 4, 'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
+          'bio' => 'Coastal gardener testing which plants can take the sea breeze. Snake plants never let me down.',
           'location' => 'Negombo', 'created_at' => '2025-01-09 12:00:00',
-          'plant_count' => 37, 'rating_avg' => 4.7, 'rating_count' => 15],
+          'plant_count' => 37, 'collection_count' => 1, 'swap_count' => 13, 'rating_avg' => 4.7, 'rating_count' => 15],
     5 => ['id' => 5, 'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
+          'bio' => 'Weekend gardener in Kurunegala. My mother aloe keeps making pups, so there are always some to share.',
           'location' => 'Kurunegala', 'created_at' => '2025-05-27 18:45:00',
-          'plant_count' => 21, 'rating_avg' => 4.6, 'rating_count' => 9],
+          'plant_count' => 21, 'collection_count' => 2, 'swap_count' => 5, 'rating_avg' => 4.6, 'rating_count' => 9],
 ];
 
 // ── Explore (P09, COM-01 to COM-03) ─────────────────────
@@ -587,6 +618,122 @@ $mock_like_counts = [
     51 => 48, 52 => 87, 53 => 48, 54 => 31, 55 => 9, 56 => 7, 57 => 22, 58 => 5, 59 => 14, 60 => 11, 61 => 6,
 ];
 
+// ── Public Profile (P14, COM-05 and COM-13) ─────────────
+
+// Other members' collections — rows of `collections` with the same two calculated columns as $mock_collections
+// (plant_count, cover_photos), using the ids $mock_community_plants already points at. plant_count counts public plants,
+// and each member's public collections add up to their plant_count in $mock_users (Amaya 12 + 30 = 42).
+// Every public collection holds at least one plant of the sample, so opening it on a profile never shows an empty list.
+// Names, counts and the two private collections are invented. The collages borrow placeholder drawings for the
+// plants that are not in the sample.
+$mock_community_collections = [
+    ['id' => 21, 'user_id' => 2, 'name' => 'Windowsill',       'is_public' => 1, 'plant_count' => 12,
+     'cover_photos' => ['mock/pip.svg', 'mock/pearl.svg', 'mock/vera.svg']],
+    ['id' => 22, 'user_id' => 2, 'name' => 'Living room',      'is_public' => 1, 'plant_count' => 30,
+     'cover_photos' => ['mock/monty.svg', 'mock/monty.svg', 'mock/lily.svg']],   // Big Momma, Holey, then a borrowed drawing
+    ['id' => 23, 'user_id' => 2, 'name' => 'Propagation box',  'is_public' => 0, 'plant_count' => 6,
+     'cover_photos' => ['mock/goldie.svg', 'mock/pip.svg', 'mock/monty.svg']],
+    ['id' => 31, 'user_id' => 3, 'name' => 'Aroids',           'is_public' => 1, 'plant_count' => 40,
+     'cover_photos' => ['mock/monty.svg', 'mock/goldie.svg', 'mock/figgy.svg']],
+    ['id' => 32, 'user_id' => 3, 'name' => 'Succulent shelf',  'is_public' => 1, 'plant_count' => 24,
+     'cover_photos' => ['mock/pearl.svg', 'mock/vera.svg', 'mock/pearl.svg']],
+    ['id' => 41, 'user_id' => 4, 'name' => 'Hallway',          'is_public' => 1, 'plant_count' => 37,
+     'cover_photos' => ['mock/monty.svg', 'mock/sergeant.svg', 'mock/lily.svg']],
+    ['id' => 42, 'user_id' => 4, 'name' => 'Propagation jars', 'is_public' => 0, 'plant_count' => 2,
+     'cover_photos' => ['mock/goldie.svg', 'mock/sergeant.svg']],
+    ['id' => 51, 'user_id' => 5, 'name' => 'Verandah',         'is_public' => 1, 'plant_count' => 14,
+     'cover_photos' => ['mock/monty.svg', 'mock/goldie.svg', 'mock/figgy.svg']],
+    ['id' => 52, 'user_id' => 5, 'name' => 'Garden',           'is_public' => 1, 'plant_count' => 7,
+     'cover_photos' => ['mock/vera.svg', 'mock/tommy.svg', 'mock/sergeant.svg']],
+];
+
+// Written reviews — rows of `user_ratings` that have a comment, newest first, each joined with:
+//   users             → rater_username, rater_full_name, rater_avatar (who wrote it)
+//   exchange_listings → listing_title (what the two members exchanged)
+// created_at is not in the table plan yet: a proposed user_ratings column for DES-07 (p21 dates the latest review).
+// Stage B: … WHERE rated_id = ? AND comment IS NOT NULL ORDER BY created_at DESC.
+// A rating belongs to one finished exchange (listing_id), and the two members may rate each other once each, so every
+// listing appears twice. Listings 1 to 5 are Nimali's closed listings; $mock_listings holds only open ones.
+// Ratings without a comment are not rows here; they are counted in $mock_rating_counts.
+// The newest rating of Nimali, from @dinesh.greens on 14 Sep, is the latest review on p21; the rest are invented.
+$mock_user_ratings = [
+    ['id' => 58, 'rater_id' => 1, 'rated_id' => 4, 'listing_id' => 5, 'score' => 5,
+     'comment' => 'Friendly and on time, and the plant in return was exactly as described.',
+     'created_at' => '2026-09-14 18:05:00',
+     'rater_username' => 'nimali.grows', 'rater_full_name' => 'Nimali Perera', 'rater_avatar' => null,
+     'listing_title' => "Pothos 'Marble Queen' cuttings (3)"],
+    ['id' => 57, 'rater_id' => 4, 'rated_id' => 1, 'listing_id' => 5, 'score' => 5,
+     'comment' => 'Healthy cuttings, well packed. Easy and friendly swap!',
+     'created_at' => '2026-09-14 16:20:00',
+     'rater_username' => 'dinesh.greens', 'rater_full_name' => 'Dinesh Gunasekara', 'rater_avatar' => null,
+     'listing_title' => "Pothos 'Marble Queen' cuttings (3)"],
+
+    ['id' => 51, 'rater_id' => 1, 'rated_id' => 3, 'listing_id' => 4, 'score' => 5,
+     'comment' => 'Brought a beautiful echeveria in return and shared great tips for it. A real plant person!',
+     'created_at' => '2026-08-30 12:40:00',
+     'rater_username' => 'nimali.grows', 'rater_full_name' => 'Nimali Perera', 'rater_avatar' => null,
+     'listing_title' => 'Monstera cutting with an aerial root'],
+    ['id' => 50, 'rater_id' => 3, 'rated_id' => 1, 'listing_id' => 4, 'score' => 5,
+     'comment' => 'Big, healthy cutting with a strong aerial root. It rooted in two weeks.',
+     'created_at' => '2026-08-30 11:05:00',
+     'rater_username' => 'kandy.jungle', 'rater_full_name' => 'Kavindi Jayawardena', 'rater_avatar' => null,
+     'listing_title' => 'Monstera cutting with an aerial root'],
+
+    ['id' => 44, 'rater_id' => 1, 'rated_id' => 2, 'listing_id' => 3, 'score' => 5,
+     'comment' => 'Brought a lovely pilea baby in return, wrapped in damp paper for the bus ride.',
+     'created_at' => '2026-07-19 17:30:00',
+     'rater_username' => 'nimali.grows', 'rater_full_name' => 'Nimali Perera', 'rater_avatar' => null,
+     'listing_title' => 'Spider plant babies (4)'],
+    ['id' => 43, 'rater_id' => 2, 'rated_id' => 1, 'listing_id' => 3, 'score' => 4,
+     'comment' => 'Nice plants and easy to arrange. One baby had a yellow leaf, but it settled in fast.',
+     'created_at' => '2026-07-19 15:10:00',
+     'rater_username' => 'aroid.amaya', 'rater_full_name' => 'Amaya Madushani', 'rater_avatar' => null,
+     'listing_title' => 'Spider plant babies (4)'],
+
+    ['id' => 37, 'rater_id' => 1, 'rated_id' => 5, 'listing_id' => 2, 'score' => 5,
+     'comment' => 'Kind and patient, and even brought a pot for the cuttings.',
+     'created_at' => '2026-06-02 19:00:00',
+     'rater_username' => 'nimali.grows', 'rater_full_name' => 'Nimali Perera', 'rater_avatar' => null,
+     'listing_title' => "Pothos 'Golden' cuttings (2)"],
+    ['id' => 36, 'rater_id' => 5, 'rated_id' => 1, 'listing_id' => 2, 'score' => 3,
+     'comment' => 'The cuttings were smaller than in the photo, but they all rooted in the end.',
+     'created_at' => '2026-06-02 18:15:00',
+     'rater_username' => 'ruwan.roots', 'rater_full_name' => 'Ruwan Rathnayake', 'rater_avatar' => null,
+     'listing_title' => "Pothos 'Golden' cuttings (2)"],
+
+    ['id' => 24, 'rater_id' => 1, 'rated_id' => 4, 'listing_id' => 1, 'score' => 5,
+     'comment' => 'Quick replies and a healthy plant in return. Would swap again.',
+     'created_at' => '2026-03-08 13:00:00',
+     'rater_username' => 'nimali.grows', 'rater_full_name' => 'Nimali Perera', 'rater_avatar' => null,
+     'listing_title' => 'Snake plant pup'],
+    ['id' => 23, 'rater_id' => 4, 'rated_id' => 1, 'listing_id' => 1, 'score' => 5,
+     'comment' => 'Strong little pup with its own roots. Smooth swap from start to finish.',
+     'created_at' => '2026-03-08 11:45:00',
+     'rater_username' => 'dinesh.greens', 'rater_full_name' => 'Dinesh Gunasekara', 'rater_avatar' => null,
+     'listing_title' => 'Snake plant pup'],
+];
+
+// How many ratings of each score every member received: the result of
+//   SELECT rated_id, score, COUNT(*) AS rating_count FROM user_ratings GROUP BY rated_id, score
+// (the profile asks for one member: WHERE rated_id = ? GROUP BY score). A score nobody gave has no row; the page adds 0.
+// Each member's rows add up to rating_count in $mock_users, and their average rounds to rating_avg.
+// Nimali: (21×5 + 1×4 + 1×3) / 23 = 112 / 23 = 4.87, printed 4.9. Wireframe p21 shows 20 / 2 / 1, which averages 4.83
+// and would print 4.8, so one 4★ became a 5★ to keep the 4.9 that p16, p17, p18 and p21 all print.
+$mock_rating_counts = [
+    ['rated_id' => 1, 'score' => 5, 'rating_count' => 21],
+    ['rated_id' => 1, 'score' => 4, 'rating_count' => 1],
+    ['rated_id' => 1, 'score' => 3, 'rating_count' => 1],
+    ['rated_id' => 2, 'score' => 5, 'rating_count' => 11],   // Amaya: 67 / 14 = 4.79, printed 4.8
+    ['rated_id' => 2, 'score' => 4, 'rating_count' => 3],
+    ['rated_id' => 3, 'score' => 5, 'rating_count' => 11],   // Kavindi: 55 / 11 = 5.0
+    ['rated_id' => 4, 'score' => 5, 'rating_count' => 11],   // Dinesh: 70 / 15 = 4.67, printed 4.7
+    ['rated_id' => 4, 'score' => 4, 'rating_count' => 3],
+    ['rated_id' => 4, 'score' => 3, 'rating_count' => 1],
+    ['rated_id' => 5, 'score' => 5, 'rating_count' => 6],    // Ruwan: 41 / 9 = 4.56, printed 4.6
+    ['rated_id' => 5, 'score' => 4, 'rating_count' => 2],
+    ['rated_id' => 5, 'score' => 3, 'rating_count' => 1],
+];
+
 // Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
 // Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
 // stay empty until ?member or Log in brings her garden back. Create account turns it on.
@@ -598,6 +745,9 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $current_user['plant_count']        = 0;
     $current_user['collection_count']   = 0;
     $current_user['new_interest_count'] = 0;
+    $current_user['swap_count']         = 0;
+    $current_user['rating_avg']         = 0;
+    $current_user['rating_count']       = 0;
 
     // Only her plants' likes go; other members' plants keep theirs. This line must run before $mock_plants is emptied.
     $mock_like_counts   = array_diff_key($mock_like_counts, array_flip(array_column($mock_plants, 'id')));
@@ -617,8 +767,11 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     // A new account has no listings yet, and nothing to count on its public profile
     $mock_listings = array_values(array_filter($mock_listings, fn ($listing) => $listing['user_id'] !== $current_user['id']));
     $mock_users[$current_user['id']] = array_merge($mock_users[$current_user['id']], [
-        'plant_count' => 0, 'rating_avg' => 0, 'rating_count' => 0,
+        'plant_count' => 0, 'collection_count' => 0, 'swap_count' => 0, 'rating_avg' => 0, 'rating_count' => 0,
     ]);
+    // No ratings received yet. The ratings she gave other members stay, so their counts still add up.
+    $mock_user_ratings  = array_values(array_filter($mock_user_ratings, fn ($rating) => $rating['rated_id'] !== $current_user['id']));
+    $mock_rating_counts = array_values(array_filter($mock_rating_counts, fn ($row) => $row['rated_id'] !== $current_user['id']));
 }
 
 // Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,
