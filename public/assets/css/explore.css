@@ -316,3 +316,107 @@
     }
   }
 }
+
+/* ── Section headings inside the results ────────────── */
+/* "Plant lovers matching …" and "Popular plants": Poppins like the result count, as on p16 */
+
+.explore-section-title {
+  margin: 0;
+  overflow-wrap: anywhere;   /* the search word is printed here, and it can be one very long word */
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Plant lovers matching the search (p16, element 6) ─ */
+
+.people-row {
+  margin-bottom: var(--space-16);
+}
+
+.people-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-12);
+}
+
+/* The whole line is the touch target, not just the words */
+.people-row-head .panel-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* Phone: one strip that scrolls sideways, each card snapping into place. Only the strip scrolls, never the page.
+   The negative margins let it run to the edges of the screen, so the next card peeks in and invites a swipe. */
+.people-row-list {
+  display: grid;
+  grid-auto-columns: minmax(240px, 80%);
+  grid-auto-flow: column;
+  gap: var(--space-12);
+  margin: 0 calc(var(--space-16) * -1);
+  padding: var(--space-4) var(--space-16) var(--space-8);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding: 0 var(--space-16);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;   /* phones draw no scroll bar anyway; a mouse gets a slim one */
+}
+
+.people-row-list > * {
+  scroll-snap-align: start;
+}
+
+/* Tablet and desktop: all three fit side by side, so the strip becomes a plain row */
+@media (min-width: 768px) {
+  .people-row-list {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--space-4) 0 0;
+    overflow: visible;
+  }
+}
+
+/* ── People tab ─────────────────────────────────────── */
+
+/* Why these people: on its own line under the count */
+.results-note {
+  flex-basis: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.people-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .people-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .people-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── No results: popular plants instead of a blank page ─ */
+
+.popular-plants {
+  margin-top: var(--space-32);
+}
+
+.popular-text {
+  margin: var(--space-4) 0 var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}

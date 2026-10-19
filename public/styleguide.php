@@ -32,6 +32,13 @@ $health_statuses = [
 // Found by id (Nimali's listing, 7), so adding listings to the mock data never changes the samples.
 $sample_member = $mock_listings[array_search(7, array_column($mock_listings, 'id'))];
 
+// Members for the member card: users rows found by id. Amaya carries a match_count, as when Explore searches "monstera".
+$sample_members = [
+    $mock_users[2] + ['match_count' => 2],
+    $mock_users[3],
+    $mock_users[4],
+];
+
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
@@ -269,6 +276,21 @@ include __DIR__ . '/../includes/header.php';
       <?php endforeach; ?>
     </div>
     <p class="text-small sg-note">Contact details never appear on a card. Cards link to pages that are built in weeks 3 and 4.</p>
+  </section>
+
+  <section class="sg-card" aria-labelledby="sg-member-cards">
+    <h2 class="label" id="sg-member-cards">Member card</h2>
+    <div class="sg-cards">
+      <?php foreach ($sample_members as $member): ?>
+        <?php partial('member-card', ['member' => $member]); ?>
+      <?php endforeach; ?>
+    </div>
+    <div class="sg-cards sg-cards-wide sg-row-spaced">
+      <?php foreach ($sample_members as $member): ?>
+        <?php partial('member-card', ['member' => $member, 'compact' => true]); ?>
+      <?php endforeach; ?>
+    </div>
+    <p class="text-small sg-note">Explore's People tab (upright from tablet width, avatar beside the text on a phone) and the compact card of its "Plant lovers matching" row. Each opens the member's Public Profile; email and phone are never shown.</p>
   </section>
 
   <section class="sg-card" aria-labelledby="sg-care">

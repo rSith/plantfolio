@@ -1,6 +1,7 @@
 <?php
 // Explore and Search (P09, wireframe p16): one search box for the whole community's public plants, species and
 // @usernames, with Plants / People tabs, active filter chips and a sort (COM-01, COM-02, COM-03, UI half).
+// A search also shows the members it matches, and finding nothing shows popular plants instead of a blank page.
 // Public: visitors and members see the same results. Only public plants can ever appear.
 // Reads $mock_public_plants and $mock_users from mock data and filters them in PHP.
 
@@ -12,14 +13,18 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // The wireframe asks for everything in the address (GET), so a search can be shared and Back works.
 // Anyone can type anything there, so every value is checked against what is allowed.
 
-$q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 100);
+// A hand-made address can send a list where one word belongs (q[]=x makes $_GET['q'] an array). Only text is
+// accepted; anything else counts as "not given", so it falls back to the default like any other wrong value.
+$get_text = fn ($name) => is_string($_GET[$name] ?? null) ? $_GET[$name] : '';
+
+$q = mb_substr(trim($get_text('q')), 0, 100);
 
 // "@kandy" looks for a member: the search opens on the People tab, and the @ is not part of the name (p16, element 1)
 $is_member_search = str_starts_with($q, '@');
 $term             = trim(ltrim($q, '@'));
 
 $default_tab = $is_member_search ? 'people' : 'plants';
-$tab         = $_GET['tab'] ?? $default_tab;
+$tab         = $get_text('tab');
 if (!in_array($tab, ['plants', 'people'], true)) {
     $tab = $default_tab;
 }
@@ -35,7 +40,7 @@ foreach ((array) ($_GET['species'] ?? []) as $value) {
 $species_filter = array_values(array_unique($species_filter));
 
 $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
-$health = $_GET['health'] ?? '';
+$health = $get_text('health');
 if (!in_array($health, $health_options, true)) {
     $health = '';
 }
@@ -43,19 +48,19 @@ if (!in_array($health, $health_options, true)) {
 // The towns that have public plants: the only places worth choosing
 $locations = array_values(array_unique(array_column($mock_public_plants, 'location')));
 sort($locations);
-$location = $_GET['location'] ?? '';
+$location = $get_text('location');
 if (!in_array($location, $locations, true)) {
     $location = '';
 }
 
-$on_exchange = ($_GET['exchange'] ?? '') === '1';
+$on_exchange = $get_text('exchange') === '1';
 
 $sort_options = [
     'likes'  => 'Most liked',
     'newest' => 'Newest',
     'name'   => 'Name A–Z',
 ];
-$sort = $_GET['sort'] ?? 'likes';
+$sort = $get_text('sort');
 if (!array_key_exists($sort, $sort_options)) {
     $sort = 'likes';
 }
@@ -73,6 +78,10 @@ $filters = [
 ];
 $explore_url = fn (array $changes) => query_url('explore.php', array_merge($filters, $changes));
 
+// The two tabs. The default tab needs no tab= in the address, so a shared search link stays short.
+$plants_tab_url = $explore_url(['tab' => $default_tab === 'plants' ? '' : 'plants']);
+$people_tab_url = $explore_url(['tab' => $default_tab === 'people' ? '' : 'people']);
+
 // ── The plants to show ──────────────────────────────────
 // Stage B: one prepared query on plants JOIN plant_species JOIN users WHERE plants.is_public = 1, with
 // (nickname LIKE ? OR scientific_name LIKE ? …) for the search and one AND per filter. Here the rows are filtered in PHP.
@@ -86,6 +95,12 @@ function plant_matches_search($plant, $term)
     $haystack = $plant['nickname'] . ' ' . $plant['scientific_name'] . ' ' . $plant['common_name'] . ' ' . $plant['username'];
 
     return mb_stripos($haystack, $term) !== false;   // mb_stripos ignores capitals and handles any language
+}
+
+/** Most liked first; equal likes fall back to the name, so the order never changes between visits. For usort(). */
+function most_liked_first($a, $b)
+{
+    return [$b['like_count'], $a['nickname']] <=> [$a['like_count'], $b['nickname']];
 }
 
 $found = array_filter($mock_public_plants, fn ($plant) => plant_matches_search($plant, $term));
@@ -115,8 +130,7 @@ usort($plants, function ($a, $b) use ($sort) {
         case 'name':
             return strcasecmp($a['nickname'], $b['nickname']);
         default:
-            // Most liked first; equal likes fall back to the name, so the order never changes between visits
-            return [$b['like_count'], $a['nickname']] <=> [$a['like_count'], $b['nickname']];
+            return most_liked_first($a, $b);
     }
 });
 
@@ -124,18 +138,26 @@ usort($plants, function ($a, $b) use ($sort) {
 // A member matches when the term is in their username, name or town, or when they own a plant that matches
 // (searching "monstera" finds the people who grow one, p16 element 6). An @ search looks at names only.
 // The members with the most matching plants come first, then the biggest gardens.
+// Stage B: users LEFT JOIN the matching public plants, GROUP BY users.id, with COUNT(plants.id) AS match_count.
+// match_count stays 0 without a search word (every plant would "match") and for an @ search (it is about names).
 
 $people = [];
 foreach ($mock_users as $member) {
-    $match_count = count(array_filter($found, fn ($plant) => $plant['user_id'] === $member['id']));
+    $match_count = ($term === '' || $is_member_search)
+        ? 0
+        : count(array_filter($found, fn ($plant) => $plant['user_id'] === $member['id']));
     $name_text   = $member['username'] . ' ' . $member['full_name'] . ($is_member_search ? '' : ' ' . $member['location']);
     $name_hit    = $term === '' || mb_stripos($name_text, $term) !== false;
 
-    if ($name_hit || (!$is_member_search && $match_count > 0)) {
+    if ($name_hit || $match_count > 0) {
         $people[] = $member + ['match_count' => $match_count];
     }
 }
 usort($people, fn ($a, $b) => [$b['match_count'], $b['plant_count']] <=> [$a['match_count'], $a['plant_count']]);
+
+// "Plant lovers matching ..." above the plant results (p16, element 6): only for a search, and three at most.
+// The People tab has the full list.
+$people_row = ($tab === 'plants' && $term !== '') ? array_slice($people, 0, 3) : [];
 
 // ── Active filters (p16, element 4) ─────────────────────
 // One removable chip per filter: its link is the same address without that one filter.
@@ -193,6 +215,64 @@ $active_count = count($active_filters);
 $plant_count  = count($plants);
 $people_count = count($people);
 
+// ── No plants found (p16 UX notes) ──────────────────────
+// "Suggest removing the last filter and show popular plants instead of a blank page."
+// The filter form sends every choice at once, so the order they were picked in is not known: "the last filter"
+// is the last chip in the row, and its link already removes just that one filter.
+
+$no_plants      = null;
+$popular_plants = [];
+if ($tab === 'plants' && $plant_count === 0) {
+    $last_filter = $active_filters ? end($active_filters) : null;
+    $actions     = [];
+
+    if ($last_filter) {
+        $actions[] = ['label' => 'Remove "' . $last_filter['label'] . '"', 'url' => $last_filter['href'], 'icon' => 'x'];
+        if ($active_count > 1) {
+            $actions[] = ['label' => 'Clear all filters', 'url' => $clear_filters_url, 'icon' => 'sliders-horizontal'];
+        } elseif ($q !== '') {
+            $actions[] = ['label' => 'Clear the search', 'url' => $explore_url(['q' => '']), 'icon' => 'search'];
+        }
+    } elseif ($q !== '') {
+        $actions[] = ['label' => 'Show all plants', 'url' => $explore_url(['q' => '']), 'icon' => 'search'];
+    }
+
+    // The most-liked public plants, whatever the search and filters said.
+    // Stage B: the same query as the results without the search and filters, ORDER BY like_count DESC LIMIT 6.
+    $popular_plants = $mock_public_plants;
+    usort($popular_plants, 'most_liked_first');
+    $popular_plants = array_slice($popular_plants, 0, 6);
+
+    if ($last_filter) {
+        $no_plants_text = 'Remove a filter to widen the search. Until then, here are some popular plants.';
+    } elseif ($q !== '') {
+        $no_plants_text = 'Check the spelling or try a shorter word. Until then, here are some popular plants.';
+    } else {
+        $no_plants_text = 'Plants appear here when members make them public.';   // only before anyone shares a plant
+    }
+
+    if ($q !== '') {
+        $no_plants_title = 'No plants match "' . $q . '"' . ($last_filter ? ' with these filters' : '');
+    } else {
+        $no_plants_title = $last_filter ? 'No plants match these filters' : 'No public plants yet';
+    }
+
+    $no_plants = [
+        'title'   => $no_plants_title,
+        'text'    => $no_plants_text,
+        'actions' => $actions,
+    ];
+}
+
+// The People tab with nobody to show: a way back to every member
+$no_people = [
+    'title'   => $q !== '' ? 'No members match "' . $q . '"' : 'No members yet',
+    'text'    => 'Check the spelling, or try part of a name, a town or an @username.',
+    'actions' => [
+        ['label' => 'Show all members', 'url' => query_url('explore.php', ['tab' => 'people']), 'icon' => 'search'],
+    ],
+];
+
 $page_title = $q !== '' ? 'Search: ' . $q : 'Explore';
 $page_css   = 'explore.css';
 
@@ -222,12 +302,10 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Links, not buttons: each tab has its own address, like the tabs on My Garden and the Plant Profile ?>
     <nav class="explore-tabs" aria-label="Results">
-      <a class="explore-tab"
-         href="<?= e($explore_url(['tab' => $default_tab === 'plants' ? '' : 'plants'])) ?>"<?= $tab === 'plants' ? ' aria-current="page"' : '' ?>>
+      <a class="explore-tab" href="<?= e($plants_tab_url) ?>"<?= $tab === 'plants' ? ' aria-current="page"' : '' ?>>
         Plants <span class="chip-count"><?= e($plant_count) ?></span>
       </a>
-      <a class="explore-tab"
-         href="<?= e($explore_url(['tab' => $default_tab === 'people' ? '' : 'people'])) ?>"<?= $tab === 'people' ? ' aria-current="page"' : '' ?>>
+      <a class="explore-tab" href="<?= e($people_tab_url) ?>"<?= $tab === 'people' ? ' aria-current="page"' : '' ?>>
         People <span class="chip-count"><?= e($people_count) ?></span>
       </a>
     </nav>
@@ -332,6 +410,21 @@ include __DIR__ . '/../includes/header.php';
     </details>
 
     <div class="explore-results">
+      <?php if ($people_row): ?>
+        <?php // Plant lovers matching the search (p16, element 6). On a phone the cards scroll sideways in their own strip. ?>
+        <section class="people-row" aria-labelledby="people-row-title">
+          <div class="people-row-head">
+            <h2 class="explore-section-title" id="people-row-title">Plant lovers matching "<?= e($q) ?>"</h2>
+            <a class="panel-link" href="<?= e($people_tab_url) ?>">See all <?= e($people_count) ?> <?= $people_count === 1 ? 'person' : 'people' ?></a>
+          </div>
+          <div class="people-row-list">
+            <?php foreach ($people_row as $member): ?>
+              <?php partial('member-card', ['member' => $member, 'compact' => true]); ?>
+            <?php endforeach; ?>
+          </div>
+        </section>
+      <?php endif; ?>
+
       <?php // Result count, active filter chips and the sort (p16, element 4) ?>
       <div class="results-bar">
         <h2 class="results-count" role="status"><?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?></h2>
@@ -363,22 +456,46 @@ include __DIR__ . '/../includes/header.php';
           <?php endforeach; ?>
         </div>
       <?php else: ?>
+        <?php // Never a blank page: a way to widen the search, then the community's favourite plants ?>
         <section class="panel">
-          <?php partial('empty-state', [
-              'title'   => 'No plants match',
-              'text'    => 'Try another word, or remove a filter.',
-              'actions' => [
-                  ['label' => 'Show all plants', 'href' => 'explore.php', 'icon' => 'search'],
-              ],
-          ]); ?>
+          <?php partial('empty-state', $no_plants); ?>
         </section>
+
+        <?php if ($popular_plants): ?>
+          <section class="popular-plants" aria-labelledby="popular-title">
+            <h2 class="explore-section-title" id="popular-title">Popular plants</h2>
+            <p class="popular-text">The most-liked public plants in the community.</p>
+            <div class="explore-grid">
+              <?php foreach ($popular_plants as $plant): ?>
+                <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+              <?php endforeach; ?>
+            </div>
+          </section>
+        <?php endif; ?>
       <?php endif; ?>
     </div>
   <?php else: ?>
-    <?php // Step 4 of P09 fills the People tab: one card per member with rating and plant count ?>
-    <section class="panel">
-      <p class="panel-empty"><?= icon('info') ?> The People results are built in the next step.</p>
-    </section>
+    <?php // People (p16, element 2): "lists profiles with rating and plant count". Filters are for plants, so none here. ?>
+    <div class="results-bar">
+      <h2 class="results-count" role="status"><?= e($people_count) ?> <?= $people_count === 1 ? 'person' : 'people' ?></h2>
+      <?php if ($term !== '' && $people): ?>
+        <p class="results-note">
+          <?= $is_member_search ? 'Names and usernames' : 'Names, usernames and towns' ?> that match "<?= e($q) ?>"<?= $is_member_search ? '' : ', and members who grow a matching plant' ?>.
+        </p>
+      <?php endif; ?>
+    </div>
+
+    <?php if ($people): ?>
+      <div class="people-grid">
+        <?php foreach ($people as $member): ?>
+          <?php partial('member-card', ['member' => $member]); ?>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <section class="panel">
+        <?php partial('empty-state', $no_people); ?>
+      </section>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
