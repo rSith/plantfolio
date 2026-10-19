@@ -25,7 +25,8 @@
   min-width: 0;
 }
 
-/* The two tabs drawn like the segmented control of the design system (p16, element 2) */
+/* The two tabs drawn like the segmented control of the design system (p16, element 2).
+   Each tab is 44px tall, the smallest touch target the project allows (the shared control is still 40px). */
 .explore-tabs {
   display: inline-flex;
   gap: var(--space-4);
@@ -39,7 +40,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
-  min-height: 40px;
+  min-height: 44px;
   padding: var(--space-4) var(--space-16);
   border-radius: calc(var(--radius-input) - var(--space-4));
   color: var(--color-neutral-text);
@@ -109,11 +110,14 @@
   background: var(--color-white);
 }
 
+/* 44px tall, the height of its "Clear all" link, with or without the link: on a desktop "Filters" then always
+   sits on the same line as the first heading of the results column, as on p16 */
 .filter-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
+  min-height: 44px;
   margin-bottom: var(--space-8);
 }
 
@@ -335,12 +339,14 @@
   margin-bottom: var(--space-16);
 }
 
+/* 44px tall even when there is no "See all" link, so the heading lines up with "Filters" (see .filter-head) */
 .people-row-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0 var(--space-12);
+  min-height: 44px;
 }
 
 /* The whole line is the touch target, not just the words */
@@ -351,10 +357,11 @@
 }
 
 /* Phone: one strip that scrolls sideways, each card snapping into place. Only the strip scrolls, never the page.
-   The negative margins let it run to the edges of the screen, so the next card peeks in and invites a swipe. */
+   The negative margins let it run to the edges of the screen. Every card is 240px wide, narrower than the
+   smallest phone (320px), so part of the next card always peeks in and invites a swipe. */
 .people-row-list {
   display: grid;
-  grid-auto-columns: minmax(240px, 80%);
+  grid-auto-columns: 240px;
   grid-auto-flow: column;
   gap: var(--space-12);
   margin: 0 calc(var(--space-16) * -1);
