@@ -1025,6 +1025,11 @@ textarea.input {
   white-space: nowrap;
 }
 
+/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left */
+.plant-card-community .plant-card-collection {
+  margin-left: 0;
+}
+
 /* Community plant card (p16): likes on the photo's top-right corner, the owner along the bottom */
 .card-media .plant-card-likes {
   left: auto;
@@ -1281,6 +1286,12 @@ textarea.input {
 
 .star.is-filled .icon {
   fill: currentColor;
+}
+
+/* Small stars beside a review's author (partials/stars.php with 'size' => 'sm') */
+.stars-sm .icon {
+  width: 14px;
+  height: 14px;
 }
 
 /* ── Care row ───────────────────────────────────────── */

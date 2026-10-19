@@ -1,0 +1,605 @@
+/* Public User Profile only (P14, wireframe p21, COM-05 and COM-13). Loaded by user.php through $page_css. */
+/* Warm style: a sage cover band, a big serif name and photo collages make it feel like a personal portfolio.
+   Phone: everything in one column, the rating card after the tabs. Desktop: the tabs beside the rating card. */
+
+/* ── The owner's note ───────────────────────────────── */
+
+.profile-note-row {
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-16);
+}
+
+.profile-note {
+  margin: 0;
+}
+
+/* ── Cover band (p21, element 1) ────────────────────── */
+/* Full width, like the top band of Explore; the drawing sits on the right edge of the content column */
+
+.profile-cover {
+  height: 120px;
+  overflow: hidden;   /* the drawing never pokes out of the band */
+  background: var(--color-sage);
+}
+
+.profile-cover-inner {
+  position: relative;
+  height: 100%;
+}
+
+.profile-cover-art {
+  position: absolute;
+  right: var(--space-16);
+  bottom: 0;
+  width: auto;
+  max-width: none;   /* the base img rule would shrink it on a phone; the band's overflow crops it instead */
+  height: 90%;
+}
+
+/* ── Identity, main action and stats ────────────────── */
+/* Phone: the avatar overlaps the band on the left, the action buttons sit on its right, the text goes below.
+   grid-template-areas names each part, so the layout can be read like a little map of the page. */
+
+.profile-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "avatar actions"
+    "name   name"
+    "about  about"
+    "stats  stats";
+  column-gap: var(--space-16);
+}
+
+.profile-avatar {
+  grid-area: avatar;
+  margin-top: -48px;   /* half of the 96px avatar hangs over the band */
+}
+
+/* A cream ring separates the avatar from the band behind it */
+.profile-avatar .avatar {
+  border: 4px solid var(--color-cream);
+}
+
+.profile-actions {
+  display: flex;
+  grid-area: actions;
+  align-items: center;
+  align-self: start;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  min-width: 0;
+  padding-top: var(--space-12);
+}
+
+.profile-name {
+  grid-area: name;
+  min-width: 0;
+  margin: var(--space-12) 0 var(--space-4);
+  font-size: var(--text-h2);
+  overflow-wrap: anywhere;
+}
+
+.profile-about {
+  grid-area: about;
+  min-width: 0;
+}
+
+/* "@nimali.grows · Kurunegala · Member since Mar 2025". Each dot sits in the 16px gap before its item. When the row
+   wraps, the item that starts the new line has its dot outside the left edge, where overflow: hidden cuts it off,
+   so no line ever starts with a dot. */
+.profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-16);
+  margin-bottom: var(--space-8);
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.profile-meta > span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.profile-meta > span + span::before {
+  content: "·";
+  position: absolute;
+  left: calc(var(--space-8) * -1);   /* the middle of the 16px gap… */
+  transform: translateX(-50%);       /* …with the dot centred on it */
+}
+
+.profile-handle {
+  overflow-wrap: anywhere;
+}
+
+.profile-bio {
+  max-width: 60ch;   /* about 60 letters a line: comfortable to read */
+  margin-bottom: 0;
+}
+
+.profile-bio-empty {
+  color: var(--color-muted);
+}
+
+/* Community stats (p21, element 2): four numbers between two thin lines */
+.profile-stats {
+  display: grid;
+  grid-area: stats;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-8);
+  margin: var(--space-16) 0 0;
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  list-style: none;
+}
+
+.profile-stat-value {
+  display: block;
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+}
+
+.profile-stat-label {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+.profile-stat-keep {
+  white-space: nowrap;
+}
+
+/* ── Tabs, their panels and the rating card ─────────── */
+
+.profile-body {
+  display: grid;
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.profile-main {
+  min-width: 0;   /* lets the tab row scroll inside the column instead of widening the page */
+}
+
+/* Four tabs with counts are wider than a phone, so the row scrolls sideways (like the Plant Profile's tabs).
+   A smaller gap than the shared 24px lets the start of the next tab peek in at the edge: a sign there is more. */
+.profile-main > .tabs {
+  gap: var(--space-16);
+}
+
+/* The label and its count in one box, the target of #tab-… in the tab links, so both scroll into view together */
+.profile-tab-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.profile-panel {
+  padding-top: var(--space-24);
+}
+
+/* ── Collections tab (p21, element 5) ───────────────── */
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+
+.collection-card:hover {
+  border-color: var(--color-line-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+/* One large photo on the left, two small ones stacked on the right, in a 4:3 frame */
+.collage {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--space-4);
+  aspect-ratio: 4 / 3;
+  margin: var(--space-8) var(--space-8) 0;
+}
+
+/* min-height: 0 lets a tile shrink to its grid row; without it a tall photo would stretch the frame */
+.collage-tile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: calc(var(--radius-card) - var(--space-8));   /* the card's corner minus the 8px inset: the curves stay parallel */
+  background: var(--color-sage);
+  object-fit: cover;
+}
+
+.collage-tile:first-child {
+  grid-row: 1 / span 2;
+}
+
+.collage-tile-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-leaf);
+}
+
+/* The name and the count share a line when there is room; on a narrow card the count drops below */
+.collection-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-8);
+  padding: var(--space-8) var(--space-12) var(--space-12);
+}
+
+.collection-card-name {
+  margin: 0;
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  overflow-wrap: anywhere;
+}
+
+.collection-card-count {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+/* ── Plants and Listings tabs ───────────────────────── */
+
+.profile-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+/* One open collection: its name, and the way back to every plant */
+.profile-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-12);
+  margin-bottom: var(--space-12);
+}
+
+.profile-section-title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.profile-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;   /* touch target */
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Ratings tab: the written reviews ───────────────── */
+
+.review-summary {
+  margin-bottom: var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.review-summary strong {
+  color: var(--color-ink);
+}
+
+.review-list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-line);
+  list-style: none;
+}
+
+.review {
+  padding: var(--space-16) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+}
+
+.review-author {
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.review-author:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.review-date {
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.review-comment {
+  margin: var(--space-8) 0 var(--space-4);
+}
+
+.review-exchange {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* ── Trader rating card (p21, elements 6 and 7) ─────── */
+
+.profile-rating {
+  min-width: 0;
+}
+
+.rating-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: var(--space-12) 0 var(--space-16);
+}
+
+.rating-big {
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+.rating-summary-text {
+  display: grid;
+  gap: 2px;
+}
+
+.rating-summary .stars .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* One row per score: "5★", the bar, the count. The amber bar is drawn by CSS from the width the page prints. */
+.rating-bars {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rating-bar-row {
+  display: grid;
+  grid-template-columns: 2.25em minmax(0, 1fr) 2em;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-small);
+}
+
+.rating-bar-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-muted);
+}
+
+.rating-bar-score .icon {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;   /* a solid star, in the muted colour of the number beside it */
+}
+
+.rating-bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+}
+
+.rating-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-amber);
+}
+
+.rating-bar-count {
+  color: var(--color-muted);
+  text-align: right;
+}
+
+.latest-review {
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.latest-review-title {
+  margin-bottom: var(--space-8);
+}
+
+.latest-review-quote {
+  margin: 0 0 var(--space-8);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.latest-review-quote p {
+  margin: 0;
+}
+
+.latest-review-by {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* "See all reviews": a full-height touch target of its own under the quote */
+.latest-review .panel-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.rating-none-text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: var(--space-12) 0 var(--space-4);
+  font-weight: var(--weight-medium);
+}
+
+.rating-none-text .icon {
+  color: var(--color-line-strong);
+}
+
+/* ── Tablet ─────────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .profile-cover {
+    height: 160px;
+  }
+
+  .profile-cover-art {
+    right: var(--gutter);
+  }
+
+  /* Avatar on the left, the name beside it with the buttons on its right, then the bio and the stats under the
+     name, as wide as the row (p21). The avatar spans the first two rows. */
+  .profile-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "avatar name  actions"
+      "avatar about about"
+      ".      stats stats";
+    column-gap: var(--space-24);
+  }
+
+  .profile-avatar {
+    margin-top: -60px;   /* half of the 120px avatar */
+  }
+
+  .profile-avatar .avatar-lg {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-actions {
+    padding-top: var(--space-16);
+  }
+
+  .profile-name {
+    margin-top: var(--space-16);
+    font-size: var(--text-h1);
+  }
+
+  .profile-stats {
+    display: flex;
+    gap: var(--space-48);
+  }
+
+  .profile-stat-value {
+    font-size: var(--text-h2);
+  }
+
+  .profile-main > .tabs {
+    gap: var(--space-24);
+  }
+
+  .collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-16);
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Below the tabs the card is as wide as the page: the breakdown on the left, the latest review on the right */
+  .profile-rating {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    column-gap: var(--space-32);
+  }
+
+  .profile-rating > .panel-title,
+  .profile-rating > p {
+    grid-column: 1 / -1;   /* the title, and the "No ratings yet" lines, use the full width */
+  }
+
+  .profile-rating > .rating-bars {
+    grid-column: 1;
+  }
+
+  .profile-rating > .latest-review {
+    grid-row: 2 / span 2;
+    grid-column: 2;
+    margin-top: var(--space-12);
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+/* ── Desktop ────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .profile-cover {
+    height: 176px;
+  }
+
+  /* The tabs beside the rating card, 2 : 1 like the Plant Profile */
+  .profile-body {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--space-32);
+  }
+
+  .profile-grid:not(.profile-grid-listings) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Beside the tabs the card is narrow again: one column, the latest review under the bars */
+  .profile-rating {
+    display: block;
+  }
+
+  .profile-rating > .latest-review {
+    margin-top: var(--space-16);
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-line);
+  }
+}

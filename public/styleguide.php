@@ -310,11 +310,8 @@ include __DIR__ . '/../includes/header.php';
         <p class="text-small">High 80%+ (green) · Medium 60–79% (amber) · Not sure below 60% (grey)</p>
         <div class="sg-row">
           <?php partial('rating', ['rating' => $sample_member]); ?>
-          <span class="stars" role="img" aria-label="4 out of 5 stars">
-            <?php for ($star = 1; $star <= 5; $star++): ?>
-              <span class="star<?= $star <= 4 ? ' is-filled' : '' ?>"><?= icon('star') ?></span>
-            <?php endfor; ?>
-          </span>
+          <?php partial('stars', ['score' => 4]); ?>
+          <?php partial('stars', ['score' => 5, 'size' => 'sm']); ?>
         </div>
       </div>
     </div>

@@ -5,9 +5,12 @@
 // Optional $community = true draws the community card of Explore (wireframe p16, element 5): likes on the photo,
 // and the owner with their town instead of the care hint and collection. $plant then also needs like_count,
 // username, full_name, avatar and location (see $mock_public_plants).
+// Optional $show_owner = false (with $community): the collection instead of the owner. The Public Profile (P14) uses it,
+// because every card there has the same owner, already named at the top of the page. Reminders still stay hidden.
 
-$community = !empty($community);
-$due       = $community ? null : care_hint($plant);   // null when the plant has no reminder yet
+$community  = !empty($community);
+$show_owner = $community && ($show_owner ?? true);
+$due        = $community ? null : care_hint($plant);   // null when the plant has no reminder yet
 ?>
 <article class="card plant-card<?= $community ? ' plant-card-community' : '' ?>">
   <div class="card-media">
@@ -25,7 +28,7 @@ $due       = $community ? null : care_hint($plant);   // null when the plant has
       <a class="card-link" href="<?= e(url('plant.php?id=' . $plant['id'])) ?>"><?= e($plant['nickname']) ?></a>
     </h3>
     <p class="scientific-name"><?= e($plant['scientific_name']) ?></p>
-    <?php if ($community): ?>
+    <?php if ($show_owner): ?>
       <?php // Whose plant it is. Not a link of its own: the whole card already opens the plant ?>
       <div class="plant-card-owner">
         <?php partial('avatar', ['member' => $plant, 'size' => 'sm']); ?>
