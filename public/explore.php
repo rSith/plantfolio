@@ -13,9 +13,10 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // The wireframe asks for everything in the address (GET), so a search can be shared and Back works.
 // Anyone can type anything there, so every value is checked against what is allowed.
 
-// A hand-made address can send a list where one word belongs (q[]=x makes $_GET['q'] an array). Only text is
-// accepted; anything else counts as "not given", so it falls back to the default like any other wrong value.
-$get_text = fn ($name) => is_string($_GET[$name] ?? null) ? $_GET[$name] : '';
+// A hand-made address can send a list where one word belongs (q[]=x makes $_GET['q'] an array), or bytes that
+// are not real UTF-8 text (q=%FF), which e() would print as an empty string. Only valid text is accepted;
+// anything else counts as "not given", so it falls back to the default like any other wrong value.
+$get_text = fn ($name) => (is_string($_GET[$name] ?? null) && mb_check_encoding($_GET[$name], 'UTF-8')) ? $_GET[$name] : '';
 
 $q = mb_substr(trim($get_text('q')), 0, 100);
 
@@ -219,12 +220,15 @@ $people_count = count($people);
 // "Suggest removing the last filter and show popular plants instead of a blank page."
 // The filter form sends every choice at once, so the order they were picked in is not known: "the last filter"
 // is the last chip in the row, and its link already removes just that one filter.
+// The filters are only to blame when the search word finds plants and the filters hide them all. When the word
+// finds nothing on its own, removing a filter leads to another empty page: the way out is a different word.
 
 $no_plants      = null;
 $popular_plants = [];
 if ($tab === 'plants' && $plant_count === 0) {
-    $last_filter = $active_filters ? end($active_filters) : null;
-    $actions     = [];
+    $search_found_nothing = $term !== '' && !$found;
+    $last_filter          = ($active_filters && !$search_found_nothing) ? end($active_filters) : null;
+    $actions              = [];
 
     if ($last_filter) {
         $actions[] = ['label' => 'Remove "' . $last_filter['label'] . '"', 'url' => $last_filter['href'], 'icon' => 'x'];
@@ -234,7 +238,16 @@ if ($tab === 'plants' && $plant_count === 0) {
             $actions[] = ['label' => 'Clear the search', 'url' => $explore_url(['q' => '']), 'icon' => 'search'];
         }
     } elseif ($q !== '') {
-        $actions[] = ['label' => 'Show all plants', 'url' => $explore_url(['q' => '']), 'icon' => 'search'];
+        // With filters on, "Clear the search" comes first because it keeps the filters the visitor chose. They may
+        // hide every plant too, so "Show all plants" (no search, no filters, same sort) is the exit that always works.
+        if ($active_filters) {
+            $actions[] = ['label' => 'Clear the search', 'url' => $explore_url(['q' => '']), 'icon' => 'search'];
+        }
+        $actions[] = [
+            'label' => 'Show all plants',
+            'url'   => $explore_url(['q' => '', 'species' => [], 'health' => '', 'location' => '', 'exchange' => '']),
+            'icon'  => 'layout-grid',
+        ];
     }
 
     // The most-liked public plants, whatever the search and filters said.
@@ -415,7 +428,10 @@ include __DIR__ . '/../includes/header.php';
         <section class="people-row" aria-labelledby="people-row-title">
           <div class="people-row-head">
             <h2 class="explore-section-title" id="people-row-title">Plant lovers matching "<?= e($q) ?>"</h2>
-            <a class="panel-link" href="<?= e($people_tab_url) ?>">See all <?= e($people_count) ?> <?= $people_count === 1 ? 'person' : 'people' ?></a>
+            <?php // Only when the row leaves someone out (p16: 3 of 8). The People tab above is always one tap away. ?>
+            <?php if ($people_count > count($people_row)): ?>
+              <a class="panel-link" href="<?= e($people_tab_url) ?>">See all <?= e($people_count) ?> people</a>
+            <?php endif; ?>
           </div>
           <div class="people-row-list">
             <?php foreach ($people_row as $member): ?>
@@ -425,9 +441,11 @@ include __DIR__ . '/../includes/header.php';
         </section>
       <?php endif; ?>
 
-      <?php // Result count, active filter chips and the sort (p16, element 4) ?>
+      <?php // Result count, active filter chips and the sort (p16, element 4).
+            // The count is a plain heading: a role="status" on it would replace the heading role, so screen readers
+            // could not jump to it. Nothing changes without a reload yet; week 6 adds a live region when it does. ?>
       <div class="results-bar">
-        <h2 class="results-count" role="status"><?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?></h2>
+        <h2 class="results-count"><?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?></h2>
 
         <?php foreach ($active_filters as $filter): ?>
           <a class="chip filter-chip" href="<?= e($filter['href']) ?>">
@@ -477,7 +495,7 @@ include __DIR__ . '/../includes/header.php';
   <?php else: ?>
     <?php // People (p16, element 2): "lists profiles with rating and plant count". Filters are for plants, so none here. ?>
     <div class="results-bar">
-      <h2 class="results-count" role="status"><?= e($people_count) ?> <?= $people_count === 1 ? 'person' : 'people' ?></h2>
+      <h2 class="results-count"><?= e($people_count) ?> <?= $people_count === 1 ? 'person' : 'people' ?></h2>
       <?php if ($term !== '' && $people): ?>
         <p class="results-note">
           <?= $is_member_search ? 'Names and usernames' : 'Names, usernames and towns' ?> that match "<?= e($q) ?>"<?= $is_member_search ? '' : ', and members who grow a matching plant' ?>.

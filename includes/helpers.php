@@ -48,7 +48,8 @@ function url($path = '')
  */
 function query_url($page, array $params)
 {
-    $params = array_filter($params, fn ($value) => $value !== null && $value !== '');
+    // An empty list ([]) is dropped too: http_build_query() would print nothing for it and leave a bare "?"
+    $params = array_filter($params, fn ($value) => $value !== null && $value !== '' && $value !== []);
 
     return url($page) . ($params ? '?' . http_build_query($params) : '');
 }
