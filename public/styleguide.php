@@ -32,6 +32,10 @@ $health_statuses = [
 // Found by id (Nimali's listing, 7), so adding listings to the mock data never changes the samples.
 $sample_member = $mock_listings[array_search(7, array_column($mock_listings, 'id'))];
 
+// Two of other members' public plants for the community look of the plant card (Explore), found by id: Thai Con
+// and Big Momma. From $mock_public_plants, which adds the owner's name, town and the like count to each plant.
+$sample_community_plants = array_values(array_filter($mock_public_plants, fn ($plant) => in_array($plant['id'], [52, 53], true)));
+
 // Members for the member card: users rows found by id. Amaya carries a match_count, as when Explore searches "monstera".
 $sample_members = [
     $mock_users[2] + ['match_count' => 2],
@@ -226,6 +230,25 @@ include __DIR__ . '/../includes/header.php';
     <p class="text-small sg-note">The selector is three radio buttons, so the arrow keys move between the choices.</p>
   </section>
 
+  <section class="sg-card" aria-labelledby="sg-results">
+    <h2 class="label" id="sg-results">Results bar: count, filter chips, sort</h2>
+    <div class="results-bar">
+      <p class="results-count">6 plants</p>
+      <a class="chip filter-chip" href="#sg-results">Thriving <?= icon('x') ?><span class="visually-hidden">: remove this filter</span></a>
+      <a class="chip filter-chip" href="#sg-results">Kandy <?= icon('x') ?><span class="visually-hidden">: remove this filter</span></a>
+      <a class="results-clear" href="#sg-results">Clear all</a>
+      <details class="menu sort-menu">
+        <summary class="btn btn-secondary">Sort: Most liked <?= icon('chevron-down') ?></summary>
+        <div class="menu-panel menu-panel-right">
+          <a class="menu-item" href="#sg-results" aria-current="page">Most liked</a>
+          <a class="menu-item" href="#sg-results">Newest</a>
+          <a class="menu-item" href="#sg-results">Name A–Z</a>
+        </div>
+      </details>
+    </div>
+    <p class="text-small sg-note">Above the results of Explore and Exchange: the count (an <span class="sg-code">h2</span> on those pages), one removable chip per active filter, 44 px tall on every screen, Clear all from two filters, and the sort as a <span class="sg-code">&lt;details&gt;</span> menu of links.</p>
+  </section>
+
   <section class="sg-card" aria-labelledby="sg-tabs">
     <h2 class="label" id="sg-tabs">Tabs, breadcrumb, avatars</h2>
     <nav class="tabs" aria-label="Plant sections">
@@ -265,7 +288,13 @@ include __DIR__ . '/../includes/header.php';
         <?php partial('plant-card', ['plant' => $plant]); ?>
       <?php endforeach; ?>
     </div>
-    <p class="text-small sg-note">The hint is terracotta when care is due today and red when it is overdue. Photos are placeholder drawings until real ones are added.</p>
+    <div class="sg-cards sg-row-spaced">
+      <?php foreach ($sample_community_plants as $plant): ?>
+        <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+      <?php endforeach; ?>
+    </div>
+    <p class="text-small sg-note">The hint is terracotta when care is due today and red when it is overdue. Photos are placeholder drawings until real ones are added.
+      The last two are the community look (<span class="sg-code">'community' =&gt; true</span>, Explore): likes on the photo, the owner and town instead of the care hint; the Public Profile adds <span class="sg-code">'show_owner' =&gt; false</span> to show the collection instead.</p>
   </section>
 
   <section class="sg-card" aria-labelledby="sg-listing-cards">
