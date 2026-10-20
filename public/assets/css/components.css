@@ -823,6 +823,7 @@ textarea.input {
 }
 
 .breadcrumb a {
+  padding: 13px 0;   /* a 44 px tall tap area; padding on an inline link does not make the row taller */
   color: var(--color-muted);
   text-decoration: none;
 }
@@ -1427,8 +1428,10 @@ textarea.input {
   color: var(--color-ink);
 }
 
-/* An active filter: tinted sage, with an × that removes it */
+/* An active filter: tinted sage, with an × that removes it.
+   44 px tall on every screen: a chip that removes a filter is tapped on tablets too (other chips are 36 px from 768 px) */
 .filter-chip {
+  min-height: 44px;
   border-color: var(--color-sage);
   background: var(--color-sage);
   color: var(--color-forest);
