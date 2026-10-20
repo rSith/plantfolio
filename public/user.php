@@ -10,11 +10,11 @@ require_once __DIR__ . '/../includes/mock-data.php';
 
 // ── Whose profile ───────────────────────────────────────
 // user.php?u=nimali.grows&tab=plants&collection=1. Only text is accepted from the address, and only valid UTF-8, as on
-// Explore: a hand-made u[]=x or u=%FF counts as "not given" instead of causing a PHP error or a blank name.
-$get_text = fn ($name) => (is_string($_GET[$name] ?? null) && mb_check_encoding($_GET[$name], 'UTF-8')) ? $_GET[$name] : '';
+// Explore: get_text() (helpers.php) treats a hand-made u[]=x or u=%FF as "not given" instead of causing a PHP error
+// or a blank name.
 
 // Usernames are lowercase and the @ belongs to a mention, not to the name, so "@Nimali.Grows" finds nimali.grows
-$asked_for = mb_strtolower(ltrim(trim($get_text('u')), '@'));
+$asked_for = mb_strtolower(ltrim(trim(get_text('u')), '@'));
 if ($asked_for === '' && $current_user) {
     $asked_for = $current_user['username'];   // nothing in the address: a member sees their own profile
 }
@@ -104,7 +104,7 @@ $tabs = [
     'listings'    => ['label' => 'Listings',    'count' => $listing_count],
     'ratings'     => ['label' => 'Ratings',     'count' => $rating_count],
 ];
-$tab = $get_text('tab');
+$tab = get_text('tab');
 if (!array_key_exists($tab, $tabs)) {
     $tab = 'collections';
 }
@@ -118,7 +118,7 @@ $tab_url = fn ($key, array $more = []) => query_url('user.php', array_merge(
 // A collection card opens the Plants tab with only that collection's plants. Only this member's public collections
 // count: any other id, or a private collection's id, shows every public plant instead.
 $collection_filter = null;
-$collection_param  = $get_text('collection');
+$collection_param  = get_text('collection');
 if ($tab === 'plants' && ctype_digit($collection_param)) {
     foreach ($collections as $collection) {
         if ($collection['id'] === (int) $collection_param) {

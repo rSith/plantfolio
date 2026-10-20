@@ -12,20 +12,16 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // explore.php?q=monstera&species[]=1&health=thriving&location=Kandy&exchange=1&sort=newest&tab=people
 // The wireframe asks for everything in the address (GET), so a search can be shared and Back works.
 // Anyone can type anything there, so every value is checked against what is allowed.
+// get_text() (helpers.php) accepts only one piece of valid text: q[]=x or q=%FF count as "not given".
 
-// A hand-made address can send a list where one word belongs (q[]=x makes $_GET['q'] an array), or bytes that
-// are not real UTF-8 text (q=%FF), which e() would print as an empty string. Only valid text is accepted;
-// anything else counts as "not given", so it falls back to the default like any other wrong value.
-$get_text = fn ($name) => (is_string($_GET[$name] ?? null) && mb_check_encoding($_GET[$name], 'UTF-8')) ? $_GET[$name] : '';
-
-$q = mb_substr(trim($get_text('q')), 0, 100);
+$q = mb_substr(trim(get_text('q')), 0, 100);
 
 // "@kandy" looks for a member: the search opens on the People tab, and the @ is not part of the name (p16, element 1)
 $is_member_search = str_starts_with($q, '@');
 $term             = trim(ltrim($q, '@'));
 
 $default_tab = $is_member_search ? 'people' : 'plants';
-$tab         = $get_text('tab');
+$tab         = get_text('tab');
 if (!in_array($tab, ['plants', 'people'], true)) {
     $tab = $default_tab;
 }
@@ -41,7 +37,7 @@ foreach ((array) ($_GET['species'] ?? []) as $value) {
 $species_filter = array_values(array_unique($species_filter));
 
 $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
-$health = $get_text('health');
+$health = get_text('health');
 if (!in_array($health, $health_options, true)) {
     $health = '';
 }
@@ -49,19 +45,19 @@ if (!in_array($health, $health_options, true)) {
 // The towns that have public plants: the only places worth choosing
 $locations = array_values(array_unique(array_column($mock_public_plants, 'location')));
 sort($locations);
-$location = $get_text('location');
+$location = get_text('location');
 if (!in_array($location, $locations, true)) {
     $location = '';
 }
 
-$on_exchange = $get_text('exchange') === '1';
+$on_exchange = get_text('exchange') === '1';
 
 $sort_options = [
     'likes'  => 'Most liked',
     'newest' => 'Newest',
     'name'   => 'Name A–Z',
 ];
-$sort = $get_text('sort');
+$sort = get_text('sort');
 if (!array_key_exists($sort, $sort_options)) {
     $sort = 'likes';
 }

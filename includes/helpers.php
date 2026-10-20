@@ -54,6 +54,20 @@ function query_url($page, array $params)
     return url($page) . ($params ? '?' . http_build_query($params) : '');
 }
 
+/**
+ * One piece of text from the address, e.g. get_text('q') for explore.php?q=monstera, or '' when it is not given.
+ * Anyone can type anything there: a hand-made address can send a list where one word belongs (q[]=x makes $_GET['q']
+ * an array, and string functions then fail) or bytes that are not real UTF-8 text (q=%FF, which e() prints as an empty
+ * string). Both count as "not given", so the page falls back to its default as for any other wrong value.
+ * Pages still check the text against what is allowed (a whitelist, ctype_digit() …) after reading it.
+ */
+function get_text($name)
+{
+    $value = $_GET[$name] ?? null;
+
+    return (is_string($value) && mb_check_encoding($value, 'UTF-8')) ? $value : '';
+}
+
 /** The file name of the page the browser asked for, e.g. "garden.php". */
 function current_page()
 {

@@ -10,16 +10,14 @@ require_once __DIR__ . '/../includes/mock-data.php';
 // ── What the visitor asked for, read from the address ───
 // exchange.php?q=pothos&type=swap&distance=10&species=2&sort=nearest
 // Every value is checked against what is allowed, as on Explore: a wrong or hand-made value falls back to its default.
+// get_text() (helpers.php) accepts only one piece of valid text: q[]=x or q=%FF count as "not given".
 
-// Only one piece of valid UTF-8 text counts (q[]=x would be an array, q=%FF is not real text); anything else is "not given"
-$get_text = fn ($name) => (is_string($_GET[$name] ?? null) && mb_check_encoding($_GET[$name], 'UTF-8')) ? $_GET[$name] : '';
-
-$q    = mb_substr(trim($get_text('q')), 0, 100);
+$q    = mb_substr(trim(get_text('q')), 0, 100);
 $term = trim(ltrim($q, '@'));   // "@ruwan" finds Ruwan's listings: the @ is not part of the username
 
 // All / Swap / Free (p17, element 3). "All" is the default, so it has no value in the address.
 $type_options = ['' => 'All', 'swap' => 'Swap', 'free' => 'Free'];
-$type = $get_text('type');
+$type = get_text('type');
 if (!in_array($type, ['swap', 'free'], true)) {
     $type = '';
 }
@@ -32,7 +30,7 @@ $has_town    = $viewer_town !== '';
 
 $distance_choices = ['5', '10', '25', '50', 'any'];
 $default_distance = $has_town ? '25' : 'any';   // p17 opens on "Near Kurunegala · 25 km"
-$distance = $get_text('distance');
+$distance = get_text('distance');
 if (!$has_town || !in_array($distance, $distance_choices, true)) {
     $distance = $default_distance;
 }
@@ -47,7 +45,7 @@ $sort_options = ['newest' => 'Newest', 'nearest' => 'Nearest', 'interest' => 'Mo
 if (!$has_town) {
     unset($sort_options['nearest']);   // nothing to be near to
 }
-$sort = $get_text('sort');
+$sort = get_text('sort');
 if (!array_key_exists($sort, $sort_options)) {
     $sort = 'newest';
 }
@@ -62,7 +60,7 @@ foreach ($open_listings as $listing) {
 }
 asort($species_options);
 
-$species = $get_text('species');
+$species = get_text('species');
 $species = (ctype_digit($species) && isset($species_options[(int) $species])) ? (int) $species : null;
 
 // The choices that differ from the defaults. Every link on the page starts from these and changes one thing.
