@@ -1,9 +1,8 @@
 /* Listing Detail only (P11, wireframe p18, COM-08). Loaded by listing.php through $page_css. */
 /* Both styles: the plant (photos, Lora title) is warm; the interest, owner and tips cards are functional panels.
-   Phone: one column in reading order: photos, summary, interest, About, owner, tips.
-   Tablet: the photos full width, then two cards side by side in each row.
-   Desktop: two rows of two columns, like the Plant Profile: the photos beside the summary and the interest card,
-   then About beside the owner and tips cards. */
+   Phone: one column in reading order: photos, summary and interest card, About, owner and tips cards.
+   Tablet: the photos full width, then two cards side by side in each pair.
+   Desktop: two columns as on p18: the photos and About on the left, the four cards on the right. */
 
 .listing-breadcrumb {
   margin-bottom: var(--space-16);
@@ -11,14 +10,9 @@
 
 /* ── Layout ─────────────────────────────────────────── */
 
-.listing-top,
-.listing-bottom {
+.listing-layout {
   display: grid;
   gap: var(--space-16);
-}
-
-.listing-top {
-  margin-bottom: var(--space-24);
 }
 
 /* min-width: 0 lets a grid column shrink below its content, so a long word or email cannot widen the page */
@@ -34,7 +28,11 @@
   gap: var(--space-16);
 }
 
-/* Tablet: the two cards of each row side by side */
+.listing-about {
+  margin: var(--space-8) 0;
+}
+
+/* Tablet: the two cards of each pair side by side */
 @media (min-width: 768px) {
   .listing-side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -42,17 +40,43 @@
   }
 }
 
-/* Desktop: the photos and About on the left, the cards stacked again in a narrower column on the right */
+/* Desktop: two columns, with the four parts placed in a grid of three rows:
+     row 1     photos   | summary + interest (spans rows 1 and 2)
+     row 2     About    |   (spans rows 2 and 3)
+     row 3              | owner + tips
+   Row 1 is as tall as the photos, so About always starts right under them. Row 2 only grows when the summary and
+   interest card are taller than the photos, so the owner card always starts right under the interest card.
+   Row 3 is 1fr: a long About makes that row taller instead of pushing the owner card down. The gaps are margins
+   (row-gap 0), so an empty row 2 adds no gap of its own. */
 @media (min-width: 1024px) {
-  .listing-top,
-  .listing-bottom {
+  .listing-layout {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: var(--space-32);
+    grid-template-rows: auto auto 1fr;
+    gap: 0 var(--space-32);
     align-items: start;
   }
 
-  .listing-top {
+  .listing-gallery {
+    grid-column: 1;
+    grid-row: 1;
     margin-bottom: var(--space-32);
+  }
+
+  .listing-side-top {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-bottom: var(--space-16);
+  }
+
+  .listing-about {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+    margin: 0;
+  }
+
+  .listing-side-bottom {
+    grid-column: 2;
+    grid-row: 3;
   }
 
   .listing-side {
@@ -218,9 +242,18 @@
   margin-top: 0.2em;
 }
 
-/* "Log in" style links in the note get a taller tap area without moving the lines apart */
-.listing-privacy a {
-  padding: var(--space-12) 0;
+/* A visitor's "Create a free account": the last line of the card, so the link can be a full 44 px tall */
+.listing-signup {
+  margin: var(--space-8) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.listing-signup a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: var(--weight-medium);
 }
 
 .listing-sent,
@@ -244,19 +277,21 @@
   list-style: none;
 }
 
-/* Each contact detail is a full-height line: an email or phone link is a 44 px touch target.
-   overflow-wrap lets a long email address break instead of pushing the card wider than a phone. */
+/* One contact detail per line. overflow-wrap lets a long email address break instead of pushing the card wider
+   than a phone. */
 .listing-contact-item {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  min-height: 44px;
+  min-height: 32px;
   font-size: var(--text-body-sm);
   font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
 
+/* In state B each detail is a link (mailto:, tel:), so it is a full 44 px touch target */
 a.listing-contact-item {
+  min-height: 44px;
   text-decoration: none;
 }
 
@@ -303,10 +338,15 @@ a.listing-contact-item:hover {
   color: var(--color-muted);
 }
 
+/* The owner's two buttons share a line when they fit; when they wrap, each fills its own line */
 .listing-owner-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
+}
+
+.listing-owner-actions .btn {
+  flex: 1 1 auto;
 }
 
 /* ── About this plant ───────────────────────────────── */

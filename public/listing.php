@@ -51,17 +51,17 @@ $is_open  = $listing['status'] === 'open';
 $owner       = $mock_users[$listing['user_id']];
 $owner_first = first_name($owner['full_name']);
 
-// The viewer's own interest: state B when it exists and is not withdrawn.
-// Stage B: SELECT … FROM listing_interests WHERE listing_id = ? AND user_id = ? AND status <> 'withdrawn'
-$my_interest = null;
+// The viewer's own interest row: state B when it exists and is not withdrawn.
+// Stage B: SELECT … FROM listing_interests WHERE listing_id = ? AND user_id = ?
+$my_row = null;
 if ($current_user && !$is_owner) {
     foreach ($mock_listing_interests as $interest) {
-        if ($interest['listing_id'] === $listing['id'] && $interest['user_id'] === $current_user['id']
-            && $interest['status'] !== 'withdrawn') {
-            $my_interest = $interest;
+        if ($interest['listing_id'] === $listing['id'] && $interest['user_id'] === $current_user['id']) {
+            $my_row = $interest;
         }
     }
 }
+$my_interest = ($my_row && $my_row['status'] !== 'withdrawn') ? $my_row : null;
 
 // ── I'm interested · Withdraw interest ──────────────────
 // Post/Redirect/Get: the form posts to this page, the change is made, then the browser is sent back to the listing's
@@ -178,8 +178,9 @@ $login_url     = query_url('login.php', ['next' => 'listing.php?id=' . $listing[
 $form_action   = url('listing.php?id=' . $listing['id']);
 $interest_text = count_words($listing['interest_count'], 'person is interested', 'people are interested');
 
-// "Interest withdrawn" after the redirect above; ignored in every other situation
-$just_withdrawn = get_text('withdrawn') === '1' && $current_user && !$is_owner && $is_open && !$my_interest;
+// "Interest withdrawn" after the redirect above, only when the viewer's row really is withdrawn: a hand-made
+// ?withdrawn=1 on any other listing shows nothing
+$just_withdrawn = get_text('withdrawn') === '1' && $is_open && $my_row && $my_row['status'] === 'withdrawn';
 
 // Who the owner exchanged a closed listing with (exchanged_with), told to the owner only
 $exchanged_with = (!$is_open && $is_owner && $listing['exchanged_with'] !== null)
@@ -199,8 +200,9 @@ include __DIR__ . '/../includes/header.php';
     </ol>
   </nav>
 
-  <?php // Top row: the photos beside what is offered and the interest card. On a phone everything is one column, in this order. ?>
-  <div class="listing-top">
+  <?php // Four parts in reading order: photos, then the summary and interest card, then About, then the owner and tips
+        // cards. A phone shows them in this order, one under the other; a desktop puts them in two columns (listing.css). ?>
+  <div class="listing-layout">
     <?php // Photo gallery (p18, element 1) ?>
     <div class="listing-gallery" id="gallery">
       <img class="listing-photo" src="<?= e(photo_url($photos[$photo_number - 1])) ?>"
@@ -219,7 +221,7 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
     </div>
 
-    <div class="listing-side">
+    <div class="listing-side listing-side-top">
       <?php // Listing summary (p18, elements 2 and 4) ?>
       <section class="panel listing-summary">
         <p class="listing-summary-meta">
@@ -280,7 +282,7 @@ include __DIR__ . '/../includes/header.php';
           <h2 class="panel-title" id="interest-title">Interested in this plant?</h2>
           <p class="listing-interest-text">Log in to tell <?= e($owner_first) ?>. You will then see <?= e($owner_first) ?>'s <?= e($shared_words) ?>.</p>
           <a class="btn btn-primary listing-interest-btn" href="<?= e($login_url) ?>">Log in to show interest</a>
-          <p class="listing-privacy">New to PlantFolio? <a href="<?= e(url('register.php')) ?>">Create a free account</a></p>
+          <p class="listing-signup">New to PlantFolio? <a href="<?= e(url('register.php')) ?>">Create a free account</a></p>
 
         <?php elseif ($my_interest): ?>
           <?php // State B: interest sent, so the details the owner chose to share are shown, and only those ?>
@@ -328,10 +330,7 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </section>
     </div>
-  </div>
 
-  <?php // Bottom row: what the plant is beside who offers it and how to swap safely ?>
-  <div class="listing-bottom">
     <section class="listing-about" aria-labelledby="about-title">
       <h2 class="listing-about-title" id="about-title">About this plant</h2>
       <p class="listing-description"><?= e($listing['description']) ?></p>
@@ -365,7 +364,7 @@ include __DIR__ . '/../includes/header.php';
       </dl>
     </section>
 
-    <div class="listing-side">
+    <div class="listing-side listing-side-bottom">
       <?php // Owner trust card (p18, element 5). Never contact details: those are only in the interest card, after interest. ?>
       <aside class="panel listing-owner" aria-labelledby="owner-title">
         <h2 class="label" id="owner-title">Offered by</h2>
