@@ -271,6 +271,12 @@ function format_day($date)
     return date('j M', strtotime($date));
 }
 
+/** "1 plant" or "13 plants": the number and the right form of the word. */
+function count_words($count, $singular, $plural)
+{
+    return $count . ' ' . ($count === 1 ? $singular : $plural);
+}
+
 /**
  * The fixed confidence word for an ML result. The limits are a design system rule and must not change:
  * High from 80%, Medium from 60% to 79%, Not sure below 60%.

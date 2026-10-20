@@ -31,7 +31,8 @@ foreach ($mock_users as $row) {
 
 if (!$member) {
     http_response_code(404);   // tells browsers and search engines that the page does not exist
-    $shown_name = mb_strlen($asked_for) > 40 ? mb_substr($asked_for, 0, 40) . '…' : $asked_for;
+    // A very long name is cut to 40 letters. Its "…" then ends the sentence, so no full stop follows it.
+    $shown_name = mb_strlen($asked_for) > 40 ? mb_substr($asked_for, 0, 40) . '…' : $asked_for . '.';
     $page_title = 'Member not found';
     $nav_area   = 'explore';   // looking for a member is part of Explore
     include __DIR__ . '/../includes/header.php';
@@ -42,7 +43,7 @@ if (!$member) {
             'title'   => 'Member not found',
             'text'    => $asked_for === ''
                 ? 'The address does not say which member to show. You can find people on Explore.'
-                : 'Nobody is called @' . $shown_name . '. Check the spelling, or search for the member on Explore.',
+                : 'Nobody is called @' . $shown_name . ' Check the spelling, or search for the member on Explore.',
             'actions' => [['label' => 'Find people', 'url' => query_url('explore.php', ['tab' => 'people']), 'icon' => 'search']],
         ]); ?>
       </section>
@@ -59,6 +60,8 @@ $is_owner = $current_user && $member['id'] === $current_user['id'];
 // Each list is one table filtered by user_id = ? in stage B.
 
 // Collections: public ones only (stage B: AND is_public = 1). Nimali's and other members' rows are two mock lists.
+// Stage B: this page's query also adds AND plants.is_public = 1 to the COUNT() and the GROUP_CONCAT() of each collection,
+// so a private plant inside a public collection is neither counted in plant_count nor shown in the collage.
 $collections = array_values(array_filter(
     array_merge($mock_collections, $mock_community_collections),
     fn ($collection) => $collection['user_id'] === $member['id'] && $collection['is_public']
@@ -132,18 +135,18 @@ if ($collection_filter) {
 $handle       = '@' . $member['username'];
 $member_since = date('M Y', strtotime($member['created_at']));
 
-/** "1 plant" or "13 plants": the number and the right form of the word. */
-function count_words($count, $singular, $plural)
-{
-    return $count . ' ' . ($count === 1 ? $singular : $plural);
-}
-
 /** A review's date: "14 Sep" this year, "8 Mar 2025" in an earlier year, so an old review never looks recent. */
 function review_date($datetime)
 {
-    $time = strtotime($datetime);
+    $year = date('Y', strtotime($datetime));
 
-    return date('Y', $time) === date('Y') ? date('j M', $time) : date('j M Y', $time);
+    return $year === date('Y') ? format_day($datetime) : format_day($datetime) . ' ' . $year;
+}
+
+/** The reviewer of a written review, shaped like a users row, so partials/avatar.php can draw them. */
+function review_rater($review)
+{
+    return ['username' => $review['rater_username'], 'full_name' => $review['rater_full_name'], 'avatar' => $review['rater_avatar']];
 }
 
 // The owner's note: what other people do not see. Their own pages count everything ($current_user); this page counts
@@ -221,6 +224,10 @@ include __DIR__ . '/../includes/header.php';
         <?php elseif ($listing_count > 0): ?>
           <?php // p21 says "See her listings": the page is generated for any member, so it names no he or she ?>
           <a class="btn btn-primary" href="<?= e($tab_url('listings')) ?>"><?= icon('repeat') ?> See listings (<?= e($listing_count) ?>)</a>
+        <?php elseif ($member['plant_count'] > 0): ?>
+          <?php // Nothing on the exchange right now: the plants are the next best thing to see. With no public plants either,
+                // there is nothing to point at, so only the ⋯ menu stays. ?>
+          <a class="btn btn-primary" href="<?= e($tab_url('plants')) ?>"><?= icon('leaf') ?> See plants (<?= e($member['plant_count']) ?>)</a>
         <?php endif; ?>
 
         <details class="menu profile-menu">
@@ -280,6 +287,12 @@ include __DIR__ . '/../includes/header.php';
     </nav>
 
     <div class="profile-panel">
+      <?php // Each panel opens with an h2 naming its tab, so the outline runs h1 → h2 → the cards' h3 without a gap.
+            // Hidden, because the chosen tab already shows the name; an open collection has a visible h2 of its own. ?>
+      <?php if (!$collection_filter): ?>
+        <h2 class="visually-hidden"><?= e($tabs[$tab]['label']) ?></h2>
+      <?php endif; ?>
+
       <?php if ($tab === 'collections'): ?>
         <?php // Collection cards (p21, element 5): a three-photo collage per public collection; private ones never get here ?>
         <?php if ($collections): ?>
@@ -349,7 +362,7 @@ include __DIR__ . '/../includes/header.php';
 
       <?php elseif ($tab === 'listings'): ?>
         <?php if ($listings): ?>
-          <div class="profile-grid profile-grid-listings">
+          <div class="profile-grid">
             <?php foreach ($listings as $listing): ?>
               <?php partial('listing-card', ['listing' => $listing]); ?>
             <?php endforeach; ?>
@@ -375,12 +388,12 @@ include __DIR__ . '/../includes/header.php';
           </p>
           <ol class="review-list">
             <?php foreach ($reviews as $review): ?>
-              <?php $rater = ['username' => $review['rater_username'], 'full_name' => $review['rater_full_name'], 'avatar' => $review['rater_avatar']]; ?>
               <li class="review">
                 <div class="review-head">
-                  <?php partial('avatar', ['member' => $rater, 'size' => 'sm']); ?>
+                  <?php partial('avatar', ['member' => review_rater($review), 'size' => 'sm']); ?>
                   <a class="review-author" href="<?= e(url('user.php?u=' . urlencode($review['rater_username']))) ?>">@<?= e($review['rater_username']) ?></a>
-                  <?php partial('stars', ['score' => $review['score'], 'size' => 'sm']); ?>
+                  <?php // The score in figures too ("4/5"): small amber stars on white are hard to count ?>
+                  <?php partial('stars', ['score' => $review['score'], 'size' => 'sm', 'show_score' => true]); ?>
                   <time class="review-date" datetime="<?= e(substr($review['created_at'], 0, 10)) ?>"><?= e(review_date($review['created_at'])) ?></time>
                 </div>
                 <p class="review-comment"><?= e($review['comment']) ?></p>
@@ -389,7 +402,10 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </ol>
         <?php elseif ($has_ratings): ?>
-          <p class="panel-empty"><?= icon('info') ?> No written reviews yet: all <?= e(count_words($rating_count, 'rating was', 'ratings were')) ?> given without a comment.</p>
+          <p class="panel-empty">
+            <?= icon('info') ?>
+            No written reviews yet: <?= $rating_count === 1 ? 'the only rating was' : 'all ' . e($rating_count) . ' ratings were' ?> given without a comment.
+          </p>
         <?php else: ?>
           <section class="panel">
             <?php partial('empty-state', [
@@ -435,9 +451,9 @@ include __DIR__ . '/../includes/header.php';
             <p>“<?= e($latest_review['comment']) ?>”</p>
           </blockquote>
           <p class="latest-review-by">
-            <?php partial('avatar', ['member' => ['username' => $latest_review['rater_username'], 'full_name' => $latest_review['rater_full_name'], 'avatar' => $latest_review['rater_avatar']], 'size' => 'sm']); ?>
+            <?php partial('avatar', ['member' => review_rater($latest_review), 'size' => 'sm']); ?>
             <span>
-              <a href="<?= e(url('user.php?u=' . urlencode($latest_review['rater_username']))) ?>">@<?= e($latest_review['rater_username']) ?></a>
+              <a class="latest-review-author" href="<?= e(url('user.php?u=' . urlencode($latest_review['rater_username']))) ?>">@<?= e($latest_review['rater_username']) ?></a>
               · <time datetime="<?= e(substr($latest_review['created_at'], 0, 10)) ?>"><?= e(review_date($latest_review['created_at'])) ?></time>
             </span>
           </p>

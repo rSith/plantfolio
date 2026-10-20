@@ -2,7 +2,10 @@
 // Five stars filled up to a score, e.g. ★★★★☆ (COM-05, COM-13, wireframe p7 "Rating" and p21).
 // Expects $score — a review's score (1–5, a whole number) or an average such as 4.9, which fills the nearest whole star.
 // Optional $size = 'sm' for the small stars of a review.
-// The five icons are one image for screen readers, named "Rated 4.9 out of 5", so nobody hears "star" five times.
+// Optional $show_score = true also prints the score in figures after the stars, "4/5". Amber stars on white are too
+// faint to count for many people (about 2:1), so wherever no number stands next to the stars already, pass it.
+// The five icons are one image for screen readers, named "Rated 4.9 out of 5", so nobody hears "star" five times;
+// the figures repeat that name, so they are hidden from screen readers.
 
 $filled      = (int) round($score);
 $score_words = is_float($score) ? number_format($score, 1) : $score;   // an average keeps one decimal: 5.0, 4.9
@@ -12,3 +15,6 @@ $score_words = is_float($score) ? number_format($score, 1) : $score;   // an ave
     <span class="star<?= $star <= $filled ? ' is-filled' : '' ?>"><?= icon('star') ?></span>
   <?php endfor; ?>
 </span>
+<?php if (!empty($show_score)): ?>
+  <span class="stars-score" aria-hidden="true"><?= e($score_words) ?>/5</span>
+<?php endif; ?>

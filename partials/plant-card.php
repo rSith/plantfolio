@@ -15,10 +15,13 @@ $due        = $community ? null : care_hint($plant);   // null when the plant ha
 <article class="card plant-card<?= $community ? ' plant-card-community' : '' ?>">
   <div class="card-media">
     <img src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>" loading="lazy">
-    <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-    <?php if ($community): ?>
-      <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
-    <?php endif; ?>
+    <?php // One row for the badges on the photo: on a narrow card the likes drop below the health word, never over it ?>
+    <div class="card-media-badges">
+      <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+      <?php if ($community): ?>
+        <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
+      <?php endif; ?>
+    </div>
     <?php if (!empty($menu)): ?>
       <?php partial('plant-menu', ['plant' => $plant]); ?>
     <?php endif; ?>

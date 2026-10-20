@@ -155,6 +155,9 @@ $mock_plants = [
 //   plant_count  — a COUNT() on plants
 //   cover_photos — the photos of up to three of its plants, most liked first: the collage on her Public Profile
 //                  (p21, element 5). Stage B: GROUP_CONCAT(plants.photo ORDER BY like_count DESC), split with explode().
+// My Garden counts every plant. The Public Profile's query adds AND plants.is_public = 1 to both calculated columns,
+// because a public collection may hold a private plant (Add plant allows it). Here her 13 public plants are exactly
+// the 7 in Living room and the 6 in Balcony, so one number serves both pages.
 // A collection with is_public = 0 is private: the page shows a lock and hides it from others.
 // The counts are her whole garden (18 plants, as on p11 and the Dashboard); $mock_plants holds only a sample of 8.
 // So the Balcony collage borrows two placeholder drawings (aloe, snake plant) for Balcony plants that are not in the sample.
@@ -769,8 +772,13 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_users[$current_user['id']] = array_merge($mock_users[$current_user['id']], [
         'plant_count' => 0, 'collection_count' => 0, 'swap_count' => 0, 'rating_avg' => 0, 'rating_count' => 0,
     ]);
-    // No ratings received yet. The ratings she gave other members stay, so their counts still add up.
-    $mock_user_ratings  = array_values(array_filter($mock_user_ratings, fn ($rating) => $rating['rated_id'] !== $current_user['id']));
+    // No ratings received and no reviews written: a brand-new member has finished no exchange yet. The other members
+    // keep their counts and averages (those rows are theirs, not hers), so on their profiles the ratings behind her
+    // reviews count as ratings without a comment, and every number still adds up.
+    $mock_user_ratings  = array_values(array_filter(
+        $mock_user_ratings,
+        fn ($rating) => $rating['rated_id'] !== $current_user['id'] && $rating['rater_id'] !== $current_user['id']
+    ));
     $mock_rating_counts = array_values(array_filter($mock_rating_counts, fn ($row) => $row['rated_id'] !== $current_user['id']));
 }
 

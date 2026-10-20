@@ -928,6 +928,23 @@ textarea.input {
   box-shadow: var(--shadow-sm);
 }
 
+/* The plant card's badges share one row along the top of the photo. Two separately placed badges overlap on a narrow
+   card ("Needs attention" under the likes); in a row that wraps, the second one moves down a line instead. */
+.card-media-badges {
+  position: absolute;
+  top: var(--space-12);
+  right: var(--space-12);
+  left: var(--space-12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.card-media-badges .badge {
+  position: static;   /* placed by the row, not by the .card-media .badge rule above */
+}
+
 .card-body {
   display: flex;
   flex: 1;
@@ -1030,10 +1047,9 @@ textarea.input {
   margin-left: 0;
 }
 
-/* Community plant card (p16): likes on the photo's top-right corner, the owner along the bottom */
+/* Community plant card (p16): likes at the right end of the badge row, the owner along the bottom */
 .card-media .plant-card-likes {
-  left: auto;
-  right: var(--space-12);
+  margin-left: auto;   /* to the right, also when it has wrapped onto a line of its own */
   background: var(--color-white);
   color: var(--color-ink);
 }
@@ -1268,11 +1284,12 @@ textarea.input {
   color: var(--color-muted);
 }
 
-/* Five stars in a row, e.g. on a profile or in the Rate a trader dialog. Filled ones get .is-filled. */
+/* Five stars in a row, e.g. on a profile or in the Rate a trader dialog. Filled ones get .is-filled.
+   An empty star is a thin outline in the muted text colour: the lighter line colour (1.5:1 on white) almost vanished. */
 .stars {
   display: inline-flex;
   gap: 2px;
-  color: var(--color-line-strong);
+  color: var(--color-muted);
 }
 
 .stars .icon {
@@ -1292,6 +1309,13 @@ textarea.input {
 .stars-sm .icon {
   width: 14px;
   height: 14px;
+}
+
+/* The score in figures after the stars, "4/5" ('show_score' => true): readable where the stars alone are too faint */
+.stars-score {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
 }
 
 /* ── Care row ───────────────────────────────────────── */

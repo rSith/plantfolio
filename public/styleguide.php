@@ -311,7 +311,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="sg-row">
           <?php partial('rating', ['rating' => $sample_member]); ?>
           <?php partial('stars', ['score' => 4]); ?>
-          <?php partial('stars', ['score' => 5, 'size' => 'sm']); ?>
+          <?php partial('stars', ['score' => 5, 'size' => 'sm', 'show_score' => true]); ?>
         </div>
       </div>
     </div>

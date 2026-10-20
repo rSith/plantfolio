@@ -241,13 +241,13 @@
   color: var(--color-leaf);
 }
 
-/* The name and the count share a line when there is room; on a narrow card the count drops below */
+/* The name, then the count under it. p21 puts them on one line, but a card is only 160 to 230 px wide, so a longer
+   name pushed its count down while the card beside it did not, and the rows no longer lined up. Two lines always do. */
 .collection-card-body {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0 var(--space-8);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   padding: var(--space-8) var(--space-12) var(--space-12);
 }
 
@@ -332,7 +332,11 @@
   gap: var(--space-4) var(--space-8);
 }
 
+/* A link on its own, not inside a sentence, so it gets the full 44px touch target */
 .review-author {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-ink);
   font-size: var(--text-body-sm);
   font-weight: var(--weight-semibold);
@@ -411,9 +415,11 @@
   font-size: var(--text-small);
 }
 
+/* Pushed to the right of its column: a "1" is narrower than a "5" in Poppins, so left-aligned stars did not line up */
 .rating-bar-score {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 2px;
   color: var(--color-muted);
 }
@@ -472,6 +478,13 @@
   margin: 0;
   color: var(--color-muted);
   font-size: var(--text-small);
+}
+
+/* The reviewer's @username: a 44px touch target, like the authors in the Ratings tab */
+.latest-review-author {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 /* "See all reviews": a full-height touch target of its own under the quote */
@@ -551,6 +564,8 @@
     gap: var(--space-16);
   }
 
+  /* Plant and listing cards 2 across, on a desktop too: beside the rating card the tabs are two-thirds of the page,
+     and 3 across made cards about 200 px, too narrow for "Needs attention" and the likes side by side on the photo */
   .profile-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -592,10 +607,6 @@
   .profile-body {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     gap: var(--space-32);
-  }
-
-  .profile-grid:not(.profile-grid-listings) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   /* Beside the tabs the card is narrow again: one column, the latest review under the bars */
