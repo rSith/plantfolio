@@ -30,8 +30,11 @@
 /* ── Collection tabs ────────────────────────────────── */
 
 /* One line of chips. On a phone the line is wider than the screen, so it scrolls sideways on its own
-   instead of making the whole page scroll. The padding leaves room for the focus outline. */
+   instead of making the whole page scroll. The padding leaves room for the focus outline.
+   position: relative makes this row the box that the visually hidden "Private:" word inside a chip is placed in;
+   without it that word was placed against the page and stretched it 17 px sideways at 375 px. */
 .collection-tabs {
+  position: relative;
   display: flex;
   gap: var(--space-8);
   margin: 0 calc(var(--space-16) * -1) var(--space-16);
