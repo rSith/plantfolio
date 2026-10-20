@@ -68,6 +68,29 @@ function get_text($name)
     return (is_string($value) && mb_check_encoding($value, 'UTF-8')) ? $value : '';
 }
 
+/**
+ * The same as get_text(), for a field of a form sent with method="post": post_text('note').
+ * A hand-made request can send note[]=x just as easily as an address can.
+ */
+function post_text($name)
+{
+    $value = $_POST[$name] ?? null;
+
+    return (is_string($value) && mb_check_encoding($value, 'UTF-8')) ? $value : '';
+}
+
+/**
+ * The page to go back to after logging in, from login.php?next=…, or '' when it is not allowed.
+ * Only a few exact local addresses pass (today: listing.php?id=<number>, for "Log in to show interest" on P11).
+ * Anything else — https://evil.example, //evil.example, listing.php?id=8&x=… — is refused, so nobody can use our
+ * Log in page to send people on to another site after they log in (an "open redirect").
+ * \z means "the very end of the text": a plain $ would also accept a hidden line break at the end.
+ */
+function return_path($value)
+{
+    return (is_string($value) && preg_match('/^listing\.php\?id=[1-9][0-9]{0,9}\z/', $value)) ? $value : '';
+}
+
 /** The file name of the page the browser asked for, e.g. "garden.php". */
 function current_page()
 {
@@ -152,6 +175,12 @@ function initials($full_name)
     $last  = count($words) > 1 ? mb_substr(end($words), 0, 1) : '';
 
     return mb_strtoupper($first . $last);
+}
+
+/** The first name, for friendly sentences: "Ruwan Rathnayake" gives "Ruwan" ("Contact Ruwan to arrange the swap"). */
+function first_name($full_name)
+{
+    return preg_split('/\s+/', trim($full_name))[0];
 }
 
 /**

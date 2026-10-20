@@ -20,7 +20,7 @@ $current_user = [
     'username'   => 'nimali.grows',
     'full_name'  => 'Nimali Perera',
     'email'      => 'nimali.p@example.com',
-    'phone'      => null,                    // not shown in the wireframes yet
+    'phone'      => '+94 77 000 1234',       // p18 and p19: shared only with people interested in a listing
     'bio'        => 'Balcony gardener growing aroids and far too many pothos. Always happy to swap cuttings.',
     'location'   => 'Kurunegala',
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
@@ -58,8 +58,9 @@ if (isset($_GET['guest'])) {
     $_SESSION['preview_visitor'] = true;
 }
 if (isset($_GET['member'])) {
-    $_SESSION['preview_visitor'] = false;
-    $_SESSION['preview_empty']   = false;   // ?member is always Nimali with her full garden
+    $_SESSION['preview_visitor']   = false;
+    $_SESSION['preview_empty']     = false;   // ?member is always Nimali with her full garden
+    $_SESSION['preview_interests'] = [];      // … and the interests of the mock data (see mock_send_interest())
 }
 if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
@@ -82,6 +83,9 @@ function mock_log_in_and_go($page, $new_account = false)
 {
     $_SESSION['preview_visitor'] = false;
     $_SESSION['preview_empty']   = $new_account;
+    if ($new_account) {
+        $_SESSION['preview_interests'] = [];   // a brand-new account has shown interest in nothing yet
+    }
     header('Location: ' . url($page));
     exit;
 }
@@ -203,21 +207,32 @@ $mock_reminders = [
 // Ids are not in date order (the Newest sort uses created_at). Rows 6 to 10 are from p17, with p17's towns, distances,
 // ages and interest counts. Echeveria (11) is p17's last card; its owner, the Monstera row (12, the 'either' example),
 // the philodendron row (13, the one far away) and every looking_for that p17 cuts off are invented.
-// Columns only the detail page needs (description, share_email, share_phone …) are added with that page.
+// The last two lines of each row hold the columns only the Listing Detail page (P11) prints:
+//   description, share_email, share_phone — from the table plan. share_email and share_phone (TINYINT 0/1) are the
+//                    owner's choices on the listing form (P12): which contact details an interested member may see.
+//   size, plant_condition — proposed exchange_listings columns for DES-07 (short optional text, p18's details list).
+//                    Not "condition": that word is reserved in MySQL.
+// Listing 7's are from p18; the others are invented.
+// interest_count counts the interests that are not withdrawn. Nimali's own interest in listing 11 is one of its 2;
+// her preview changes (mock_send_interest() below) are added to or taken from these numbers at the end of this file.
 $mock_listings = [
     ['id' => 7, 'user_id' => 1, 'plant_id' => 43, 'title' => "Pothos 'Golden', 3 rooted cuttings",
      'type' => 'swap', 'looking_for' => 'succulents or a snake plant pup', 'location' => 'Kurunegala',
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00',
      'species_id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
-     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 4, 'distance_km' => 3],
+     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 4, 'distance_km' => 3,
+     'description' => 'Three healthy cuttings from my pothos Goldie, rooted in water for three weeks. Each has four to six leaves and roots about 5 cm long. Ready to pot.',
+     'size' => '3 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 
     ['id' => 8, 'user_id' => 5, 'plant_id' => 61, 'title' => 'Aloe vera pups (4)',
      'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kurunegala',
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/vera.svg', 'created_at' => mock_date(-3) . ' 17:40:00',
      'species_id' => 5, 'common_name' => 'Aloe vera', 'scientific_name' => 'Aloe vera',
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
-     'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 2, 'distance_km' => 5],
+     'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 2, 'distance_km' => 5,
+     'description' => 'Four pups from my mother aloe, each with its own small roots. Aloe is very easy on a sunny windowsill, so these are perfect for a beginner. Bring a small pot or a bag.',
+     'size' => '4 pups, 8 to 12 cm tall', 'plant_condition' => 'Healthy, rooted, ready to pot', 'share_email' => 1, 'share_phone' => 1],
 
     // Swap or free: the owner takes a plant in return, or gives it to a beginner for nothing. It appears under both
     // the Swap and the Free filter. Nobody is interested yet, so its card has no "interested" count.
@@ -226,14 +241,18 @@ $mock_listings = [
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/monty.svg', 'created_at' => mock_date(-4) . ' 12:10:00',
      'species_id' => 1, 'common_name' => 'Swiss cheese plant', 'scientific_name' => 'Monstera deliciosa',
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
-     'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 0, 'distance_km' => 5],
+     'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 0, 'distance_km' => 5,
+     'description' => 'A top cutting from Leafy with one leaf, a node and a short aerial root. It roots easily in water or damp moss. Happy to swap for a pothos or a philodendron, or to give it to someone starting out.',
+     'size' => '1 cutting with one leaf, about 25 cm', 'plant_condition' => 'Healthy, not rooted yet', 'share_email' => 0, 'share_phone' => 1],
 
     ['id' => 9, 'user_id' => 4, 'plant_id' => 59, 'title' => "Snake plant 'Laurentii'",
      'type' => 'swap', 'looking_for' => 'any fern', 'location' => 'Kuliyapitiya',
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
      'species_id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
-     'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18],
+     'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18,
+     'description' => 'A Laurentii pup with yellow edges, separated from Spike with its own roots and potted in a 10 cm pot. Snake plants forgive almost everything, even a missed watering.',
+     'size' => '1 pup in a 10 cm pot, about 20 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0],
 
     // Kandy is 42 km from Kurunegala, beyond the 25 km a member sees first: it proves the distance filter hides far
     // listings, and appears with "50 km" or "Any distance". Visitors see it, as they see every listing.
@@ -242,7 +261,9 @@ $mock_listings = [
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-6) . ' 19:20:00',
      'species_id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
      'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
-     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42],
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42,
+     'description' => 'Four cuttings from my philodendron Hugo, two leaves each, rooting in a jar of water. The first roots are already showing. I can meet in Kandy town.',
+     'size' => '4 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, roots starting in water', 'share_email' => 1, 'share_phone' => 1],
 
     // p17: "Wariyapola · 14 km · 1 week ago", 3 interested. Kavindi (Kandy) keeps it: her bio promises seedlings to give away.
     ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
@@ -250,7 +271,9 @@ $mock_listings = [
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/tommy.svg', 'created_at' => mock_date(-7) . ' 18:30:00',
      'species_id' => 6, 'common_name' => 'Tomato', 'scientific_name' => 'Solanum lycopersicum',
      'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
-     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 14],
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 14,
+     'description' => 'Six tomato seedlings grown from saved seed, about three weeks old, each in a small paper pot that can go straight into the ground. Pick-up in Wariyapola, where I spend the weekends.',
+     'size' => '6 seedlings, about 10 cm tall', 'plant_condition' => 'Healthy, in paper pots', 'share_email' => 1, 'share_phone' => 0],
 
     // Nimali's second open listing, from wireframe p17 ("Peace lily division · Kurunegala · 1 km · 1 week ago"),
     // so her profile's "See listings (2)" matches p21. It offers her Lily (plant 48). looking_for is invented
@@ -260,7 +283,9 @@ $mock_listings = [
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/lily.svg', 'created_at' => mock_date(-7) . ' 16:30:00',
      'species_id' => 7, 'common_name' => 'Peace lily', 'scientific_name' => 'Spathiphyllum wallisii',
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
-     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 1, 'distance_km' => 1],
+     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 1, 'distance_km' => 1,
+     'description' => 'A division from my peace lily Lily, with its own roots and five leaves. Potted in fresh soil last week, and a new leaf is already coming.',
+     'size' => '1 division, about 30 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0],
 
     // p17: "Echeveria cuttings (5) · Pannala · 22 km", 2 interested. Cuttings, so no plant row: the proposed species_id.
     ['id' => 11, 'user_id' => 4, 'plant_id' => null, 'title' => 'Echeveria cuttings (5)',
@@ -268,7 +293,9 @@ $mock_listings = [
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/pearl.svg', 'created_at' => mock_date(-9) . ' 10:45:00',
      'species_id' => 8, 'common_name' => 'Mexican snowball', 'scientific_name' => 'Echeveria elegans',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
-     'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 2, 'distance_km' => 22],
+     'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 2, 'distance_km' => 22,
+     'description' => 'Five rosette cuttings from my echeveria, dried for a week and now growing tiny roots. Keep them dry and in bright light until they settle.',
+     'size' => '5 rosettes, 3 to 5 cm across', 'plant_condition' => 'Healthy, roots starting', 'share_email' => 1, 'share_phone' => 0],
 
     // A finished swap, so the marketplace can prove that closed listings stay hidden (p17, UX notes). It is listing 5 of
     // the reviews below: Nimali swapped these cuttings with Dinesh (exchanged_with 4), and they rated each other on 14 Sep.
@@ -277,7 +304,9 @@ $mock_listings = [
      'status' => 'closed', 'exchanged_with' => 4, 'photo' => 'mock/goldie.svg', 'created_at' => '2026-09-06 10:00:00',
      'species_id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
-     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 3, 'distance_km' => 2],
+     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 3, 'distance_km' => 2,
+     'description' => 'Three Marble Queen cuttings with cream and green leaves, rooted in water for a month.',
+     'size' => '3 cuttings, about 15 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 ];
 
 // A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
@@ -286,6 +315,74 @@ if (!$current_user) {
     foreach ($mock_listings as $index => $listing) {
         $mock_listings[$index]['distance_km'] = null;
     }
+}
+
+// ── Listing Detail (P11, COM-08) ────────────────────────
+
+// Extra photos for the gallery — rows of a proposed `listing_photos` table for DES-07 (id, listing_id, path, created_at),
+// shaped like the optional plant_photos. The gallery shows the listing's own photo first (exchange_listings.photo, the
+// card photo), then these, oldest first. p18 shows three photos of the pothos cuttings. Only placeholder drawings exist,
+// so they repeat the card drawing; the aloe's second photo is invented. The other listings have only their card photo.
+$mock_listing_photos = [
+    ['id' => 301, 'listing_id' => 7, 'path' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00'],
+    ['id' => 302, 'listing_id' => 7, 'path' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:16:00'],
+    ['id' => 303, 'listing_id' => 8, 'path' => 'mock/vera.svg',   'created_at' => mock_date(-3) . ' 17:40:00'],
+];
+
+// Contact details — the email and phone columns of `users`, keyed by user id. They are kept apart from $mock_users
+// (what other people see) because one page reads them, in one state: Listing Detail after "I'm interested", and then
+// only the fields the owner chose to share (share_email, share_phone). Stage B selects them in that one query only.
+// Nimali's are on p18 and p19 (the same as $current_user); the others are invented, at example.com, a domain kept for
+// examples. Dinesh gave no phone number: phone is optional, so a listing can never share a phone its owner does not have.
+$mock_user_contacts = [
+    1 => ['id' => 1, 'email' => 'nimali.p@example.com',  'phone' => '+94 77 000 1234'],
+    2 => ['id' => 2, 'email' => 'amaya.m@example.com',   'phone' => '+94 76 000 2345'],
+    3 => ['id' => 3, 'email' => 'kavindi.j@example.com', 'phone' => '+94 71 000 3456'],
+    4 => ['id' => 4, 'email' => 'dinesh.g@example.com',  'phone' => null],
+    5 => ['id' => 5, 'email' => 'ruwan.r@example.com',   'phone' => '+94 70 000 5678'],
+];
+
+// The interests Nimali has sent — rows of `listing_interests` with her user_id: the requester's side, which decides
+// state A or B on Listing Detail. status is new (the owner has not opened it yet), seen, or withdrawn (the table plan's
+// ➕ column); a withdrawn row no longer counts. Stage B: SELECT … FROM listing_interests WHERE listing_id = ? AND
+// user_id = ?, with a proposed UNIQUE (listing_id, user_id) for DES-07, so one member has one row per listing.
+// She asked Dinesh for his echeveria cuttings, which suits her own "looking for succulents". Message and dates invented.
+$mock_listing_interests = [
+    ['id' => 16, 'listing_id' => 11, 'user_id' => 1,
+     'message' => 'Hello! Could I have two of these for my balcony? I can bring a pothos cutting in return.',
+     'status' => 'seen', 'created_at' => mock_date(-6) . ' 20:10:00'],
+];
+
+// The listings whose interest_count above already includes one of these rows (listing 11). Kept before any preview
+// change, so the end of this file can work out the difference.
+$seeded_interest_ids = array_column(
+    array_filter($mock_listing_interests, fn ($interest) => $interest['status'] !== 'withdrawn'),
+    'listing_id'
+);
+
+/**
+ * Mock-only: "I'm interested" on Listing Detail (P11). Nothing is saved in stage F, so the new row is kept in the
+ * session, like the mock login, and laid over $mock_listing_interests at the end of this file. Every page then agrees:
+ * the detail page shows state B, and the listing's card on Exchange counts one more person.
+ * Stage B: INSERT INTO listing_interests (listing_id, user_id, message, status) VALUES (?, ?, ?, 'new'), or an UPDATE
+ * back to 'new' when the member had withdrawn an earlier interest.
+ */
+function mock_send_interest($listing_id, $user_id, $message)
+{
+    $_SESSION['preview_interests'][$listing_id] = [
+        'id'         => $_SESSION['preview_interests'][$listing_id]['id'] ?? 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
+        'listing_id' => $listing_id,
+        'user_id'    => $user_id,
+        'message'    => $message,
+        'status'     => 'new',
+        'created_at' => date('Y-m-d H:i:s'),
+    ];
+}
+
+/** Mock-only: "Withdraw interest". Stage B: UPDATE listing_interests SET status = 'withdrawn' WHERE id = ? AND user_id = ?. */
+function mock_withdraw_interest($interest)
+{
+    $_SESSION['preview_interests'][$interest['listing_id']] = array_merge($interest, ['status' => 'withdrawn']);
 }
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -804,7 +901,8 @@ $mock_rating_counts = [
 // stay empty until ?member or Log in brings her garden back. Create account turns it on.
 // It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
 if (isset($_GET['empty'])) {
-    $_SESSION['preview_empty'] = true;
+    $_SESSION['preview_empty']     = true;
+    $_SESSION['preview_interests'] = [];   // a brand-new member has shown interest in nothing yet
 }
 if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'index.php') {
     $current_user['plant_count']        = 0;
@@ -842,6 +940,32 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
         fn ($rating) => $rating['rated_id'] !== $current_user['id'] && $rating['rater_id'] !== $current_user['id']
     ));
     $mock_rating_counts = array_values(array_filter($mock_rating_counts, fn ($row) => $row['rated_id'] !== $current_user['id']));
+
+    // The interests she sent are hers too. Interests she sends after ?empty come from the session, below.
+    $mock_listing_interests = [];
+}
+
+// Nimali's interests as the preview changed them (mock_send_interest(), mock_withdraw_interest()): a row kept in the
+// session replaces the mock row of the same listing. Built here, after the ?empty switch, so a brand-new Nimali starts
+// with none but keeps the ones she sends. A visitor's pages count them too: they are Nimali's rows, whoever looks.
+foreach ($_SESSION['preview_interests'] ?? [] as $preview_row) {
+    $mock_listing_interests = array_values(array_filter(
+        $mock_listing_interests,
+        fn ($interest) => $interest['listing_id'] !== $preview_row['listing_id']
+    ));
+    $mock_listing_interests[] = $preview_row;
+}
+
+// interest_count then follows, as a COUNT() on listing_interests would: one more where she is interested now and was
+// not in the mock data, one less where she was (listing 11) and is not any more. So the card on Exchange and the
+// detail page always show the same number. Stage B: COUNT(*) … WHERE status <> 'withdrawn' does this by itself.
+$active_interest_ids = array_column(
+    array_filter($mock_listing_interests, fn ($interest) => $interest['status'] !== 'withdrawn'),
+    'listing_id'
+);
+foreach ($mock_listings as $index => $listing) {
+    $mock_listings[$index]['interest_count'] += (int) in_array($listing['id'], $active_interest_ids, true)
+                                              - (int) in_array($listing['id'], $seeded_interest_ids, true);
 }
 
 // Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,
