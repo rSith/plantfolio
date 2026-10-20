@@ -205,15 +205,6 @@ $mock_reminders = [
 // the philodendron row (13, the one far away) and every looking_for that p17 cuts off are invented.
 // Columns only the detail page needs (description, share_email, share_phone …) are added with that page.
 $mock_listings = [
-    // Kandy is 42 km from Kurunegala, beyond the 25 km a member sees first: it proves the distance filter hides far
-    // listings, and appears with "50 km" or "Any distance". Visitors see it, as they see every listing.
-    ['id' => 13, 'user_id' => 3, 'plant_id' => 57, 'title' => 'Heartleaf philodendron cuttings (4)',
-     'type' => 'swap', 'looking_for' => 'any hoya or a small fern', 'location' => 'Kandy',
-     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-1) . ' 19:20:00',
-     'species_id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
-     'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
-     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42],
-
     ['id' => 7, 'user_id' => 1, 'plant_id' => 43, 'title' => "Pothos 'Golden', 3 rooted cuttings",
      'type' => 'swap', 'looking_for' => 'succulents or a snake plant pup', 'location' => 'Kurunegala',
      'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00',
@@ -243,6 +234,15 @@ $mock_listings = [
      'species_id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18],
+
+    // Kandy is 42 km from Kurunegala, beyond the 25 km a member sees first: it proves the distance filter hides far
+    // listings, and appears with "50 km" or "Any distance". Visitors see it, as they see every listing.
+    ['id' => 13, 'user_id' => 3, 'plant_id' => 57, 'title' => 'Heartleaf philodendron cuttings (4)',
+     'type' => 'swap', 'looking_for' => 'any hoya or a small fern', 'location' => 'Kandy',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-6) . ' 19:20:00',
+     'species_id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
+     'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42],
 
     // p17: "Wariyapola · 14 km · 1 week ago", 3 interested. Kavindi (Kandy) keeps it: her bio promises seedlings to give away.
     ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
