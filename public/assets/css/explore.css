@@ -213,53 +213,7 @@
   width: 100%;
 }
 
-/* ── Results bar: count, active filters, sort ───────── */
-
-.results-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-8);
-  margin-bottom: var(--space-16);
-}
-
-.results-count {
-  margin: 0 var(--space-4) 0 0;
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-}
-
-/* An active filter: tinted sage, with an × that removes it */
-.filter-chip {
-  border-color: var(--color-sage);
-  background: var(--color-sage);
-  color: var(--color-forest);
-}
-
-.filter-chip .icon {
-  width: 14px;
-  height: 14px;
-}
-
-.results-clear {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: var(--text-small);
-  font-weight: var(--weight-medium);
-}
-
-/* margin-left: auto pushes the sort to the right end of the row, as on p16 */
-.sort-menu {
-  margin-left: auto;
-}
-
-.sort-menu > summary .icon {
-  width: 16px;
-  height: 16px;
-}
+/* The results bar (count, active filter chips, Clear all, sort) is in components.css: the Exchange page uses it too */
 
 /* ── Plant grid ─────────────────────────────────────── */
 

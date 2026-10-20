@@ -31,8 +31,10 @@ $species_plant  = $mock_plants[array_search($species_result['plant_id'], array_c
 $disease_plant  = $mock_plants[array_search($disease_result['plant_id'], array_column($mock_plants, 'id'))];
 
 // "Fresh on the exchange": the four newest open listings (wireframe p8, UX notes).
-// Stage B: … WHERE status = 'open' ORDER BY created_at DESC LIMIT 4. The mock array is already newest first.
-$fresh_listings = array_slice($mock_listings, 0, 4);
+// Stage B: … WHERE status = 'open' ORDER BY created_at DESC LIMIT 4. The mock array is already newest first,
+// but it also holds a closed listing, which must never be offered again.
+$open_listings  = array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open');
+$fresh_listings = array_slice($open_listings, 0, 4);
 
 // "How it works": three steps that mirror the product, add → track → swap (wireframe p8, element 4).
 $steps = [

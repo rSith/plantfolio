@@ -1408,6 +1408,55 @@ textarea.input {
   }
 }
 
+/* ── Results bar: count, active filters, sort ───────── */
+/* Above a list of search results. Moved here from explore.css: the Exchange page (P10) uses it too. */
+
+.results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.results-count {
+  margin: 0 var(--space-4) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* An active filter: tinted sage, with an × that removes it */
+.filter-chip {
+  border-color: var(--color-sage);
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.filter-chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.results-clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* margin-left: auto pushes the sort to the right end of the row, as on p16 and p17 */
+.sort-menu {
+  margin-left: auto;
+}
+
+.sort-menu > summary .icon {
+  width: 16px;
+  height: 16px;
+}
+
 /* ── Panels ─────────────────────────────────────────── */
 /* A white box with a heading row. Moved here from dashboard.css: My Garden, Plant Profile and Settings use it too. */
 

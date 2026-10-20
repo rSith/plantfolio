@@ -271,7 +271,8 @@ include __DIR__ . '/../includes/header.php';
   <section class="sg-card" aria-labelledby="sg-listing-cards">
     <h2 class="label" id="sg-listing-cards">Listing card</h2>
     <div class="sg-cards sg-cards-wide">
-      <?php foreach ($mock_listings as $listing): ?>
+      <?php // Open listings only: the card has no "closed" look, because closed listings are never shown ?>
+      <?php foreach (array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open') as $listing): ?>
         <?php partial('listing-card', ['listing' => $listing]); ?>
       <?php endforeach; ?>
     </div>

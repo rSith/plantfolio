@@ -187,53 +187,115 @@ $mock_reminders = [
      'nickname' => 'Sergeant', 'photo' => 'mock/sergeant.svg', 'common_name' => 'Snake plant'],
 ];
 
-// Open listings on the marketplace, newest first — rows of `exchange_listings` (wireframe p17), each joined with:
-//   users → username, full_name, avatar of the owner
+// Listings on the marketplace, newest first — rows of `exchange_listings` (wireframes p17, p8), each joined with:
+//   users         → username, full_name, avatar of the owner
+//   plant_species → species_id, common_name, scientific_name, for the Species filter and the search (P10).
+//                   A listing that offers one of the owner's plants takes the species of that plant (plant_id → plants);
+//                   seedlings and cuttings listed without a plant (plant_id null) need their own species_id: a proposed
+//                   exchange_listings column for DES-07. Stage B: COALESCE(plants.species_id, exchange_listings.species_id)
+//                   AS species_id, then LEFT JOIN plant_species on it.
 // and four calculated columns: rating_avg and rating_count (from user_ratings), interest_count
-// (from listing_interests) and distance_km (between the viewer's town and the listing's town).
+// (from listing_interests) and distance_km (between the viewer's town and the listing's town; null for a visitor,
+// who has no town: see below the array).
+// location is the town where the plant can be picked up, typed on the listing form. It can differ from the owner's home
+// town (users.location): Dinesh lives in Negombo but meets people in Kuliyapitiya and Pannala, on the way to Kurunegala.
+// Rows with status 'closed' are finished exchanges (exchanged_with is the other member): pages show open rows only.
+// Ids are not in date order (the Newest sort uses created_at). Rows 6 to 10 are from p17, with p17's towns, distances,
+// ages and interest counts. Echeveria (11) is p17's last card; its owner, the Monstera row (12, the 'either' example),
+// the philodendron row (13, the one far away) and every looking_for that p17 cuts off are invented.
 // Columns only the detail page needs (description, share_email, share_phone …) are added with that page.
 $mock_listings = [
-    ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
-     'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kandy',
-     'status' => 'open', 'photo' => 'mock/tommy.svg', 'created_at' => mock_date(-1) . ' 18:30:00',
+    // Kandy is 42 km from Kurunegala, beyond the 25 km a member sees first: it proves the distance filter hides far
+    // listings, and appears with "50 km" or "Any distance". Visitors see it, as they see every listing.
+    ['id' => 13, 'user_id' => 3, 'plant_id' => 57, 'title' => 'Heartleaf philodendron cuttings (4)',
+     'type' => 'swap', 'looking_for' => 'any hoya or a small fern', 'location' => 'Kandy',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-1) . ' 19:20:00',
+     'species_id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
      'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
-     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 42],
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42],
 
     ['id' => 7, 'user_id' => 1, 'plant_id' => 43, 'title' => "Pothos 'Golden', 3 rooted cuttings",
      'type' => 'swap', 'looking_for' => 'succulents or a snake plant pup', 'location' => 'Kurunegala',
-     'status' => 'open', 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/goldie.svg', 'created_at' => mock_date(-2) . ' 09:15:00',
+     'species_id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 4, 'distance_km' => 3],
 
     ['id' => 8, 'user_id' => 5, 'plant_id' => 61, 'title' => 'Aloe vera pups (4)',
      'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kurunegala',
-     'status' => 'open', 'photo' => 'mock/vera.svg', 'created_at' => mock_date(-3) . ' 17:40:00',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/vera.svg', 'created_at' => mock_date(-3) . ' 17:40:00',
+     'species_id' => 5, 'common_name' => 'Aloe vera', 'scientific_name' => 'Aloe vera',
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
      'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 2, 'distance_km' => 5],
 
+    // Swap or free: the owner takes a plant in return, or gives it to a beginner for nothing. It appears under both
+    // the Swap and the Free filter. Nobody is interested yet, so its card has no "interested" count.
+    ['id' => 12, 'user_id' => 5, 'plant_id' => 55, 'title' => 'Monstera cutting with a node',
+     'type' => 'either', 'looking_for' => 'a pothos or a philodendron, or free to a beginner', 'location' => 'Kurunegala',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/monty.svg', 'created_at' => mock_date(-4) . ' 12:10:00',
+     'species_id' => 1, 'common_name' => 'Swiss cheese plant', 'scientific_name' => 'Monstera deliciosa',
+     'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
+     'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 0, 'distance_km' => 5],
+
     ['id' => 9, 'user_id' => 4, 'plant_id' => 59, 'title' => "Snake plant 'Laurentii'",
      'type' => 'swap', 'looking_for' => 'any fern', 'location' => 'Kuliyapitiya',
-     'status' => 'open', 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/sergeant.svg', 'created_at' => mock_date(-5) . ' 08:05:00',
+     'species_id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata',
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18],
 
+    // p17: "Wariyapola · 14 km · 1 week ago", 3 interested. Kavindi (Kandy) keeps it: her bio promises seedlings to give away.
+    ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
+     'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Wariyapola',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/tommy.svg', 'created_at' => mock_date(-7) . ' 18:30:00',
+     'species_id' => 6, 'common_name' => 'Tomato', 'scientific_name' => 'Solanum lycopersicum',
+     'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
+     'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 14],
+
     // Nimali's second open listing, from wireframe p17 ("Peace lily division · Kurunegala · 1 km · 1 week ago"),
     // so her profile's "See listings (2)" matches p21. It offers her Lily (plant 48). looking_for is invented
-    // (cut off on p17). Id 6: it is older than listings 7 to 10.
+    // (cut off on p17).
     ['id' => 6, 'user_id' => 1, 'plant_id' => 48, 'title' => 'Peace lily division',
      'type' => 'swap', 'looking_for' => 'a fern or a calathea', 'location' => 'Kurunegala',
-     'status' => 'open', 'photo' => 'mock/lily.svg', 'created_at' => mock_date(-7) . ' 16:30:00',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/lily.svg', 'created_at' => mock_date(-7) . ' 16:30:00',
+     'species_id' => 7, 'common_name' => 'Peace lily', 'scientific_name' => 'Spathiphyllum wallisii',
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 1, 'distance_km' => 1],
+
+    // p17: "Echeveria cuttings (5) · Pannala · 22 km", 2 interested. Cuttings, so no plant row: the proposed species_id.
+    ['id' => 11, 'user_id' => 4, 'plant_id' => null, 'title' => 'Echeveria cuttings (5)',
+     'type' => 'swap', 'looking_for' => 'a string of pearls or any trailing succulent', 'location' => 'Pannala',
+     'status' => 'open', 'exchanged_with' => null, 'photo' => 'mock/pearl.svg', 'created_at' => mock_date(-9) . ' 10:45:00',
+     'species_id' => 8, 'common_name' => 'Mexican snowball', 'scientific_name' => 'Echeveria elegans',
+     'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
+     'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 2, 'distance_km' => 22],
+
+    // A finished swap, so the marketplace can prove that closed listings stay hidden (p17, UX notes). It is listing 5 of
+    // the reviews below: Nimali swapped these cuttings with Dinesh (exchanged_with 4), and they rated each other on 14 Sep.
+    ['id' => 5, 'user_id' => 1, 'plant_id' => null, 'title' => "Pothos 'Marble Queen' cuttings (3)",
+     'type' => 'swap', 'looking_for' => 'a snake plant pup', 'location' => 'Kurunegala',
+     'status' => 'closed', 'exchanged_with' => 4, 'photo' => 'mock/goldie.svg', 'created_at' => '2026-09-06 10:00:00',
+     'species_id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
+     'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
+     'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 3, 'distance_km' => 2],
 ];
+
+// A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
+// when nobody is logged in. Every page that shows listings (Landing, Exchange, Public Profile) then hides the distance.
+if (!$current_user) {
+    foreach ($mock_listings as $index => $listing) {
+        $mock_listings[$index]['distance_km'] = null;
+    }
+}
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
 
 // Site-wide counts for the Landing page. The wireframe says they are read live, never typed into the page.
 // Stage B: SELECT COUNT(*) FROM users · SELECT COUNT(*) FROM exchange_listings WHERE status = 'open'
+// The listing count is counted from $mock_listings, so "See all N listings" leads to exactly N cards on the Exchange page.
 $mock_site_stats = [
     'member_count'       => 1248,   // shown rounded down: "1,200+"
-    'open_listing_count' => 37,
+    'open_listing_count' => count(array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open')),
 ];
 
 // The newest members, for the avatar row in the hero — users rows, newest first.
@@ -656,7 +718,7 @@ $mock_community_collections = [
 // created_at is not in the table plan yet: a proposed user_ratings column for DES-07 (p21 dates the latest review).
 // Stage B: … WHERE rated_id = ? AND comment IS NOT NULL ORDER BY created_at DESC.
 // A rating belongs to one finished exchange (listing_id), and the two members may rate each other once each, so every
-// listing appears twice. Listings 1 to 5 are Nimali's closed listings; $mock_listings holds only open ones.
+// listing appears twice. Listings 1 to 5 are Nimali's closed listings; $mock_listings holds the newest of them (5).
 // Ratings without a comment are not rows here; they are counted in $mock_rating_counts.
 // The newest rating of Nimali, from @dinesh.greens on 14 Sep, is the latest review on p21; the rest are invented.
 $mock_user_ratings = [
