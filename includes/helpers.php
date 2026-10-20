@@ -9,7 +9,9 @@
 function e($value)
 {
     // The (string) cast lets numbers and null pass through without a PHP warning.
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    // ENT_SUBSTITUTE: bytes that are not valid UTF-8 become a "�" instead of blanking the whole value
+    // (without it, htmlspecialchars() returns an empty string, so one broken byte would hide a name or a heading).
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /**
