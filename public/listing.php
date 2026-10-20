@@ -80,8 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = post_text('action');
     if ($is_open && !$is_owner) {
         if ($action === 'interest' && !$my_interest) {
-            // The note is optional and kept as typed (at most 300 letters); e() escapes it wherever it is shown
-            $note = mb_substr(trim(post_text('note')), 0, 300);
+            // The note is optional and kept as typed (at most 300 letters); e() escapes it wherever it is shown.
+            // The textarea's maxlength counts a line break as one character, but the browser sends it as two (\r\n),
+            // so each \r\n becomes \n first: otherwise a note the textarea accepted would lose its last words here.
+            $note = mb_substr(trim(str_replace("\r\n", "\n", post_text('note'))), 0, 300);
             mock_send_interest($listing['id'], $current_user['id'], $note === '' ? null : $note);
         } elseif ($action === 'withdraw' && $my_interest) {
             mock_withdraw_interest($my_interest);
@@ -89,7 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    header('Location: ' . url($back) . '#interest');   // #interest scrolls back down to the card on a phone
+    // #summary brings the browser back to the title, the "N interested" that just changed and the card: on a phone they
+    // are below the photos; on a desktop they are at the top already, so the page moves only past the breadcrumb.
+    header('Location: ' . url($back) . '#summary');
     exit;
 }
 
@@ -222,8 +226,9 @@ include __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="listing-side listing-side-top">
-      <?php // Listing summary (p18, elements 2 and 4) ?>
-      <section class="panel listing-summary">
+      <?php // Listing summary (p18, elements 2 and 4). After I'm interested, Withdraw or Log in the browser returns to
+            // #summary, so the title, the count and the interest card under it (or beside it) are in view. ?>
+      <section class="panel listing-summary" id="summary">
         <p class="listing-summary-meta">
           <span class="badge badge-type-<?= e($listing['type']) ?>"><?= icon($type['icon']) ?> <?= e($type['label']) ?></span>
           <?php if (!$is_open): ?>
@@ -243,7 +248,7 @@ include __DIR__ . '/../includes/header.php';
       </section>
 
       <?php // Interest and contact reveal (p18, element 6): one card, five situations ?>
-      <section class="panel listing-interest<?= $my_interest && $is_open ? ' is-sent' : '' ?>" id="interest" aria-labelledby="interest-title">
+      <section class="panel listing-interest<?= $my_interest && $is_open ? ' is-sent' : '' ?>" aria-labelledby="interest-title">
         <?php if (!$is_open): ?>
           <?php // Closed or exchanged: no form and no contact details ?>
           <h2 class="panel-title" id="interest-title"><?= icon('lock') ?> This listing is closed</h2>

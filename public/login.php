@@ -6,14 +6,17 @@ require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
 // Stage B, on POST: check the CSRF token, find the user by email or username, password_verify(),
-//   session_regenerate_id(true), then go to the Dashboard. Every failure shows the same message,
-//   "Email or password is incorrect", and 5 failures lock the account for 15 minutes (CORE-12).
+//   session_regenerate_id(true), then go to $after_login below (the checked listing, or the Dashboard).
+//   Every failure shows the same message, "Email or password is incorrect", and 5 failures lock the account
+//   for 15 minutes (CORE-12).
 
 // Where to go after logging in. "Log in to show interest" on a listing (P11) sends login.php?next=listing.php?id=8,
 // so the member comes back to that listing (p18, UX notes). return_path() (helpers.php) accepts only that kind of local
 // address; anything else is ignored and the member goes to the Dashboard. The form carries the value on in a hidden field.
 $next = return_path($_SERVER['REQUEST_METHOD'] === 'POST' ? post_text('next') : get_text('next'));
-$after_login = $next !== '' ? $next : 'dashboard.php';
+// #summary is added only after return_path() has checked the plain address. On a phone it scrolls past the photos to
+// the listing's title and the I'm interested button (listing.php).
+$after_login = $next !== '' ? $next . '#summary' : 'dashboard.php';
 
 // Stage F: pressing Log in "logs in" as Nimali without checking anything, so a demo can go from the Landing page
 // into the member pages. The browser's own checks (required fields) still run first.
