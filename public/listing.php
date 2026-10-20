@@ -306,7 +306,8 @@ include __DIR__ . '/../includes/header.php';
             <p class="listing-note"><span class="listing-note-label">Your note</span> <span class="listing-note-text"><?= e($my_interest['message']) ?></span></p>
           <?php endif; ?>
           <div class="listing-interest-actions">
-            <button type="button" class="btn btn-secondary" disabled><?= icon('check') ?> Interest sent</button>
+            <?php // No tick here (as on p18): the message above already has one, and the room keeps both buttons on one line ?>
+            <button type="button" class="btn btn-secondary" disabled>Interest sent</button>
             <form method="post" action="<?= e($form_action) ?>">
               <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
               <input type="hidden" name="action" value="withdraw">

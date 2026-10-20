@@ -158,13 +158,17 @@
   color: var(--color-forest);
 }
 
+/* text-wrap: balance evens out the lines of a long title, so none ends with a lone word such as "node" or "(6)".
+   Browsers without it simply wrap as before. */
 .listing-title {
   margin-bottom: var(--space-8);
   font-size: var(--text-h2);
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-@media (min-width: 768px) {
+/* The full H1 size only from 1024 px: on a tablet the summary card is half the width, too narrow for 32 px */
+@media (min-width: 1024px) {
   .listing-title {
     font-size: var(--text-h1);
   }
@@ -334,7 +338,9 @@ a.listing-contact-item:hover {
   border-top: 1px solid var(--color-line);
 }
 
+/* Less side padding than a normal button, so both buttons share one line down to a 344 px wide screen */
 .listing-withdraw {
+  padding-inline: var(--space-8);
   color: var(--color-muted);
 }
 
