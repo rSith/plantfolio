@@ -21,6 +21,9 @@ mysql -u root plantfolio < database/seed.sql
 
 The proposal defines **10 tables**. Task **DES-07** adds the fields the wireframes need that the proposal lacks
 (marked ➕ below). Confirm or change these during DES-07 and update this file.
+Entries marked *proposal (week N)* were added while building the pages with mock data (stage F): a page needed them,
+`includes/mock-data.php` already uses them, and the week's progress note says why. They are suggestions until DES-07
+accepts or drops them.
 
 | Table | Purpose | Key fields (proposal) | ➕ Added by DES-07 |
 |---|---|---|---|
@@ -30,12 +33,13 @@ The proposal defines **10 tables**. Task **DES-07** adds the fields the wirefram
 | `plants` | Each individual plant profile | id, user_id, collection_id, species_id, nickname, photo, acquired_on, health_status | is_public |
 | `health_logs` | Dated health timeline (the plant story) | id, plant_id, status, note, photo, source (manual / ML), logged_at | — |
 | `care_reminders` | Recurring care tasks | id, plant_id, task (water, fertilise), interval_days, last_done, next_due | — |
-| `exchange_listings` | Plants offered for exchange | id, user_id, plant_id, title, description, location, status (open, closed) | type (swap / free / either), looking_for, share_email, share_phone, approx_area, photo, exchanged_with, created_at ("2 days ago" on cards, Newest sort) |
-| `listing_interests` | Interest expressed in a listing | id, listing_id, user_id, message, created_at | status (new / seen / withdrawn) |
-| `user_ratings` | Trust ratings between traders | id, rater_id, rated_id, listing_id, score (1–5), comment | UNIQUE (rater_id, listing_id) |
+| `exchange_listings` | Plants offered for exchange | id, user_id, plant_id, title, description, location, status (open, closed) | type (swap / free / either), looking_for, share_email, share_phone, approx_area, photo, exchanged_with, created_at ("2 days ago" on cards, Newest sort) · *proposal (week 4):* species_id (NULL when the listing offers one of the owner's plants, which already has a species; for seedlings and cuttings listed without a plant, P10 Species filter), size and plant_condition (short optional text for the P11 details list; not `condition`, a reserved word in MySQL, and P12 has no fields for them yet) |
+| `listing_interests` | Interest expressed in a listing | id, listing_id, user_id, message, created_at | status (new / seen / withdrawn) · *proposal (week 4):* UNIQUE (listing_id, user_id): one row per member and listing; withdrawing sets `withdrawn`, showing interest again sets `new` (P11) |
+| `user_ratings` | Trust ratings between traders | id, rater_id, rated_id, listing_id, score (1–5), comment | UNIQUE (rater_id, listing_id) · *proposal (week 4):* created_at (P14 dates each review and shows the latest) |
 | `ml_predictions` | Every recognition or diagnosis | id, user_id, plant_id, type, predicted_label, confidence, image_path, created_at | model_version (from the API contract, DES-10) |
 | `plant_photos` *(optional)* | Extra photos for the P05 gallery | id, plant_id, path, created_at | ➕ new |
 | `plant_likes` *(optional, COM-15)* | Likes on public plants | id, plant_id, user_id, created_at · UNIQUE (plant_id, user_id) | ➕ new |
+| `listing_photos` *(proposal, week 4)* | Extra photos for the P11 gallery, after the listing's own `photo` | id, listing_id, path, created_at (like `plant_photos`) | ➕ new |
 
 ## Rules
 - `health_status` and `health_logs.status` use exactly: `thriving`, `stable`, `needs_attention`, `sick`.
