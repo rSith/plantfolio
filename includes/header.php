@@ -32,9 +32,11 @@ $tool_links = [
     ['label' => 'Health Check',     'href' => 'health-check.php', 'icon' => 'activity'],
 ];
 
+// The header's own names ($bell_count, not $interest_count): a page's variables share this scope, and the
+// Dashboard prints its own $interest_count after including this file, so a shared name would overwrite it.
 if ($is_member) {
-    $profile_url    = url('user.php?u=' . urlencode($current_user['username']));
-    $interest_count = (int) ($current_user['new_interest_count'] ?? 0);
+    $profile_url = url('user.php?u=' . urlencode($current_user['username']));
+    $bell_count  = (int) ($current_user['new_interest_count'] ?? 0);
 }
 ?>
 <!doctype html>
@@ -89,9 +91,9 @@ if ($is_member) {
         <?php if ($is_member): ?>
           <a class="icon-btn" href="<?= e(url('explore.php')) ?>" aria-label="Search"><?= icon('search') ?></a>
           <a class="btn btn-primary btn-sm header-add" href="<?= e(url('plant-form.php')) ?>" aria-label="Add plant"><?= icon('plus') ?> <span class="header-add-label">Add plant</span></a>
-          <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $interest_count > 0 ? ': ' . e($interest_count) . ' new' : '' ?>">
+          <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $bell_count > 0 ? ': ' . e($bell_count) . ' new' : '' ?>">
             <?= icon('bell') ?>
-            <?php if ($interest_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>
+            <?php if ($bell_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>
           </a>
           <details class="menu" name="site-menu">
             <summary class="avatar-toggle" aria-label="Account menu"><?php partial('avatar', ['member' => $current_user]); ?></summary>
