@@ -11,6 +11,8 @@ $is_member       = !empty($current_user);
 // A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
 $area            = $nav_area ?? current_area();
 $show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
+// The top bar's .site-header-member follows $is_member, not $show_bottom_bar: a member's bar holds more buttons, so
+// layout.css hides its logo text on a tablet, also on a page without the bottom bar (Add plant).
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
 $nav_links = $is_member
@@ -60,7 +62,7 @@ if ($is_member) {
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header<?= $show_bottom_bar ? ' site-header-member' : '' ?>">
+  <header class="site-header<?= $is_member ? ' site-header-member' : '' ?>">
     <div class="container site-header-inner">
       <?php // A member's home is the Dashboard; a visitor's is the top of the Landing page ?>
       <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : 'index.php')) ?>" aria-label="PlantFolio home">
