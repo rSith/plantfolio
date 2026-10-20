@@ -72,6 +72,12 @@
   padding-top: var(--space-12);
 }
 
+/* The panel hangs from the 44px "⋯" button, so its width would shrink to the 220px minimum and break
+   "Community guidelines" over two lines. nowrap keeps each item on one line; the panel grows to fit. */
+.profile-menu .menu-item {
+  white-space: nowrap;
+}
+
 .profile-name {
   grid-area: name;
   min-width: 0;
