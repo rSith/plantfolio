@@ -121,20 +121,33 @@
   min-height: 52px;
 }
 
-/* Phone: one line that scrolls sideways on its own. position: relative keeps the hidden radio buttons inside the
-   scrolling box, so they can never stretch the page. The negative margins let the line run to the screen's edges. */
+/* Phone: the type on a line of its own, its three segments sharing the full width. The two selects together are
+   wider than a phone (the distance alone is about 290px), so they share a second line that scrolls sideways. */
+.exchange-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);   /* plus the scrolling line's 4px padding: 12px, like the gap above */
+}
+
+/* The negative margins let the line run to the screen's edges, so the Species select is cut by the edge of the
+   screen and peeks in: that cut-off control is what shows there is more to scroll to. */
 .exchange-filter-row {
-  position: relative;
   display: flex;
   gap: var(--space-8);
   margin: 0 calc(var(--space-16) * -1);
   padding: var(--space-4) var(--space-16);
   overflow-x: auto;
-  scrollbar-width: none;   /* the cut-off control at the edge already shows there is more */
+  scrollbar-width: none;
 }
 
 .exchange-filter-row > * {
   flex-shrink: 0;
+}
+
+/* A select alone on the line (a visitor has no distance) grows to the full width, like the type above it.
+   Two selects are wider than the line, so there is no room left to grow into and they keep their own widths. */
+.exchange-select {
+  flex-grow: 1;
 }
 
 /* 44 × 44px segments at least: the smallest touch target the project allows (the shared control is 40px tall) */
@@ -144,30 +157,37 @@
 }
 
 .exchange-select .input {
-  width: auto;
+  width: 100%;
   min-height: 52px;   /* level with the segmented control: 44px segments plus its 4px frame */
   padding-right: var(--space-32);
 }
 
-/* Tablet and up: everything fits, so the line stops scrolling. A grid shares the room left by the segmented control
-   equally between the selects, so they fill the line instead of one of them dropping onto a second line. */
+/* Tablet and up: everything fits, so the type and the selects share one line that no longer scrolls. A grid gives
+   the selects equal shares of the room the type leaves, so they fill the line instead of one dropping below. */
 @media (min-width: 768px) {
+  .exchange-choices {
+    flex-direction: row;
+  }
+
+  .exchange-type {
+    flex: none;
+  }
+
   .exchange-filter-row {
+    flex: 1;
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
-    grid-template-columns: auto;
     margin: 0;
     padding: 0;
     overflow: visible;
   }
-
-  .exchange-select .input {
-    width: 100%;
-  }
 }
 
-/* Desktop: the search and the choices share one line, as on p17 */
+/* Desktop: the search and the choices share one line, as on p17. flex-grow shares out the room left over in
+   proportion, 100 parts to the search for 1 part to the choices: side by side, the search takes almost all of it.
+   Between 1024 and about 1050px a member's choices (712px) do not fit beside the search and wrap onto a line of
+   their own; alone there, their 1 part is the only one, so they fill that line instead of stopping two-thirds across. */
 @media (min-width: 1024px) {
   .exchange-filters {
     flex-direction: row;
@@ -176,7 +196,11 @@
   }
 
   .exchange-search {
-    flex: 1 1 280px;
+    flex: 100 1 280px;
+  }
+
+  .exchange-choices {
+    flex: 1 1 auto;
   }
 }
 

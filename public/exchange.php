@@ -89,22 +89,31 @@ function listing_matches_search($listing, $term)
     return mb_stripos($haystack, $term) !== false;
 }
 
-$listings = array_filter($open_listings, function ($listing) use ($term, $type, $distance, $species) {
-    if (!listing_matches_search($listing, $term)) {
-        return false;
-    }
-    // A listing of type 'either' (swap or free) belongs under both Swap and Free
-    if ($type !== '' && !in_array($listing['type'], [$type, 'either'], true)) {
-        return false;
-    }
-    if ($distance !== 'any' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $distance) {
-        return false;
-    }
-    if ($species !== null && $listing['species_id'] !== $species) {
-        return false;
-    }
-    return true;
-});
+/**
+ * The listings that pass the search and every filter. A function, not a one-off filter, because the no-results
+ * state below runs it again with one filter loosened, to offer only a way out that really finds listings.
+ */
+function filter_listings($listings, $term, $type, $distance, $species)
+{
+    return array_filter($listings, function ($listing) use ($term, $type, $distance, $species) {
+        if (!listing_matches_search($listing, $term)) {
+            return false;
+        }
+        // A listing of type 'either' (swap or free) belongs under both Swap and Free
+        if ($type !== '' && !in_array($listing['type'], [$type, 'either'], true)) {
+            return false;
+        }
+        if ($distance !== 'any' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $distance) {
+            return false;
+        }
+        if ($species !== null && $listing['species_id'] !== $species) {
+            return false;
+        }
+        return true;
+    });
+}
+
+$listings = filter_listings($open_listings, $term, $type, $distance, $species);
 
 // Ties fall back to the newest, so the order never changes between visits
 usort($listings, function ($a, $b) use ($sort) {
@@ -139,32 +148,58 @@ if ($species !== null) {
     $active_filters[] = ['label' => $species_options[$species], 'href' => $exchange_url(['species' => null])];
 }
 $clear_filters_url = $exchange_url(['type' => '', 'distance' => '', 'species' => null]);
-$show_all_url      = query_url('exchange.php', ['sort' => $filters['sort']]);
 
 // ── No listings found ───────────────────────────────────
-// The empty-state partial with a way out: clear the search (keeping the filters) or start again from the defaults.
+// The empty-state partial with a way out. A button that leads to another empty page is no way out, so the page
+// counts first (the same filter, one choice loosened) and offers the smallest change that really finds listings:
+// 1. "Search any distance": keeps the search and the filters. A member's 25 km limit is a filter too, only a hidden
+//    one, so this is the way to the listings further away (e.g. "hoya" in Kandy, 42 km).
+// 2. "Clear the search": keeps the filters the visitor chose.
+// Then "Show all listings": no search, no filters, any distance, the same sort. It always finds every open listing.
+// Stage B: each count is a SELECT COUNT(*) with the same WHERE, minus the one condition being loosened.
 $no_listings = null;
 if ($listing_count === 0) {
+    $show_all_url = query_url('exchange.php', ['distance' => $has_town ? 'any' : '', 'sort' => $filters['sort']]);
+
+    $further_count = ($has_town && $distance !== 'any')
+        ? count(filter_listings($open_listings, $term, $type, 'any', $species))
+        : 0;
+    $without_search_count = ($q !== '' && $active_filters)
+        ? count(filter_listings($open_listings, '', $type, $distance, $species))
+        : 0;
+
     $actions = [];
-    if ($q !== '' && $active_filters) {
+    if ($further_count > 0) {
+        $actions[] = ['label' => 'Search any distance', 'url' => $exchange_url(['distance' => 'any']), 'icon' => 'map-pin'];
+    } elseif ($without_search_count > 0) {
         $actions[] = ['label' => 'Clear the search', 'url' => $exchange_url(['q' => '']), 'icon' => 'search'];
+    }
+    // Not twice: with no search and no filters, "Search any distance" already is the address of every listing
+    if ($open_listings && (!$actions || $actions[0]['url'] !== $show_all_url)) {
         $actions[] = ['label' => 'Show all listings', 'url' => $show_all_url, 'icon' => 'layout-grid'];
-    } elseif ($q !== '') {
-        $actions[] = ['label' => 'Show all listings', 'url' => $show_all_url, 'icon' => 'layout-grid'];
-    } elseif ($active_filters) {
-        $actions[] = ['label' => 'Clear all filters', 'url' => $clear_filters_url, 'icon' => 'sliders-horizontal'];
     }
 
-    if ($q !== '') {
-        $empty_title = 'No listings match "' . $q . '"' . ($active_filters ? ' with these filters' : '');
-        $empty_text  = 'Check the spelling or try a shorter word, like a plant name.';
-    } elseif ($active_filters) {
-        $empty_title = 'No listings match these filters';
-        $empty_text  = 'Try another type or species, or a longer distance.';
-    } else {
-        // Only when nobody nearby has listed anything at all
-        $empty_title = $has_town ? 'No open listings near ' . $viewer_town : 'No open listings yet';
+    if (!$open_listings) {
+        $empty_title = 'No open listings yet';   // only before anyone lists a plant
         $empty_text  = 'New listings appear here as soon as members post them.';
+    } else {
+        if ($q !== '') {
+            $empty_title = 'No listings match "' . $q . '"' . ($active_filters ? ' with these filters' : '');
+        } elseif ($active_filters) {
+            $empty_title = 'No listings match these filters';
+        } else {
+            $empty_title = 'No open listings near ' . $viewer_town;   // only the 25 km limit can hide every listing
+        }
+
+        // Say why: the distance when it is to blame (naming it, as the 25 km has no chip), otherwise the word or the filters
+        if ($further_count > 0) {
+            $empty_text = 'Nothing within ' . $distance . ' km of ' . $viewer_town . ', but there '
+                        . ($further_count === 1 ? 'is 1 listing' : 'are ' . $further_count . ' listings') . ' further away.';
+        } elseif ($q !== '') {
+            $empty_text = 'Check the spelling or try a shorter word, like a plant name.';
+        } else {
+            $empty_text = 'Try another type or species.';
+        }
     }
 
     $no_listings = ['title' => $empty_title, 'text' => $empty_text, 'actions' => $actions];
@@ -225,8 +260,9 @@ include __DIR__ . '/../includes/header.php';
       <button type="submit" class="btn btn-secondary">Search</button>
     </div>
 
-    <?php // One line of choices; on a phone it scrolls sideways on its own, never the whole page (p23) ?>
-    <div class="exchange-filter-row">
+    <?php // The choices: one line from 768 px. On a phone the type gets a line of its own, and the two selects share a
+          // line that scrolls sideways on its own, never the whole page (p23), with the Species select peeking in at the edge. ?>
+    <div class="exchange-choices">
       <fieldset class="segmented exchange-type">
         <legend class="visually-hidden">Listing type</legend>
         <?php foreach ($type_options as $value => $label): ?>
@@ -235,29 +271,31 @@ include __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </fieldset>
 
-      <?php if ($has_town): ?>
+      <div class="exchange-filter-row">
+        <?php if ($has_town): ?>
+          <div class="input-icon exchange-select">
+            <?= icon('map-pin') ?>
+            <label class="visually-hidden" for="exchange-distance">Distance from <?= e($viewer_town) ?></label>
+            <select class="input" id="exchange-distance" name="distance">
+              <?php foreach ($distance_choices as $choice): ?>
+                <option value="<?= e($choice) ?>"<?= $choice === $distance ? ' selected' : '' ?>>
+                  <?= e($choice === 'any' ? 'Any distance' : 'Near ' . $viewer_town . ' · ' . $choice . ' km') ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        <?php endif; ?>
+
         <div class="input-icon exchange-select">
-          <?= icon('map-pin') ?>
-          <label class="visually-hidden" for="exchange-distance">Distance from <?= e($viewer_town) ?></label>
-          <select class="input" id="exchange-distance" name="distance">
-            <?php foreach ($distance_choices as $choice): ?>
-              <option value="<?= e($choice) ?>"<?= $choice === $distance ? ' selected' : '' ?>>
-                <?= e($choice === 'any' ? 'Any distance' : 'Near ' . $viewer_town . ' · ' . $choice . ' km') ?>
-              </option>
+          <?= icon('leaf') ?>
+          <label class="visually-hidden" for="exchange-species">Species</label>
+          <select class="input" id="exchange-species" name="species">
+            <option value="">Species: Any</option>
+            <?php foreach ($species_options as $species_id => $name): ?>
+              <option value="<?= e($species_id) ?>"<?= $species_id === $species ? ' selected' : '' ?>><?= e($name) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
-      <?php endif; ?>
-
-      <div class="input-icon exchange-select">
-        <?= icon('leaf') ?>
-        <label class="visually-hidden" for="exchange-species">Species</label>
-        <select class="input" id="exchange-species" name="species">
-          <option value="">Species: Any</option>
-          <?php foreach ($species_options as $species_id => $name): ?>
-            <option value="<?= e($species_id) ?>"<?= $species_id === $species ? ' selected' : '' ?>><?= e($name) ?></option>
-          <?php endforeach; ?>
-        </select>
       </div>
     </div>
   </form>
