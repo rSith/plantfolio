@@ -16,7 +16,7 @@ Each partial expects one row-shaped array (e.g. `$plant`, `$listing`) so it work
 | `avatar.php` | Member photo, or initials on a tinted circle; sizes `sm` and `lg` | Header, listing cards, P13, P14 | CORE-05 |
 | `auth-tabs.php` | The Sign up · Log in switch: two links drawn like the segmented control, the current page pressed | P02 (`register.php`, `login.php`) | CORE-07, CORE-09 |
 | `auth-panel.php` | Community panel beside the form: a member's quote, their town and plant count, a plant picture | P02 (`register.php`, `login.php`) | CORE-07 |
-| `empty-state.php` | Illustration, one-line message and one clear next step (state S1). An action takes `'href'` (a page) or `'url'` (a full address from `query_url()`) | P03, P04, P09, P10 | CORE-25 |
+| `empty-state.php` | Illustration, one-line message and one clear next step (state S1). An action takes `'href'` (a page) or `'url'` (a full address from `query_url()`). `'heading' => 'h1'` on a "not found" page, where the empty state is the whole page and its title must be the page's one `<h1>` (it looks the same as the usual `<h2>`) | P03, P04, P09, P10, P14 (empty tabs); the not-found pages of P05, P06, P11 and P14 | CORE-25 |
 | `modal.php` | Dialog shell for S4 Rate, S5 Log update, S6 Confirm delete | P05, P13, all deletes | Week 5 · COM-12, CORE-19, CORE-20 (built with its JavaScript, as in the roadmap) |
 
 Render a partial with the `partial()` helper from `includes/helpers.php`, naming the variable it expects:

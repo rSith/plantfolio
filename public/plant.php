@@ -31,6 +31,7 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
     <div class="container page">
       <section class="panel">
         <?php partial('empty-state', [
+            'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Plant not found',
             'text'    => 'This plant does not exist, or its owner keeps it private.',
             'actions' => $current_user

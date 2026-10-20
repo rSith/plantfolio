@@ -1568,6 +1568,7 @@ textarea.input {
 
 .empty-state-title {
   margin-bottom: var(--space-4);
+  font-size: var(--text-h2);   /* the same size when it is the page's h1 (a "not found" page) */
 }
 
 .empty-state-text {

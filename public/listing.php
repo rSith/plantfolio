@@ -33,6 +33,7 @@ if (!$listing) {
     <div class="container page">
       <section class="panel">
         <?php partial('empty-state', [
+            'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Listing not found',
             'text'    => 'This listing does not exist, or its owner has removed it.',
             'actions' => [['label' => 'Browse the exchange', 'href' => 'exchange.php', 'icon' => 'repeat']],

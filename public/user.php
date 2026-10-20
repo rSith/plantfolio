@@ -40,6 +40,7 @@ if (!$member) {
     <div class="container page">
       <section class="panel">
         <?php partial('empty-state', [
+            'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Member not found',
             'text'    => $asked_for === ''
                 ? 'The address does not say which member to show. You can find people on Explore.'

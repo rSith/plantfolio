@@ -40,6 +40,7 @@ if ($plant_id !== null) {
         <div class="container page">
           <section class="panel">
             <?php partial('empty-state', [
+                'heading' => 'h1',   // the whole page: its one main heading
                 'title'   => 'Plant not found',
                 'text'    => 'This plant does not exist, or it is not yours to edit.',
                 'actions' => [['label' => 'Back to My Garden', 'href' => 'garden.php', 'icon' => 'leaf']],
