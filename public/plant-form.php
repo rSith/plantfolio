@@ -124,7 +124,7 @@ if ($is_edit) {
 
 $ai = null;
 if (!$is_edit && isset($_GET['ai'])) {
-    $ai_mode = $_GET['ai'] === 'unsure' ? 'unsure' : 'sure';
+    $ai_mode = get_text('ai') === 'unsure' ? 'unsure' : 'sure';
     $ai      = $ai_mode === 'unsure' ? $mock_species_result_unsure : $mock_species_result;
 
     $top        = $ai['predictions'][0];
@@ -134,7 +134,7 @@ if (!$is_edit && isset($_GET['ai'])) {
     // Which suggestion fills the Species field: the top one if the model is sure, or the one the member picked
     // Whitelist: "none" or the number of a suggestion. (int) 'abc' would be 0, so the text itself is compared.
     $allowed = array_merge(['none'], array_map('strval', array_keys($ai['predictions'])));
-    $pick    = $_GET['pick'] ?? ($is_unsure ? 'none' : '0');
+    $pick    = get_text('pick');   // '' when it is missing, a list (pick[]=1) or not real text: the default below
     if (!in_array($pick, $allowed, true)) {
         $pick = $is_unsure ? 'none' : '0';
     }

@@ -85,7 +85,7 @@ $tabs = [
 if (!$is_owner) {
     unset($tabs['reminders']);   // reminders are the owner's to-do list, not part of the public story
 }
-$tab = $_GET['tab'] ?? 'story';
+$tab = get_text('tab');   // tab[]=x or tab=%FF count as "not given" (helpers.php), so they fall back to Story
 if (!array_key_exists($tab, $tabs)) {
     $tab = 'story';
 }

@@ -22,10 +22,11 @@ if (!in_array($collection_id, $collection_ids, true)) {
     $collection_id = null;   // "All plants"
 }
 
-$q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 100);
+// get_text() (helpers.php) accepts only one piece of valid text: q[]=x or q=%FF count as "not given".
+$q = mb_substr(trim(get_text('q')), 0, 100);
 
 $status_options = ['thriving', 'stable', 'needs_attention', 'sick'];
-$status = $_GET['status'] ?? '';
+$status = get_text('status');
 if (!in_array($status, $status_options, true)) {
     $status = '';
 }
@@ -36,13 +37,13 @@ $sort_options = [
     'care'    => 'Next care',
     'health'  => 'Health, worst first',
 ];
-$sort = $_GET['sort'] ?? 'updated';
+$sort = get_text('sort');
 if (!array_key_exists($sort, $sort_options)) {
     $sort = 'updated';
 }
 
 // Cards, or a table for large gardens (p11, UX notes). Week 5 switches without a reload; for now it is a link.
-$view = ($_GET['view'] ?? '') === 'list' ? 'list' : 'grid';
+$view = get_text('view') === 'list' ? 'list' : 'grid';
 
 // The choices that differ from the defaults. Links on the page start from these, so changing one filter keeps
 // the others; query_url() leaves out the empty ones, so the plain page stays plain "garden.php".

@@ -31,14 +31,15 @@ $card_of = ['profile' => 'profile', 'email' => 'account', 'password' => 'account
 $errors = [];   // field name => message, printed under that field
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $form = $_POST['form'] ?? '';
+    // post_text() (helpers.php) accepts only one piece of valid text: a hand-made form[]=x counts as "not given"
+    $form = post_text('form');
 
     if (array_key_exists($form, $saved_messages)) {
         if ($form === 'password') {
             // The same rules the browser checks, checked again here: the browser's checks can be switched off.
             // Stage B also adds: password_verify() of the current password, else "Current password is incorrect".
-            $new     = (string) ($_POST['new_password'] ?? '');
-            $confirm = (string) ($_POST['confirm_password'] ?? '');
+            $new     = post_text('new_password');
+            $confirm = post_text('confirm_password');
 
             if (strlen($new) < 8 || !preg_match('/\d/', $new)) {
                 $errors['new_password'] = 'Use at least 8 characters, including a number.';
@@ -56,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Which card just saved, from the redirect above; anything else in ?saved= is ignored
-$saved = $_GET['saved'] ?? '';
+$saved = get_text('saved');
 if (!array_key_exists($saved, $saved_messages)) {
     $saved = '';
 }
