@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mock_send_interest($listing['id'], $current_user['id'], $note === '' ? null : $note);
         } elseif ($action === 'withdraw' && $my_interest) {
             mock_withdraw_interest($my_interest);
-            $back .= '&withdrawn=1';   // shows "Interest withdrawn" once, like Settings' ?saved=
+            $back .= '&withdrawn=1';   // the page it returns to says "Interest withdrawn", like Settings' ?saved=
         }
     }
 
