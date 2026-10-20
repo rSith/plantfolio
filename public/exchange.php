@@ -149,6 +149,9 @@ if ($species !== null) {
 }
 $clear_filters_url = $exchange_url(['type' => '', 'distance' => '', 'species' => null]);
 
+// "Any distance" has a chip but only widens the search, so it is not one of "these filters" that can hide listings
+$has_narrowing_filter = $type !== '' || $species !== null || ($filters['distance'] !== '' && $distance !== 'any');
+
 // ── No listings found ───────────────────────────────────
 // The empty-state partial with a way out. A button that leads to another empty page is no way out, so the page
 // counts first (the same filter, one choice loosened) and offers the smallest change that really finds listings:
@@ -184,7 +187,7 @@ if ($listing_count === 0) {
         $empty_text  = 'New listings appear here as soon as members post them.';
     } else {
         if ($q !== '') {
-            $empty_title = 'No listings match "' . $q . '"' . ($active_filters ? ' with these filters' : '');
+            $empty_title = 'No listings match "' . $q . '"' . ($has_narrowing_filter ? ' with these filters' : '');
         } elseif ($active_filters) {
             $empty_title = 'No listings match these filters';
         } else {
