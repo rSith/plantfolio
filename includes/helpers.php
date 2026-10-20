@@ -43,6 +43,19 @@ function url($path = '')
 }
 
 /**
+ * Address of one of our own files in public/ with its version added: asset_url('assets/css/listing.css') gives
+ * …/assets/css/listing.css?v=1792560000. The number is the time the file last changed (filemtime), so after a change
+ * the address is new and every browser loads the new file instead of an old copy it kept; while nothing changes,
+ * the address stays the same and the browser may keep using its copy. Only for paths written in our code.
+ */
+function asset_url($path)
+{
+    $file = __DIR__ . '/../public/' . ltrim($path, '/');
+
+    return url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
+/**
  * Address of a page with a query string, leaving out empty values:
  * query_url('garden.php', ['collection' => 2, 'q' => '']) gives …/garden.php?collection=2.
  * Filters keep their choices in the address, so a filtered page can be bookmarked, shared and reloaded.

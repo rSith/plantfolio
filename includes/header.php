@@ -4,6 +4,8 @@
 // A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
 // and $hide_bottom_bar = true to leave out the phone bottom bar: inner pages with their own action bar (p23).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
+// The stylesheets go through asset_url(), which adds ?v=<last change time>: after a CSS change every browser
+// loads the new file instead of an old copy it kept (Ctrl + F5 is no longer needed).
 
 $is_member       = !empty($current_user);
 // A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
@@ -48,11 +50,11 @@ if ($is_member) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Poppins:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="<?= e(url('assets/css/variables.css')) ?>">
-  <link rel="stylesheet" href="<?= e(url('assets/css/components.css')) ?>">
-  <link rel="stylesheet" href="<?= e(url('assets/css/layout.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/variables.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/components.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/layout.css')) ?>">
   <?php if (!empty($page_css)): ?>
-    <link rel="stylesheet" href="<?= e(url('assets/css/' . $page_css)) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/' . $page_css)) ?>">
   <?php endif; ?>
 </head>
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
