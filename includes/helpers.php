@@ -100,6 +100,24 @@ function current_page()
 }
 
 /**
+ * The aria-current attribute of a navigation link, so a screen reader hears which link is lit, as the eye sees it.
+ * $is_lit is the same test that gives the link its .is-active class. A lit link that opens this very page gets
+ * aria-current="page" (Exchange on exchange.php); a lit link whose area the page only belongs to gets
+ * aria-current="true", "the current item of this set" (Exchange on listing.php, My Garden on a plant's profile).
+ * A link that is not lit gets nothing. Print the result without e(): it is fixed text.
+ */
+function nav_current($is_lit, $href)
+{
+    if (!$is_lit) {
+        return '';
+    }
+    // 'garden.php' and a full address like http://localhost/plantfolio/public/user.php?u=… both give the file name
+    $page = basename((string) parse_url($href, PHP_URL_PATH));
+
+    return $page === current_page() ? ' aria-current="page"' : ' aria-current="true"';
+}
+
+/**
  * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'exchange' …
  * The navigation highlights a whole area, so "My Garden" stays lit on a plant's profile and on the plant form.
  * Returns '' for pages outside every area (landing, sign up, log in).

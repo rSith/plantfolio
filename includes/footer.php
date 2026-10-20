@@ -49,8 +49,9 @@ if ($show_bottom_bar) {
   <?php if ($show_bottom_bar): ?>
     <!-- Phones only: layout.css hides this bar from 768px, where the top navigation takes over -->
     <nav class="bottom-bar" aria-label="Main">
+      <?php // nav_current() adds aria-current to the lit link, so screen readers hear what the colour shows ?>
       <?php foreach ($bar_links_left as $link): ?>
-        <a class="bottom-bar-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e($link['href']) ?>"><?= icon($link['icon']) ?> <?= e($link['label']) ?></a>
+        <a class="bottom-bar-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e($link['href']) ?>"<?= nav_current($link['area'] === $area, $link['href']) ?>><?= icon($link['icon']) ?> <?= e($link['label']) ?></a>
       <?php endforeach; ?>
 
       <details class="menu bottom-bar-add" name="site-menu">
@@ -63,7 +64,7 @@ if ($show_bottom_bar) {
       </details>
 
       <?php foreach ($bar_links_right as $link): ?>
-        <a class="bottom-bar-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e($link['href']) ?>"><?= icon($link['icon']) ?> <?= e($link['label']) ?></a>
+        <a class="bottom-bar-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e($link['href']) ?>"<?= nav_current($link['area'] === $area, $link['href']) ?>><?= icon($link['icon']) ?> <?= e($link['label']) ?></a>
       <?php endforeach; ?>
     </nav>
   <?php endif; ?>

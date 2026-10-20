@@ -68,7 +68,7 @@ if ($is_member) {
 
       <nav class="site-nav" aria-label="Main">
         <?php foreach ($nav_links as $link): ?>
-          <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= $link['href'] === current_page() ? ' aria-current="page"' : '' ?>><?= e($link['label']) ?></a>
+          <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= nav_current($link['area'] === $area, $link['href']) ?>><?= e($link['label']) ?></a>
         <?php endforeach; ?>
 
         <?php if ($is_member): ?>
@@ -102,8 +102,9 @@ if ($is_member) {
                 <strong><?= e($current_user['full_name']) ?></strong>
                 <span class="text-small">@<?= e($current_user['username']) ?></span>
               </div>
-              <a class="menu-item" href="<?= e($profile_url) ?>"><?= icon('user') ?> My public profile</a>
-              <a class="menu-item" href="<?= e(url('settings.php')) ?>"><?= icon('settings') ?> Settings</a>
+              <?php // Marked only on the page itself: your own profile ('profile' area on user.php) and Settings ?>
+              <a class="menu-item" href="<?= e($profile_url) ?>"<?= nav_current($area === 'profile' && current_page() === 'user.php', $profile_url) ?>><?= icon('user') ?> My public profile</a>
+              <a class="menu-item" href="<?= e(url('settings.php')) ?>"<?= nav_current(current_page() === 'settings.php', 'settings.php') ?>><?= icon('settings') ?> Settings</a>
               <a class="menu-item" href="<?= e(url('logout.php')) ?>"><?= icon('log-out') ?> Log out</a>
             </div>
           </details>
