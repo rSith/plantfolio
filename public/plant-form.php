@@ -2,7 +2,8 @@
 // Add or Edit Plant (P06, wireframe p13): a new plant in under a minute, photo first (CORE-16, UI half).
 // plant-form.php adds a plant; plant-form.php?id=42 edits Monty with the same form, filled in (p13, UX notes).
 // Stage F preview: plant-form.php?ai shows the form after a photo was analysed (p13 as drawn, ML-13 UI half),
-// ?ai=unsure the same when the model is not sure (state S3).
+// ?ai=unsure the same when the model is not sure (state S3). plant-form.php?prediction=5 opens a result of the
+// Plant Identifier (P07), its "Add to my garden".
 // Members only. A full page, not a modal: the form is long, and its own address lets a link open it directly.
 // Stage F draws the form, and Save only moves on to the next page without saving. Stage B checks the form,
 // saves the photo (CORE-17) and the plants, care_reminders and first health_logs rows, then opens the plant's profile.
@@ -123,10 +124,25 @@ if ($is_edit) {
 // ?pick=1 or 2 applies an alternative, ?pick=none clears the species. They are links, so they work without
 // JavaScript; week 7 can apply a suggestion without reloading. Nothing is saved until Save plant (p13, UX notes).
 
-$ai = null;
-if (!$is_edit && isset($_GET['ai'])) {
-    $ai_mode = get_text('ai') === 'unsure' ? 'unsure' : 'sure';
-    $ai      = $ai_mode === 'unsure' ? $mock_species_result_unsure : $mock_species_result;
+// From the Plant Identifier (P07): ?prediction=5 is "Add to my garden" (p14, element 6). The form opens with that
+// result's photo, its top 3 and the reminders of its species, just like ?ai. Only the member's own results count.
+
+$ai               = null;
+$prediction_param = get_text('prediction');
+$from_identify    = ctype_digit($prediction_param) ? ($mock_identify_results[(int) $prediction_param] ?? null) : null;
+if ($from_identify && $from_identify['user_id'] !== $current_user['id']) {
+    $from_identify = null;
+}
+
+if (!$is_edit && ($from_identify || isset($_GET['ai']))) {
+    if ($from_identify) {
+        $ai      = $from_identify;
+        $ai_base = 'plant-form.php?prediction=' . $from_identify['id'];
+    } else {
+        $ai_mode = get_text('ai') === 'unsure' ? 'unsure' : 'sure';
+        $ai      = $ai_mode === 'unsure' ? $mock_species_result_unsure : $mock_species_result;
+        $ai_base = 'plant-form.php?ai' . ($ai_mode === 'unsure' ? '=unsure' : '');
+    }
 
     $top        = $ai['predictions'][0];
     $top_level  = confidence_level($top['confidence']);
@@ -158,10 +174,8 @@ if (!$is_edit && isset($_GET['ai'])) {
         }
     }
 
-    // Links that keep the preview: plant-form.php?ai&pick=1
-    $ai_url = function ($pick) use ($ai_mode) {
-        return url('plant-form.php?ai' . ($ai_mode === 'unsure' ? '=unsure' : '') . '&pick=' . $pick);
-    };
+    // Links that keep the preview: plant-form.php?ai&pick=1, plant-form.php?prediction=5&pick=1
+    $ai_url = fn ($pick) => url($ai_base . '&pick=' . $pick);
 }
 
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;

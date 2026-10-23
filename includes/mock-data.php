@@ -534,59 +534,73 @@ $mock_attention = [
 // The species guide — rows of `plant_species`, keyed by id so a plant finds its row with $mock_species[$species_id].
 // light, water, humidity and notes come from the proposal; pet_safe and the two default intervals are the
 // DES-07 additions (column names are my proposal until DES-13 writes database/species.csv).
+// photo is a reference picture of the species, the "reference photo" beside the Plant Identifier's top match (p14,
+// element 4): a proposed column for DES-13, each picture credited in docs/credits.md. Placeholder drawings for now.
 // The default intervals fill in a new plant's reminders on the Add Plant form (P06).
 $mock_species = [
-    1 => ['id' => 1, 'common_name' => 'Swiss cheese plant', 'scientific_name' => 'Monstera deliciosa',
+    1 => ['id' => 1, 'common_name' => 'Swiss cheese plant', 'scientific_name' => 'Monstera deliciosa', 'photo' => 'mock/monty.svg',
           'light' => 'Bright, indirect', 'water' => 'When the top 5 cm of soil are dry', 'humidity' => '60%+ preferred',
           'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
           'notes' => 'Give it a moss pole to climb: the leaves grow bigger and split more as it climbs. Wipe the leaves now and then so they can take in light.'],
-    2 => ['id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum',
+    2 => ['id' => 2, 'common_name' => 'Golden pothos', 'scientific_name' => 'Epipremnum aureum', 'photo' => 'mock/goldie.svg',
           'light' => 'Low to bright, indirect', 'water' => 'When the top half of the soil is dry', 'humidity' => '40%+',
           'pet_safe' => 0, 'water_interval_days' => 5, 'fertilise_interval_days' => 30,
           'notes' => 'Drooping leaves are its way of asking for water. Cuttings root easily in a glass of water.'],
-    3 => ['id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata',
+    3 => ['id' => 3, 'common_name' => 'Snake plant', 'scientific_name' => 'Dracaena trifasciata', 'photo' => 'mock/sergeant.svg',
           'light' => 'Low to bright', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Any',
           'pet_safe' => 0, 'water_interval_days' => 14, 'fertilise_interval_days' => 30,
           'notes' => 'Too much water is the usual way to lose one. Water less in the rainy season.'],
-    4 => ['id' => 4, 'common_name' => 'Fiddle-leaf fig', 'scientific_name' => 'Ficus lyrata',
+    4 => ['id' => 4, 'common_name' => 'Fiddle-leaf fig', 'scientific_name' => 'Ficus lyrata', 'photo' => 'mock/figgy.svg',
           'light' => 'Bright, indirect, some sun', 'water' => 'When the top 3 cm are dry', 'humidity' => '50%+',
           'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
           'notes' => 'Dislikes being moved: expect a dropped leaf or two after a change of place.'],
-    5 => ['id' => 5, 'common_name' => 'Aloe vera', 'scientific_name' => 'Aloe vera',
+    5 => ['id' => 5, 'common_name' => 'Aloe vera', 'scientific_name' => 'Aloe vera', 'photo' => 'mock/vera.svg',
           'light' => 'Bright, direct sun', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Low, dry air is fine',
           'pet_safe' => 0, 'water_interval_days' => 14, 'fertilise_interval_days' => 60,
           'notes' => 'Use a gritty, fast-draining mix and a pot with a hole. Pups can be potted up once they have roots.'],
-    6 => ['id' => 6, 'common_name' => 'Tomato', 'scientific_name' => 'Solanum lycopersicum',
+    6 => ['id' => 6, 'common_name' => 'Tomato', 'scientific_name' => 'Solanum lycopersicum', 'photo' => 'mock/tommy.svg',
           'light' => 'Full sun, 6+ hours', 'water' => 'Keep the soil evenly moist', 'humidity' => 'Any',
           'pet_safe' => 0, 'water_interval_days' => 2, 'fertilise_interval_days' => 14,
           'notes' => 'Water the soil, not the leaves: wet leaves invite early blight. Remove the lowest leaves as the plant grows.'],
-    7 => ['id' => 7, 'common_name' => 'Peace lily', 'scientific_name' => 'Spathiphyllum wallisii',
+    7 => ['id' => 7, 'common_name' => 'Peace lily', 'scientific_name' => 'Spathiphyllum wallisii', 'photo' => 'mock/lily.svg',
           'light' => 'Low to medium, indirect', 'water' => 'When the leaves just begin to droop', 'humidity' => '50%+',
           'pet_safe' => 0, 'water_interval_days' => 4, 'fertilise_interval_days' => 45,
           'notes' => 'Brown leaf tips usually mean dry air or tap water with a lot of chlorine.'],
-    8 => ['id' => 8, 'common_name' => 'Mexican snowball', 'scientific_name' => 'Echeveria elegans',
+    8 => ['id' => 8, 'common_name' => 'Mexican snowball', 'scientific_name' => 'Echeveria elegans', 'photo' => 'mock/pearl.svg',
           'light' => 'Bright, some direct sun', 'water' => 'Only when the soil is fully dry', 'humidity' => 'Low',
           'pet_safe' => 1, 'water_interval_days' => 10, 'fertilise_interval_days' => 60,
           'notes' => 'Water the soil, never into the rosette. A stretched, leaning stem means it wants more light.'],
 
     // Species of other members' plants, for Explore (P09). The Thai Constellation is a cultivar of
     // Monstera deliciosa with its own row, because wireframe p16 prints its own scientific name on the card.
-    9 => ['id' => 9, 'common_name' => 'Thai Constellation monstera', 'scientific_name' => "Monstera 'Thai Constellation'",
+    9 => ['id' => 9, 'common_name' => 'Thai Constellation monstera', 'scientific_name' => "Monstera 'Thai Constellation'", 'photo' => 'mock/monty.svg',
           'light' => 'Bright, indirect', 'water' => 'When the top 5 cm of soil are dry', 'humidity' => '60%+ preferred',
           'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
           'notes' => 'The cream patches cannot make food, so it grows slower than a green monstera and needs more light.'],
-    10 => ['id' => 10, 'common_name' => 'Swiss cheese vine', 'scientific_name' => 'Monstera adansonii',
+    10 => ['id' => 10, 'common_name' => 'Swiss cheese vine', 'scientific_name' => 'Monstera adansonii', 'photo' => 'mock/monty.svg',
           'light' => 'Bright, indirect', 'water' => 'When the top 3 cm of soil are dry', 'humidity' => '60%+ preferred',
           'pet_safe' => 0, 'water_interval_days' => 6, 'fertilise_interval_days' => 30,
           'notes' => 'A climber or a trailer: give it a pole or let it hang. The holes appear as the leaves mature.'],
-    11 => ['id' => 11, 'common_name' => 'Chinese money plant', 'scientific_name' => 'Pilea peperomioides',
+    11 => ['id' => 11, 'common_name' => 'Chinese money plant', 'scientific_name' => 'Pilea peperomioides', 'photo' => 'mock/pip.svg',
           'light' => 'Bright, indirect', 'water' => 'When the top half of the soil is dry', 'humidity' => '40%+',
           'pet_safe' => 1, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
           'notes' => 'Turn the pot a quarter each week so it grows straight. Its baby plants are easy to share.'],
-    12 => ['id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum',
+    12 => ['id' => 12, 'common_name' => 'Heartleaf philodendron', 'scientific_name' => 'Philodendron hederaceum', 'photo' => 'mock/goldie.svg',
           'light' => 'Low to bright, indirect', 'water' => 'When the top 3 cm of soil are dry', 'humidity' => '40%+',
           'pet_safe' => 0, 'water_interval_days' => 6, 'fertilise_interval_days' => 30,
           'notes' => 'Pale new leaves mean it wants more light. Pinch the tips to keep it bushy.'],
+
+    // The two "Other possibilities" of the Plant Identifier (P07, p14, element 7). Nobody owns one yet, so they only
+    // appear there and in the species lists of the forms. Their care values are from general care guides; the
+    // drawings are borrowed placeholders.
+    13 => ['id' => 13, 'common_name' => 'Flamingo flower', 'scientific_name' => 'Anthurium andraeanum', 'photo' => 'mock/lily.svg',
+          'light' => 'Bright, indirect', 'water' => 'When the top 3 cm of soil are dry', 'humidity' => '60%+ preferred',
+          'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 30,
+          'notes' => 'The red "flowers" are waxy leaves that last for weeks. Wipe dust off the leaves to keep them shiny.'],
+    14 => ['id' => 14, 'common_name' => 'Chinese evergreen', 'scientific_name' => 'Aglaonema commutatum', 'photo' => 'mock/goldie.svg',
+          'light' => 'Low to medium, indirect', 'water' => 'When the top half of the soil is dry', 'humidity' => '40%+',
+          'pet_safe' => 0, 'water_interval_days' => 7, 'fertilise_interval_days' => 45,
+          'notes' => 'One of the most forgiving houseplants. Keep it away from cold draughts.'],
 ];
 
 // Every reminder of Nimali's plants — rows of `care_reminders`. $mock_reminders above holds only today's three;
@@ -813,6 +827,41 @@ $mock_species_result_unsure = array_merge($mock_species_result, [
         ['label' => 'Epipremnum pinnatum',         'confidence' => 0.12],
     ],
 ]);
+
+// ── Plant Identifier (P07, ML-12) ───────────────────────
+
+// Results of the Plant Identifier, keyed by id: rows of `ml_predictions` with type 'species' (predicted_label and
+// confidence are the top result), plus what the page shows about them:
+//   predictions — the whole top 3 Flask answered (POST /predict/species). ml_predictions keeps only the top result, so
+//                 the runners-up need a place of their own to be shown again later: a proposed `alternatives` column
+//                 (JSON text) for DES-07/DES-10, or the page shows only the top result on a second visit.
+//   upload_name, upload_size — the photo as it was sent (from $_FILES, like $mock_species_result above).
+// Every prediction is stored, so its accuracy can be measured for the report (p14, UX notes), and each result has its
+// own address: identify.php?prediction=5. "Add to my garden" opens plant-form.php?prediction=5 with the same result.
+// 5 is p14 as drawn (the peace lily, 88%); 6 is the same kind of photo when the model is not sure (S3, p24: 42%).
+// Taken a few minutes ago, so "Uploaded" always reads as just now.
+$mock_identify_results = [
+    5 => ['id' => 5, 'user_id' => 1, 'plant_id' => null, 'type' => 'species',
+          'predicted_label' => 'Spathiphyllum wallisii', 'confidence' => 0.88,
+          'image_path' => 'mock/lily.svg', 'model_version' => 'species-mobilenetv2-v1',
+          'created_at' => date('Y-m-d H:i:s', strtotime('-3 minutes')),
+          'upload_name' => 'lily.jpg', 'upload_size' => 1992294,   // bytes: 1.9 MB
+          'predictions' => [
+              ['label' => 'Spathiphyllum wallisii', 'confidence' => 0.88],
+              ['label' => 'Anthurium andraeanum',   'confidence' => 0.07],
+              ['label' => 'Aglaonema commutatum',   'confidence' => 0.03],
+          ]],
+    6 => ['id' => 6, 'user_id' => 1, 'plant_id' => null, 'type' => 'species',
+          'predicted_label' => 'Spathiphyllum wallisii', 'confidence' => 0.42,
+          'image_path' => 'mock/lily.svg', 'model_version' => 'species-mobilenetv2-v1',
+          'created_at' => date('Y-m-d H:i:s', strtotime('-2 minutes')),
+          'upload_name' => 'IMG_2041.jpg', 'upload_size' => 3250586,   // 3.1 MB
+          'predictions' => [
+              ['label' => 'Spathiphyllum wallisii', 'confidence' => 0.42],
+              ['label' => 'Anthurium andraeanum',   'confidence' => 0.31],
+              ['label' => 'Aglaonema commutatum',   'confidence' => 0.14],
+          ]],
+];
 
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.

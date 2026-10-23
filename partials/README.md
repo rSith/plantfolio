@@ -11,7 +11,10 @@ Each partial expects one row-shaped array (e.g. `$plant`, `$listing`) so it work
 | `status-badge.php` | Health status chip — colour **and** word (Thriving, Stable, Needs attention, Sick) | Everywhere | CORE-05 |
 | `care-row.php` | Plant thumbnail, task and interval, due/overdue tag, Mark done | P03 Dashboard, P05 Reminders | CORE-05 |
 | `plant-menu.php` | The ⋯ menu of one plant (a `<details>` menu): Edit, Move to collection, List for exchange, Delete | P04 My Garden (plant card with `'menu' => true`, list view rows), P05 Plant Profile (owner) | CORE-14 |
-| `confidence-meter.php` | Labelled bar: High ≥ 80 % · Medium 60–79 % · Not sure < 60 % | P01 Landing (collage), P06; later P07, P08 | CORE-05 |
+| `confidence-meter.php` | Labelled bar: High ≥ 80 % · Medium 60–79 % · Not sure < 60 % | P01 Landing (collage), P06, P07, P08 | CORE-05 |
+| `tool-switch.php` | The Identify · Health check switch at the top of both Plant Tools: two links drawn like the segmented control, the current page pressed. Expects `$active` (`'identify'` or `'health'`) | P07, P08 | ML-12, ML-14 |
+| `analysing-state.php` | State S2 "Analysing leaves…": spinner, moving bar and Cancel while Flask runs the model (still versions for reduced motion). Expects `$title` and `$cancel_url` | P07, P08 (`?analysing`) | ML-17 |
+| `not-sure.php` | State S3: below 60 % a result is never an answer. "Not sure · 42%", a grey bar, advice and two actions; without `$confidence` it reads "Not supported" (a plant the disease model does not know) | P07, P08 | ML-17 |
 | `rating.php` | Stars, average and count, e.g. ★ 4.9 (23) | Listing cards (P01, P10, P14), member cards (P09), the owner cards of P05 and P11, P13 (interest table, interests sent) | CORE-05 |
 | `stars.php` | Five stars filled up to a score (a review's 1–5, or an average to the nearest whole star), one image for screen readers: "Rated 4.9 out of 5". `'size' => 'sm'` for small stars; `'show_score' => true` adds the score in figures ("4/5") where no number stands beside the stars | P14 Public Profile (rating card, reviews), P13 (ratings you gave), style guide; later the S4 Rate dialog | COM-05, COM-13 |
 | `avatar.php` | Member photo, or initials on a tinted circle; sizes `sm` and `lg` | Header, listing, plant and member cards, P01, P03, P05, P11, P13, P14, P15 | CORE-05 |
