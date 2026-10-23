@@ -760,6 +760,177 @@ textarea.input {
   outline-offset: 2px;
 }
 
+/* ── Form pages ─────────────────────────────────────── */
+/* The page head, white form cards, sections and photo drop area of a form page. Moved here from plant-form.css:
+   Add Plant (P06), Create Listing (P12) and the Plant Tools (P07, P08) all use them. */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.form-title {
+  margin-bottom: var(--space-4);
+}
+
+.form-intro {
+  margin-bottom: var(--space-24);
+  color: var(--color-muted);
+}
+
+/* A white box, like the Dashboard's panels */
+.form-card {
+  min-width: 0;
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+@media (min-width: 768px) {
+  .form-card {
+    padding: var(--space-24);
+  }
+}
+
+.form-card-title {
+  margin-bottom: var(--space-16);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+/* A <fieldset> without the browser's frame: it groups radio buttons for screen readers, nothing more */
+.form-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-fieldset legend {
+  padding: 0;
+}
+
+/* A part of a long form, with a line above it */
+.form-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.form-section-title {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+.form-section-hint {
+  margin: 0 0 var(--space-8);
+}
+
+/* The whole box is the <label> of the file input, so a click anywhere opens the picker */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  aspect-ratio: 4 / 3;
+  padding: var(--space-16);
+  border: 2px dashed var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dropzone:hover {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+}
+
+/* The file input itself is hidden, so its focus is shown on the box around it */
+.dropzone:has(+ input:focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-leaf);
+}
+
+.dropzone-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.dropzone-title {
+  font-weight: var(--weight-semibold);
+}
+
+.dropzone-text {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.photo-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-8) 0 0;
+}
+
+/* A photo that is already there, with "Change photo" on its corner (p13): the edit forms of P06 and P12 */
+.photo-current {
+  position: relative;
+}
+
+.photo-current img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.photo-change {
+  position: absolute;
+  right: var(--space-12);
+  bottom: var(--space-12);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The file input is hidden, so its keyboard focus is shown on the Change photo button */
+.photo-current:has(~ input:focus-visible) .photo-change {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+/* "Please check 2 fields" above a form that came back with errors */
+.form-errors {
+  margin-bottom: var(--space-16);
+}
+
 /* ── Tabs ───────────────────────────────────────────── */
 /* A row of links; the current one gets .is-active. JavaScript for switching without a reload comes in week 5. */
 

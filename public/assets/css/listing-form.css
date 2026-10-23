@@ -1,0 +1,263 @@
+/* Create Listing only (P12, wireframe p19, COM-06). Loaded by listing-form.php through $page_css. */
+/* Functional style. Phone and tablet: the form, then the preview and Publish under it.
+   Desktop: the preview beside the form, staying in view while the form scrolls (p19). */
+
+/* ── Columns ────────────────────────────────────────── */
+
+.listing-form-grid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.listing-form-main {
+  min-width: 0;
+}
+
+.listing-form-side {
+  display: grid;
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+/* A tablet is wide enough to stretch the card too far: the preview keeps the width of an Exchange card */
+@media (min-width: 768px) {
+  .listing-form-side {
+    max-width: 380px;
+  }
+}
+
+/* position: sticky keeps the preview and Publish on screen while the long form scrolls past (p19) */
+@media (min-width: 1024px) {
+  .listing-form-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--gutter);
+  }
+
+  .listing-form-side {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-16));
+    max-width: none;
+  }
+}
+
+/* "1. Which plant?" and the other step titles, with less room under them than a card title */
+.listing-step {
+  margin-bottom: var(--space-4);
+}
+
+.listing-step-hint {
+  margin: 0;
+}
+
+/* ── 1. Which plant? (p19, element 1) ───────────────── */
+/* Tiles in rows: four on a phone, six or more on a desktop. They wrap instead of scrolling sideways, so the chosen
+   tile is always in view, "Not in my garden" (the last one) included.
+   auto-fill makes as many columns as fit; each is 68 to 84 px wide, and the leftover room stays at the end of the row. */
+
+.pick-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 84px));
+  gap: var(--space-12) var(--space-8);
+  margin: var(--space-12) 0 0;
+  padding: var(--space-4);   /* room for the selected ring */
+  list-style: none;
+}
+
+.pick-tile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-radius: var(--radius-input);
+  color: var(--color-ink);
+  font-size: var(--text-small);
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+}
+
+.pick-tile:hover {
+  color: var(--color-ink);
+}
+
+.pick-photo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 72px;
+  aspect-ratio: 1;   /* square, as thumbnails are in the design system */
+  border: 2px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pick-photo img {
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--radius-input) - 2px);
+  object-fit: cover;
+}
+
+.pick-tile:hover .pick-photo {
+  border-color: var(--color-line-strong);
+}
+
+/* The chosen plant: a Leaf frame, a soft ring and a tick, so the choice never rests on colour alone */
+.pick-tile[aria-current="true"] .pick-photo {
+  border-color: var(--color-leaf);
+  box-shadow: var(--focus-ring);
+}
+
+.pick-tile[aria-current="true"] .pick-name {
+  color: var(--color-forest);
+  font-weight: var(--weight-semibold);
+}
+
+.pick-check {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-leaf);
+  color: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.pick-check .icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* "Not in my garden": a dashed box with a plus, like the "+ New collection" chip */
+.pick-photo-none {
+  border: 2px dashed var(--color-line-strong);
+  background: transparent;
+  color: var(--color-muted);
+}
+
+.pick-photo-none .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.pick-tile[aria-current="true"] .pick-photo-none {
+  border-style: solid;
+  color: var(--color-leaf);
+}
+
+.pick-note {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+}
+
+.pick-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  margin: var(--space-8) 0 0;
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-small);
+}
+
+.pick-summary .icon {
+  margin-top: 2px;
+}
+
+/* The photo and species of something that is not in the garden */
+.listing-own {
+  margin-top: var(--space-16);
+}
+
+.listing-dropzone {
+  max-width: 420px;
+}
+
+.listing-own .photo-current {
+  max-width: 420px;
+}
+
+/* ── 2. Listing details ─────────────────────────────── */
+
+/* Free asks nothing in return, so "Looking for" disappears while Free is chosen (p19, element 3).
+   :has() lets CSS react to the radio button without JavaScript. */
+.listing-form:has(#type-free:checked) .looking-for-field {
+  display: none;
+}
+
+/* "142 / 500" under the right end of the description */
+.listing-count {
+  justify-self: end;
+}
+
+/* ── 3. Location and contact ────────────────────────── */
+
+.share-options {
+  display: grid;
+}
+
+.share-value {
+  color: var(--color-muted);
+}
+
+.check.is-disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+/* ── Preview and Publish (p19, elements 6 and 7) ────── */
+
+.listing-preview-label {
+  margin: 0;
+}
+
+/* A card that is only a preview does not lift on hover: there is nothing to open yet */
+.listing-form-side .listing-card:hover {
+  border-color: var(--color-line);
+  box-shadow: none;
+  transform: none;
+}
+
+.listing-form-privacy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.listing-form-submit,
+.listing-form-cancel {
+  width: 100%;
+}
+
+/* Edit mode: the two ways to end a listing, apart from Save */
+.listing-form-manage {
+  display: grid;
+  gap: var(--space-8);
+  margin-top: var(--space-4);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.listing-form-close {
+  color: var(--color-danger);
+}
+
+.listing-form-close:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}

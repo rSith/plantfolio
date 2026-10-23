@@ -3,8 +3,11 @@
 // Expects $listing — an exchange_listings row joined with its owner (username, full_name, avatar) and the
 // calculated columns rating_avg, rating_count, interest_count and distance_km (see $mock_listings).
 // Contact details are never printed here: they appear only after "I'm interested" (privacy rule).
+// Optional $preview = true (Create Listing, P12): the card of a listing that is not published yet, so its title is
+// plain text instead of a link to a Listing Detail page that does not exist.
 
-$type = listing_type($listing['type']);
+$type       = listing_type($listing['type']);
+$is_preview = !empty($preview);
 ?>
 <article class="card listing-card">
   <div class="card-media">
@@ -16,7 +19,11 @@ $type = listing_type($listing['type']);
   </div>
   <div class="card-body">
     <h3 class="listing-card-title">
-      <a class="card-link" href="<?= e(url('listing.php?id=' . $listing['id'])) ?>"><?= e($listing['title']) ?></a>
+      <?php if ($is_preview): ?>
+        <?= e($listing['title']) ?>
+      <?php else: ?>
+        <a class="card-link" href="<?= e(url('listing.php?id=' . $listing['id'])) ?>"><?= e($listing['title']) ?></a>
+      <?php endif; ?>
     </h3>
     <p class="listing-card-place">
       <?= icon('map-pin') ?>
