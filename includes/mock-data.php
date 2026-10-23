@@ -863,6 +863,112 @@ $mock_identify_results = [
           ]],
 ];
 
+// ── Health Check (P08, ML-14) ───────────────────────────
+
+// Results of the Health Check, keyed by id: rows of `ml_predictions` with type 'disease', shaped like the identifier's
+// results above (predictions is Flask's top 3 from POST /predict/disease; predicted_label is a class name of the
+// PlantVillage model, turned into words by prediction_name()). plant_id is the plant the check is attached to (p15,
+// element 1), or null. Each result has its own address: health-check.php?prediction=7.
+//   7 — p15 as drawn: a new photo of Tommy's lower leaf, early blight at 92% (yesterday's check is in Tommy's story)
+//   8 — the same leaf when the model is not sure (S3): no diagnosis is given
+//   9 — a leaf of Monty: the model knows no monstera diseases, so the page says so instead of guessing (S3, p24),
+//       whatever Flask answered
+$mock_health_results = [
+    7 => ['id' => 7, 'user_id' => 1, 'plant_id' => 47, 'type' => 'disease',
+          'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
+          'image_path' => 'mock/tomato-leaf.svg', 'model_version' => 'disease-mobilenetv2-v1',
+          'created_at' => date('Y-m-d H:i:s', strtotime('-4 minutes')),
+          'upload_name' => 'tommy-lower-leaf.jpg', 'upload_size' => 2306867,   // 2.2 MB
+          'predictions' => [
+              ['label' => 'Tomato___Early_blight',       'confidence' => 0.92],
+              ['label' => 'Tomato___Septoria_leaf_spot', 'confidence' => 0.05],
+              ['label' => 'Tomato___healthy',            'confidence' => 0.02],
+          ]],
+    8 => ['id' => 8, 'user_id' => 1, 'plant_id' => 47, 'type' => 'disease',
+          'predicted_label' => 'Tomato___Septoria_leaf_spot', 'confidence' => 0.44,
+          'image_path' => 'mock/tomato-leaf.svg', 'model_version' => 'disease-mobilenetv2-v1',
+          'created_at' => date('Y-m-d H:i:s', strtotime('-3 minutes')),
+          'upload_name' => 'IMG_2077.jpg', 'upload_size' => 3565158,   // 3.4 MB
+          'predictions' => [
+              ['label' => 'Tomato___Septoria_leaf_spot', 'confidence' => 0.44],
+              ['label' => 'Tomato___Early_blight',       'confidence' => 0.38],
+              ['label' => 'Tomato___Bacterial_spot',     'confidence' => 0.11],
+          ]],
+    9 => ['id' => 9, 'user_id' => 1, 'plant_id' => 42, 'type' => 'disease',
+          'predicted_label' => 'Pepper,_bell___Bacterial_spot', 'confidence' => 0.37,
+          'image_path' => 'mock/monty.svg', 'model_version' => 'disease-mobilenetv2-v1',
+          'created_at' => date('Y-m-d H:i:s', strtotime('-2 minutes')),
+          'upload_name' => 'monty-leaf.jpg', 'upload_size' => 1887437,   // 1.8 MB
+          'predictions' => [
+              ['label' => 'Pepper,_bell___Bacterial_spot', 'confidence' => 0.37],
+              ['label' => 'Tomato___Target_Spot',          'confidence' => 0.21],
+              ['label' => 'Grape___Esca_(Black_Measles)',  'confidence' => 0.12],
+          ]],
+];
+
+// The crops the disease model was trained on: the 14 plants of the PlantVillage dataset (ml-service/README.md).
+// Stage M reads them from the model's class list (GET /health); p15's scope statement names six and "8 more".
+// A plant is checked only when its species' common name is one of these.
+$mock_supported_crops = ['Apple', 'Blueberry', 'Cherry', 'Corn', 'Grape', 'Orange', 'Peach', 'Pepper', 'Potato',
+                         'Raspberry', 'Soybean', 'Squash', 'Strawberry', 'Tomato'];
+
+// What the Health Check says about a result, keyed by the model's class name (p15, elements 3 to 5): the cause, what
+// the disease looks like in everyday words, and four steps to follow today. Not a table of the proposal: a proposed
+// `disease_guides` table, or a PHP or JSON file kept next to the model's class list, to decide in DES-07/DES-10.
+// status is the health_status a saved result gives the plant. Only the classes of the mock results have a guide here;
+// a class without one still shows its name and confidence. Early blight's words are p15's; the others are written
+// from general plant-care advice.
+$mock_disease_guide = [
+    'Tomato___Early_blight' => [
+        'crop'     => 'Tomato',
+        'status'   => 'sick',
+        'cause'    => 'Caused by the fungus Alternaria solani',
+        'symptoms' => 'Dark brown spots with rings, like a target, on older lower leaves. Yellowing around the spots is common.',
+        'steps'    => [
+            'Remove the spotted lower leaves and bin them. Do not compost them.',
+            'Water at the base in the morning and keep the leaves dry.',
+            'Give plants more space so air can move between them.',
+            'If spots keep spreading, ask a local agriculture officer about a suitable fungicide.',
+        ],
+    ],
+    'Tomato___Septoria_leaf_spot' => [
+        'crop'     => 'Tomato',
+        'status'   => 'sick',
+        'cause'    => 'Caused by the fungus Septoria lycopersici',
+        'symptoms' => 'Many small round spots with grey centres and dark edges, starting on the lowest leaves.',
+        'steps'    => [
+            'Pick off the spotted leaves and bin them.',
+            'Water the soil, not the leaves.',
+            'Spread mulch under the plant so soil does not splash onto the leaves.',
+            'If it spreads to the upper leaves, ask a local agriculture officer for advice.',
+        ],
+    ],
+    'Tomato___Bacterial_spot' => [
+        'crop'     => 'Tomato',
+        'status'   => 'sick',
+        'cause'    => 'Caused by Xanthomonas bacteria',
+        'symptoms' => 'Small dark, greasy-looking spots on leaves and fruit, sometimes with a yellow edge.',
+        'steps'    => [
+            'Remove the worst leaves and wash your hands and tools afterwards.',
+            'Keep the leaves dry: water at the base in the morning.',
+            'Do not work with the plants while they are wet.',
+            'Ask a local agriculture officer before using any spray.',
+        ],
+    ],
+    'Tomato___healthy' => [
+        'crop'     => 'Tomato',
+        'status'   => 'thriving',
+        'cause'    => 'No disease found',
+        'symptoms' => 'The leaf shows none of the diseases the model knows.',
+        'steps'    => [
+            'Keep watering at the base, not over the leaves.',
+            'Remove yellowing lower leaves as the plant grows.',
+            'Check the lower leaves again every week or two.',
+            'Log a photo now and then, so changes are easy to spot.',
+        ],
+    ],
+];
+
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 // Thai Con 87, Big Momma 48, Swiss 31, Monty 12, Leafy 9, Holey 7 are from wireframe p16; Pip's 48 from the Landing page.

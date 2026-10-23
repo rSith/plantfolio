@@ -614,3 +614,212 @@
   gap: var(--space-8);
   margin-top: var(--space-4);
 }
+
+/* ── Health Check (P08) ─────────────────────────────── */
+
+/* The scope card moves to the end on a phone once there is a result, like the photo tips */
+.tool-grid.has-result .tool-scope {
+  order: 1;
+}
+
+.tool-plant-field {
+  margin: var(--space-16) 0 0;
+}
+
+/* "Check another photo" as wide as the card, under the time of the upload (p15) */
+.tool-photo-foot-stacked {
+  display: grid;
+  justify-content: stretch;
+}
+
+.tool-photo-foot-stacked .btn {
+  width: 100%;
+}
+
+/* Plant link (p15, element 1): a menu button showing the linked plant, above the diagnosis */
+.tool-plant {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.tool-plant-label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.tool-plant-menu {
+  width: 100%;
+}
+
+.tool-plant-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 48px;
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-white);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.tool-plant-toggle:hover {
+  border-color: var(--color-muted);
+}
+
+.tool-plant-toggle .menu-chevron {
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+.tool-plant-toggle > .icon {
+  color: var(--color-leaf);
+}
+
+.tool-plant-thumb {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--space-8);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.tool-plant-meta {
+  color: var(--color-muted);
+}
+
+/* The open menu is as wide as the button, so long plant names fit */
+.tool-plant-menu .menu-panel {
+  left: 0;
+  right: 0;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .tool-plant {
+    justify-self: end;
+    width: min(340px, 100%);
+  }
+}
+
+/* Scope statement (p15, element 7) */
+.tool-scope-text {
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-body-sm);
+}
+
+.tool-scope-more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-leaf);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.tool-scope-more > summary:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.crop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crop-list li {
+  padding: 2px var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-small);
+}
+
+/* Diagnosis (p15, elements 3 to 6) */
+.tool-alert {
+  margin: 0 0 var(--space-16);
+}
+
+.diagnosis-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.diagnosis-cause {
+  margin: var(--space-4) 0 0;
+}
+
+.diagnosis-confidence {
+  margin: var(--space-16) 0;
+  padding-bottom: var(--space-16);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.diagnosis-heading {
+  margin: var(--space-16) 0 var(--space-4);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.diagnosis-text {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* The four steps, each with its number in a small sage circle (p15, element 5). The numbers are the list's own
+   counter (counter-increment), so the HTML stays a plain <ol> that screen readers count too. */
+.action-plan {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-8) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  font-size: var(--text-body-sm);
+}
+
+.action-plan li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  counter-increment: step;
+}
+
+.action-plan li::before {
+  content: counter(step);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+
+.diagnosis-warning {
+  margin: var(--space-16) 0 0;
+}
+
+.diagnosis-actions {
+  margin-top: var(--space-16);
+}
+
+.diagnosis-actions form {
+  display: flex;
+}
