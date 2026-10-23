@@ -305,7 +305,7 @@ include __DIR__ . '/../includes/header.php';
         <?php partial('listing-card', ['listing' => $listing]); ?>
       <?php endforeach; ?>
     </div>
-    <p class="text-small sg-note">Contact details never appear on a card. Cards link to pages that are built in weeks 3 and 4.</p>
+    <p class="text-small sg-note">Contact details never appear on a card. Each card opens its Listing Detail page (P11); with <span class="sg-code">'preview' =&gt; true</span> (the live preview of Create Listing, P12) the title is plain text, because the listing has no page yet.</p>
   </section>
 
   <section class="sg-card" aria-labelledby="sg-member-cards">
@@ -377,6 +377,26 @@ include __DIR__ . '/../includes/header.php';
             ['label' => 'Identify from a photo', 'href' => '#sg-empty', 'icon' => 'sparkles'],
         ],
     ]); ?>
+  </section>
+
+  <section class="sg-card" aria-labelledby="sg-tools">
+    <h2 class="label" id="sg-tools">Plant Tools: switch, analysing (S2), not sure (S3)</h2>
+    <div class="sg-row">
+      <?php partial('tool-switch', ['active' => 'identify']); ?>
+    </div>
+    <div class="sg-grid-2">
+      <?php partial('analysing-state', ['title' => 'Analysing leaves…', 'cancel_url' => '#sg-tools']); ?>
+      <?php partial('not-sure', [
+          'confidence' => 0.42,
+          'title'      => "We couldn't identify this confidently",
+          'text'       => 'Try a closer photo of one leaf in daylight, or pick the species yourself.',
+          'actions'    => [
+              ['label' => 'Retake photo',    'url' => '#sg-tools', 'icon' => 'camera'],
+              ['label' => 'Choose manually', 'url' => '#sg-tools', 'icon' => 'pencil'],
+          ],
+      ]); ?>
+    </div>
+    <p class="text-small sg-note">The switch sits at the top of Identify (P07) and Health check (P08). S2 shows while the ML service works (spinner and bar stand still for people who ask for less motion); S3 replaces the answer below 60%, and without a number it reads "Not supported" for a plant the disease model does not know.</p>
   </section>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

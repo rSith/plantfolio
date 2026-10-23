@@ -30,42 +30,6 @@
   color: var(--color-muted);
 }
 
-/* ── Tool switcher (element 1): two links drawn like the segmented control ── */
-
-.tool-switch {
-  display: flex;
-  padding: var(--space-4);
-  border-radius: var(--radius-input);
-  background: var(--color-neutral-bg);
-}
-
-.tool-switch-link {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: var(--space-4) var(--space-16);
-  border-radius: calc(var(--radius-input) - var(--space-4));
-  color: var(--color-neutral-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-
-.tool-switch-link:hover {
-  color: var(--color-ink);
-}
-
-.tool-switch-link.is-active {
-  background: var(--color-white);
-  color: var(--color-ink);
-  box-shadow: var(--shadow-sm);
-}
-
 /* The switch is as wide as the page on a phone, and as wide as its words from tablet up */
 .tool-head > .tool-switch,
 .tool-head > .tool-plant {
@@ -492,127 +456,25 @@
   margin-top: 2px;
 }
 
-/* ── Analysing (S2, partials/analysing-state.php) ──── */
-
-.analysing {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-8);
-  padding-top: var(--space-48);
-  padding-bottom: var(--space-48);
-  text-align: center;
-}
-
-.analysing-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-8);
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-}
-
-.analysing-text {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
-/* A ring with one gap, turning */
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--color-sage);
-  border-top-color: var(--color-leaf);
-  border-radius: 50%;
-  animation: tool-spin 0.8s linear infinite;
-}
-
-@keyframes tool-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* A short bar sliding along its track: work is going on, without pretending to know how much is left */
-.analysing-bar {
-  position: relative;
-  width: min(240px, 100%);
-  height: 6px;
-  margin: var(--space-8) 0;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--color-neutral-bg);
-}
-
-.analysing-bar span {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 40%;
-  border-radius: var(--radius-pill);
-  background: var(--color-leaf);
-  animation: tool-slide 1.4s ease-in-out infinite;
-}
-
-@keyframes tool-slide {
-  from { left: -40%; }
-  to   { left: 100%; }
-}
-
-/* People who ask their system for less motion get still versions: the words already say what is happening */
+/* People who ask their system for less motion get a still scan line (the spinner and bar: components.css) */
 @media (prefers-reduced-motion: reduce) {
-  .tool-photo-scan,
-  .spinner,
-  .analysing-bar span {
-    animation: none;
-  }
-
   .tool-photo-scan {
     top: 50%;
-  }
-
-  .analysing-bar span {
-    left: 30%;
+    animation: none;
   }
 }
 
-/* ── Not sure (S3, partials/not-sure.php) and the offline message ── */
+/* ── The offline message: laid out like the Not sure card (S3, components.css), whose title, text and buttons it uses ── */
 
-.not-sure,
 .tool-offline {
   display: grid;
   justify-items: start;
   gap: var(--space-12);
 }
 
-.not-sure .badge .icon,
 .tool-offline .badge .icon {
   width: 14px;
   height: 14px;
-}
-
-.not-sure-title {
-  margin: 0;
-  font-size: var(--text-h2);
-}
-
-.not-sure-meter {
-  width: 100%;
-}
-
-.not-sure-meter .meter-fill {
-  background: var(--color-meter-low);
-}
-
-.not-sure-text {
-  margin: 0;
-  color: var(--color-muted);
-}
-
-.not-sure-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  margin-top: var(--space-4);
 }
 
 /* ── Health Check (P08) ─────────────────────────────── */
