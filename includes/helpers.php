@@ -23,7 +23,22 @@ function config($key)
     static $config = null;
 
     if ($config === null) {
-        $config = require __DIR__ . '/../config/config.php';
+        // config.php is git-ignored, so a host that builds from GitHub (the Vercel preview) never has it.
+        // There the committed template supplies the defaults, which hold no secrets in stage F.
+        $file   = __DIR__ . '/../config/config.php';
+        $config = require (is_file($file) ? $file : __DIR__ . '/../config/config.example.php');
+
+        // Settings from the host's environment win over the file: BASE_URL is set in the Vercel dashboard.
+        // Without it, a Vercel deployment (which sets VERCEL=1) uses the address it was opened at,
+        // so every preview link works without changing anything.
+        if (getenv('BASE_URL')) {
+            $config['base_url'] = getenv('BASE_URL');
+        } elseif (getenv('VERCEL') && isset($_SERVER['HTTP_HOST'])) {
+            $config['base_url'] = 'https://' . $_SERVER['HTTP_HOST'];
+        }
+        if (getenv('APP_ENV')) {
+            $config['app_env'] = getenv('APP_ENV');
+        }
     }
 
     return $config[$key] ?? null;
