@@ -2,13 +2,17 @@
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
 // A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
-// and $simple_header = true for a bar with only the logo (sign up, log in: nothing pulls the visitor away from the form).
+// and $hide_bottom_bar = true to leave out the phone bottom bar: inner pages with their own action bar (p23).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
+// The stylesheets go through asset_url(), which adds ?v=<last change time>: after a CSS change every browser
+// loads the new file instead of an old copy it kept (Ctrl + F5 is no longer needed).
 
 $is_member       = !empty($current_user);
-$area            = current_area();
-$simple_header   = !empty($simple_header);
-$show_bottom_bar = $is_member && !$simple_header;   // footer.php prints the phone bar when this is true
+// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
+$area            = $nav_area ?? current_area();
+$show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
+// The top bar's .site-header-member follows $is_member, not $show_bottom_bar: a member's bar holds more buttons, so
+// layout.css hides its logo text on a tablet, also on a page without the bottom bar (Add plant).
 
 // 'area' is the name current_area() returns for the pages that belong to the link.
 $nav_links = $is_member
@@ -19,8 +23,10 @@ $nav_links = $is_member
         ['label' => 'Exchange',  'href' => 'exchange.php',  'area' => 'exchange'],
     ]
     : [
+        // A visitor's Exchange link shows the newest listings on the Landing page ("Fresh on the exchange"),
+        // as the team asked; from the "See all" link there they reach the full marketplace (exchange.php).
         ['label' => 'Explore',      'href' => 'explore.php',             'area' => 'explore'],
-        ['label' => 'Exchange',     'href' => 'exchange.php',            'area' => 'exchange'],
+        ['label' => 'Exchange',     'href' => 'index.php#fresh',         'area' => null],
         ['label' => 'How it works', 'href' => 'index.php#how-it-works',  'area' => null],
     ];
 
@@ -30,9 +36,11 @@ $tool_links = [
     ['label' => 'Health Check',     'href' => 'health-check.php', 'icon' => 'activity'],
 ];
 
+// The header's own names ($bell_count, not $interest_count): a page's variables share this scope, and the
+// Dashboard prints its own $interest_count after including this file, so a shared name would overwrite it.
 if ($is_member) {
-    $profile_url    = url('user.php?u=' . urlencode($current_user['username']));
-    $interest_count = (int) ($current_user['new_interest_count'] ?? 0);
+    $profile_url = url('user.php?u=' . urlencode($current_user['username']));
+    $bell_count  = (int) ($current_user['new_interest_count'] ?? 0);
 }
 ?>
 <!doctype html>
@@ -44,27 +52,27 @@ if ($is_member) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Poppins:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="<?= e(url('assets/css/variables.css')) ?>">
-  <link rel="stylesheet" href="<?= e(url('assets/css/components.css')) ?>">
-  <link rel="stylesheet" href="<?= e(url('assets/css/layout.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/variables.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/components.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/css/layout.css')) ?>">
   <?php if (!empty($page_css)): ?>
-    <link rel="stylesheet" href="<?= e(url('assets/css/' . $page_css)) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/' . $page_css)) ?>">
   <?php endif; ?>
 </head>
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header<?= $show_bottom_bar ? ' site-header-member' : '' ?>">
+  <header class="site-header<?= $is_member ? ' site-header-member' : '' ?>">
     <div class="container site-header-inner">
-      <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : '')) ?>" aria-label="PlantFolio home">
+      <?php // A member's home is the Dashboard; a visitor's is the top of the Landing page ?>
+      <a class="logo" href="<?= e(url($is_member ? 'dashboard.php' : 'index.php')) ?>" aria-label="PlantFolio home">
         <span class="logo-mark"><?= icon('leaf') ?></span>
         <span class="logo-text">PlantFolio</span>
       </a>
 
-      <?php if (!$simple_header): ?>
       <nav class="site-nav" aria-label="Main">
         <?php foreach ($nav_links as $link): ?>
-          <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= $link['href'] === current_page() ? ' aria-current="page"' : '' ?>><?= e($link['label']) ?></a>
+          <a class="nav-link<?= $link['area'] === $area ? ' is-active' : '' ?>" href="<?= e(url($link['href'])) ?>"<?= nav_current($link['area'] === $area, $link['href']) ?>><?= e($link['label']) ?></a>
         <?php endforeach; ?>
 
         <?php if ($is_member): ?>
@@ -87,9 +95,9 @@ if ($is_member) {
         <?php if ($is_member): ?>
           <a class="icon-btn" href="<?= e(url('explore.php')) ?>" aria-label="Search"><?= icon('search') ?></a>
           <a class="btn btn-primary btn-sm header-add" href="<?= e(url('plant-form.php')) ?>" aria-label="Add plant"><?= icon('plus') ?> <span class="header-add-label">Add plant</span></a>
-          <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $interest_count > 0 ? ': ' . e($interest_count) . ' new' : '' ?>">
+          <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $bell_count > 0 ? ': ' . e($bell_count) . ' new' : '' ?>">
             <?= icon('bell') ?>
-            <?php if ($interest_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>
+            <?php if ($bell_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>
           </a>
           <details class="menu" name="site-menu">
             <summary class="avatar-toggle" aria-label="Account menu"><?php partial('avatar', ['member' => $current_user]); ?></summary>
@@ -98,8 +106,9 @@ if ($is_member) {
                 <strong><?= e($current_user['full_name']) ?></strong>
                 <span class="text-small">@<?= e($current_user['username']) ?></span>
               </div>
-              <a class="menu-item" href="<?= e($profile_url) ?>"><?= icon('user') ?> My public profile</a>
-              <a class="menu-item" href="<?= e(url('settings.php')) ?>"><?= icon('settings') ?> Settings</a>
+              <?php // Marked only on the page itself: your own profile ('profile' area on user.php) and Settings ?>
+              <a class="menu-item" href="<?= e($profile_url) ?>"<?= nav_current($area === 'profile' && current_page() === 'user.php', $profile_url) ?>><?= icon('user') ?> My public profile</a>
+              <a class="menu-item" href="<?= e(url('settings.php')) ?>"<?= nav_current(current_page() === 'settings.php', 'settings.php') ?>><?= icon('settings') ?> Settings</a>
               <a class="menu-item" href="<?= e(url('logout.php')) ?>"><?= icon('log-out') ?> Log out</a>
             </div>
           </details>
@@ -119,7 +128,6 @@ if ($is_member) {
           </details>
         <?php endif; ?>
       </div>
-      <?php endif; ?>
     </div>
   </header>
 

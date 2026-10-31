@@ -32,12 +32,23 @@ $health_statuses = [
 // Found by id (Nimali's listing, 7), so adding listings to the mock data never changes the samples.
 $sample_member = $mock_listings[array_search(7, array_column($mock_listings, 'id'))];
 
+// Two of other members' public plants for the community look of the plant card (Explore), found by id: Thai Con
+// and Big Momma. From $mock_public_plants, which adds the owner's name, town and the like count to each plant.
+$sample_community_plants = array_values(array_filter($mock_public_plants, fn ($plant) => in_array($plant['id'], [52, 53], true)));
+
+// Members for the member card: users rows found by id. Amaya carries a match_count, as when Explore searches "monstera".
+$sample_members = [
+    $mock_users[2] + ['match_count' => 2],
+    $mock_users[3],
+    $mock_users[4],
+];
+
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
   <h1>Style guide</h1>
   <p class="sg-intro">Every shared component, built once and reused on all pages. Compare with wireframes p6 and p7.
-    The top navigation from p7 is the real header of this page; add <span class="sg-code">?guest</span> to the address to see the visitor version.</p>
+    The top navigation from p7 is the real header of this page; add <span class="sg-code">?guest</span> to the address to see the visitor version, and <span class="sg-code">?member</span> to switch back.</p>
 
   <section class="sg-card" aria-labelledby="sg-colours">
     <h2 class="label" id="sg-colours">Brand palette</h2>
@@ -219,6 +230,25 @@ include __DIR__ . '/../includes/header.php';
     <p class="text-small sg-note">The selector is three radio buttons, so the arrow keys move between the choices.</p>
   </section>
 
+  <section class="sg-card" aria-labelledby="sg-results">
+    <h2 class="label" id="sg-results">Results bar: count, filter chips, sort</h2>
+    <div class="results-bar">
+      <p class="results-count">6 plants</p>
+      <a class="chip filter-chip" href="#sg-results">Thriving <?= icon('x') ?><span class="visually-hidden">: remove this filter</span></a>
+      <a class="chip filter-chip" href="#sg-results">Kandy <?= icon('x') ?><span class="visually-hidden">: remove this filter</span></a>
+      <a class="results-clear" href="#sg-results">Clear all</a>
+      <details class="menu sort-menu">
+        <summary class="btn btn-secondary">Sort: Most liked <?= icon('chevron-down') ?></summary>
+        <div class="menu-panel menu-panel-right">
+          <a class="menu-item" href="#sg-results" aria-current="page">Most liked</a>
+          <a class="menu-item" href="#sg-results">Newest</a>
+          <a class="menu-item" href="#sg-results">Name A–Z</a>
+        </div>
+      </details>
+    </div>
+    <p class="text-small sg-note">Above the results of Explore and Exchange: the count (an <span class="sg-code">h2</span> on those pages), one removable chip per active filter, 44 px tall on every screen, Clear all from two filters, and the sort as a <span class="sg-code">&lt;details&gt;</span> menu of links.</p>
+  </section>
+
   <section class="sg-card" aria-labelledby="sg-tabs">
     <h2 class="label" id="sg-tabs">Tabs, breadcrumb, avatars</h2>
     <nav class="tabs" aria-label="Plant sections">
@@ -258,17 +288,39 @@ include __DIR__ . '/../includes/header.php';
         <?php partial('plant-card', ['plant' => $plant]); ?>
       <?php endforeach; ?>
     </div>
-    <p class="text-small sg-note">The hint is terracotta when care is due today and red when it is overdue. Photos are placeholder drawings until real ones are added.</p>
+    <div class="sg-cards sg-row-spaced">
+      <?php foreach ($sample_community_plants as $plant): ?>
+        <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+      <?php endforeach; ?>
+    </div>
+    <p class="text-small sg-note">The hint is terracotta when care is due today and red when it is overdue. Photos are placeholder drawings until real ones are added.
+      The last two are the community look (<span class="sg-code">'community' =&gt; true</span>, Explore): likes on the photo, the owner and town instead of the care hint; the Public Profile adds <span class="sg-code">'show_owner' =&gt; false</span> to show the collection instead.</p>
   </section>
 
   <section class="sg-card" aria-labelledby="sg-listing-cards">
     <h2 class="label" id="sg-listing-cards">Listing card</h2>
     <div class="sg-cards sg-cards-wide">
-      <?php foreach ($mock_listings as $listing): ?>
+      <?php // Open listings only: the card has no "closed" look, because closed listings are never shown ?>
+      <?php foreach (array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open') as $listing): ?>
         <?php partial('listing-card', ['listing' => $listing]); ?>
       <?php endforeach; ?>
     </div>
-    <p class="text-small sg-note">Contact details never appear on a card. Cards link to pages that are built in weeks 3 and 4.</p>
+    <p class="text-small sg-note">Contact details never appear on a card. Each card opens its Listing Detail page (P11); with <span class="sg-code">'preview' =&gt; true</span> (the live preview of Create Listing, P12) the title is plain text, because the listing has no page yet.</p>
+  </section>
+
+  <section class="sg-card" aria-labelledby="sg-member-cards">
+    <h2 class="label" id="sg-member-cards">Member card</h2>
+    <div class="sg-cards">
+      <?php foreach ($sample_members as $member): ?>
+        <?php partial('member-card', ['member' => $member]); ?>
+      <?php endforeach; ?>
+    </div>
+    <div class="sg-cards sg-cards-wide sg-row-spaced">
+      <?php foreach ($sample_members as $member): ?>
+        <?php partial('member-card', ['member' => $member, 'compact' => true]); ?>
+      <?php endforeach; ?>
+    </div>
+    <p class="text-small sg-note">Explore's People tab (upright from tablet width, avatar beside the text on a phone) and the compact card of its "Plant lovers matching" row. Each opens the member's Public Profile; email and phone are never shown.</p>
   </section>
 
   <section class="sg-card" aria-labelledby="sg-care">
@@ -288,11 +340,8 @@ include __DIR__ . '/../includes/header.php';
         <p class="text-small">High 80%+ (green) · Medium 60–79% (amber) · Not sure below 60% (grey)</p>
         <div class="sg-row">
           <?php partial('rating', ['rating' => $sample_member]); ?>
-          <span class="stars" role="img" aria-label="4 out of 5 stars">
-            <?php for ($star = 1; $star <= 5; $star++): ?>
-              <span class="star<?= $star <= 4 ? ' is-filled' : '' ?>"><?= icon('star') ?></span>
-            <?php endfor; ?>
-          </span>
+          <?php partial('stars', ['score' => 4]); ?>
+          <?php partial('stars', ['score' => 5, 'size' => 'sm', 'show_score' => true]); ?>
         </div>
       </div>
     </div>
@@ -316,6 +365,38 @@ include __DIR__ . '/../includes/header.php';
         <div class="sg-row"><div class="alert alert-danger"><?= icon('triangle-alert') ?> We could not save your changes. Try again.</div></div>
       </div>
     </div>
+  </section>
+
+  <section class="sg-card" aria-labelledby="sg-empty">
+    <h2 class="label" id="sg-empty">Empty state (S1)</h2>
+    <?php partial('empty-state', [
+        'title'   => 'Your garden is waiting',
+        'text'    => 'Add your first plant to start its story.',
+        'actions' => [
+            ['label' => 'Add a plant',           'href' => '#sg-empty', 'icon' => 'plus'],
+            ['label' => 'Identify from a photo', 'href' => '#sg-empty', 'icon' => 'sparkles'],
+        ],
+    ]); ?>
+  </section>
+
+  <section class="sg-card" aria-labelledby="sg-tools">
+    <h2 class="label" id="sg-tools">Plant Tools: switch, analysing (S2), not sure (S3)</h2>
+    <div class="sg-row">
+      <?php partial('tool-switch', ['active' => 'identify']); ?>
+    </div>
+    <div class="sg-grid-2">
+      <?php partial('analysing-state', ['title' => 'Analysing leaves…', 'cancel_url' => '#sg-tools']); ?>
+      <?php partial('not-sure', [
+          'confidence' => 0.42,
+          'title'      => "We couldn't identify this confidently",
+          'text'       => 'Try a closer photo of one leaf in daylight, or pick the species yourself.',
+          'actions'    => [
+              ['label' => 'Retake photo',    'url' => '#sg-tools', 'icon' => 'camera'],
+              ['label' => 'Choose manually', 'url' => '#sg-tools', 'icon' => 'pencil'],
+          ],
+      ]); ?>
+    </div>
+    <p class="text-small sg-note">The switch sits at the top of Identify (P07) and Health check (P08). S2 shows while the ML service works (spinner and bar stand still for people who ask for less motion); S3 replaces the answer below 60%, and without a number it reads "Not supported" for a plant the disease model does not know.</p>
   </section>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

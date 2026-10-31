@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <!-- Empty-state illustration (S1, wireframe p24): a small succulent on a sage circle. Drawn for PlantFolio. -->
+  <circle cx="80" cy="80" r="80" fill="#E4ECDC"/>
+  <ellipse cx="80" cy="128" rx="30" ry="4" fill="#2B2B28" opacity=".1"/>
+  <g fill="#7FA58E">
+    <path d="M80 92C64 90 52 82 46 70C60 70 72 76 80 92Z"/>
+    <path d="M80 92C96 90 108 82 114 70C100 70 88 76 80 92Z"/>
+  </g>
+  <g fill="#6A9479">
+    <path d="M80 92C70 84 64 72 64 58C74 64 80 76 80 92Z"/>
+    <path d="M80 92C90 84 96 72 96 58C86 64 80 76 80 92Z"/>
+  </g>
+  <path d="M80 92C74 80 74 64 80 50C86 64 86 80 80 92Z" fill="#8DB59C"/>
+  <path d="M60 94h40l-5 30a4 4 0 0 1 -4 3h-22a4 4 0 0 1 -4 -3z" fill="#B5552F"/>
+  <rect x="56" y="88" width="48" height="10" rx="3" fill="#C4633C"/>
+</svg>

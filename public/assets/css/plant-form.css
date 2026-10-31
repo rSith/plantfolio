@@ -1,0 +1,360 @@
+/* Add or Edit Plant only (P06, wireframe p13, CORE-16). Loaded by plant-form.php through $page_css. */
+/* Functional style. Phone: one column, photo first. Desktop: photo and AI suggestion on the left, details on the right. */
+
+/* The page head (back link, title, intro), the white form cards, the form sections and the photo drop area are in
+   components.css: Create Listing (P12) and the Plant Tools (P07, P08) use them too. */
+
+/* ── Columns ────────────────────────────────────────── */
+
+.plant-form-grid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.plant-form-side {
+  display: grid;
+  gap: var(--space-16);
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .plant-form-grid {
+    grid-template-columns: 5fr 7fr;
+    gap: var(--gutter);
+  }
+}
+
+/* ── AI suggestion card ─────────────────────────────── */
+
+.ai-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+.ai-title .icon {
+  color: var(--color-leaf);
+}
+
+.ai-card-waiting {
+  border-style: dashed;
+  background: transparent;
+}
+
+.ai-card-waiting p {
+  margin: 0;
+}
+
+/* ── Current health ─────────────────────────────────── */
+
+/* Four choices: two by two on a phone ("Needs attention" does not fit in a quarter of 375px), one row from tablet */
+.health-segmented {
+  flex-wrap: wrap;
+}
+
+.health-segmented label {
+  flex: 1 1 40%;
+}
+
+/* From tablet: one row; each choice as wide as its words need, so "Needs attention" stays on one line */
+@media (min-width: 768px) {
+  .health-segmented label {
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+}
+
+/* The status colour as a dot beside the word, like on the health badges */
+.health-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.health-dot-thriving { background: var(--status-thriving-text); }
+.health-dot-stable { background: var(--status-stable-text); }
+.health-dot-needs-attention { background: var(--status-needs-attention-text); }
+.health-dot-sick { background: var(--status-sick-text); }
+
+/* ── Care reminders ─────────────────────────────────── */
+
+/* Phone: the switch on one line, "every 7 days, starting [date]" under it. Tablet: one line. */
+.reminder-row {
+  display: grid;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-8) 0;
+}
+
+.reminder-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-body-sm);
+}
+
+.reminder-task .icon {
+  color: var(--color-leaf);
+}
+
+.reminder-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.input-days {
+  width: 72px;
+  text-align: center;
+}
+
+.input-date {
+  width: auto;
+}
+
+@media (min-width: 768px) {
+  .reminder-row {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+}
+
+/* ── Visibility ─────────────────────────────────────── */
+
+.visibility-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-24);
+}
+
+/* ── Sticky save bar ────────────────────────────────── */
+/* position: sticky keeps the bar at the bottom of the screen while the form is long enough to scroll,
+   and lets it settle in its place at the end of the form */
+
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-top: var(--space-24);
+  padding: var(--space-12);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+}
+
+.save-bar-note {
+  display: none;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.save-bar-actions {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .save-bar {
+    bottom: var(--space-16);
+    gap: var(--space-16);
+    padding: var(--space-12) var(--space-16);
+  }
+
+  .save-bar-note {
+    display: flex;
+  }
+
+  .save-bar-actions {
+    flex: 0 0 auto;
+  }
+}
+
+/* ── Edit mode ──────────────────────────────────────── */
+
+/* "To change the health status, use Log update …" in place of the four choices */
+.form-alert {
+  margin: 0 0 var(--space-16);
+}
+
+/* Destructive, so red; a quiet text button because it is not the main action of the bar */
+.save-bar-delete {
+  color: var(--color-danger);
+}
+
+.save-bar-delete:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Phone: the bar stays one line, so Delete shows only its bin and Save keeps the room */
+.save-bar-delete {
+  min-width: 44px;
+  padding-right: var(--space-8);
+  padding-left: var(--space-8);
+}
+
+.save-bar-delete-label {
+  display: none;
+}
+
+.save-bar-delete + .save-bar-actions {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 768px) {
+  .save-bar-delete {
+    padding-right: var(--space-16);
+    padding-left: var(--space-16);
+  }
+
+  .save-bar-delete-label {
+    display: inline;
+  }
+}
+
+/* ── AI suggestion (?ai preview) ────────────────────── */
+
+/* The suggestion card is tinted sage, like p13, so it reads as help rather than part of the form */
+.ai-card:not(.ai-card-waiting) {
+  border-color: var(--color-leaf);
+  background: var(--color-white);
+}
+
+.ai-unsure {
+  margin-bottom: var(--space-12);
+}
+
+.ai-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-option {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.ai-option:first-child {
+  border-top: 0;
+}
+
+/* The top suggestion gets a box of its own, as on p13 */
+.ai-option-top {
+  margin-bottom: var(--space-4);
+  padding: var(--space-12);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+}
+
+.ai-option-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.ai-option-head > span:first-child {
+  display: grid;
+  line-height: 1.35;
+}
+
+.ai-option-name {
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+}
+
+.ai-option-top .ai-option-name {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+/* "Applied" is a label, not a button: it shows the state */
+.ai-applied {
+  cursor: default;
+}
+
+.ai-applied:hover {
+  background: var(--color-leaf);
+}
+
+.ai-option-meter .meter {
+  height: 4px;
+}
+
+/* Alternatives are never the answer, so their bars stay grey: green is kept for a High result */
+.ai-option-meter .meter-fill {
+  background: var(--color-meter-low);
+}
+
+.ai-option-meter .confidence-value {
+  font-size: var(--text-small);
+}
+
+.ai-manual {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* "Species (optional)  ✦ Filled by AI  × Clear" on one line */
+.species-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+}
+
+.ai-tag {
+  padding: 0 var(--space-8);
+  font-size: var(--text-label);
+}
+
+/* The × sits inside the right end of the Species field */
+.species-box {
+  position: relative;
+}
+
+/* Room on the right so a long name never runs under the × */
+.species-box:has(.ai-clear) .input {
+  padding-right: var(--space-48);
+}
+
+.ai-clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--color-muted);
+}
+
+.ai-clear:hover {
+  color: var(--color-danger);
+}

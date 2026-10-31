@@ -9,7 +9,9 @@
 function e($value)
 {
     // The (string) cast lets numbers and null pass through without a PHP warning.
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    // ENT_SUBSTITUTE: bytes that are not valid UTF-8 become a "�" instead of blanking the whole value
+    // (without it, htmlspecialchars() returns an empty string, so one broken byte would hide a name or a heading).
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /**
@@ -21,7 +23,22 @@ function config($key)
     static $config = null;
 
     if ($config === null) {
-        $config = require __DIR__ . '/../config/config.php';
+        // config.php is git-ignored, so a host that builds from GitHub (the Vercel preview) never has it.
+        // There the committed template supplies the defaults, which hold no secrets in stage F.
+        $file   = __DIR__ . '/../config/config.php';
+        $config = require (is_file($file) ? $file : __DIR__ . '/../config/config.example.php');
+
+        // Settings from the host's environment win over the file: BASE_URL is set in the Vercel dashboard.
+        // Without it, a Vercel deployment (which sets VERCEL=1) uses the address it was opened at,
+        // so every preview link works without changing anything.
+        if (getenv('BASE_URL')) {
+            $config['base_url'] = getenv('BASE_URL');
+        } elseif (getenv('VERCEL') && isset($_SERVER['HTTP_HOST'])) {
+            $config['base_url'] = 'https://' . $_SERVER['HTTP_HOST'];
+        }
+        if (getenv('APP_ENV')) {
+            $config['app_env'] = getenv('APP_ENV');
+        }
     }
 
     return $config[$key] ?? null;
@@ -40,10 +57,92 @@ function url($path = '')
     return rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
 }
 
+/**
+ * Address of one of our own files in public/ with its version added: asset_url('assets/css/listing.css') gives
+ * …/assets/css/listing.css?v=1792560000. The number is the time the file last changed (filemtime), so after a change
+ * the address is new and every browser loads the new file instead of an old copy it kept; while nothing changes,
+ * the address stays the same and the browser may keep using its copy. Only for paths written in our code.
+ */
+function asset_url($path)
+{
+    $file = __DIR__ . '/../public/' . ltrim($path, '/');
+
+    return url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
+/**
+ * Address of a page with a query string, leaving out empty values:
+ * query_url('garden.php', ['collection' => 2, 'q' => '']) gives …/garden.php?collection=2.
+ * Filters keep their choices in the address, so a filtered page can be bookmarked, shared and reloaded.
+ * http_build_query() URL-encodes each value, so a search like "snake plant" becomes q=snake+plant.
+ */
+function query_url($page, array $params)
+{
+    // An empty list ([]) is dropped too: http_build_query() would print nothing for it and leave a bare "?"
+    $params = array_filter($params, fn ($value) => $value !== null && $value !== '' && $value !== []);
+
+    return url($page) . ($params ? '?' . http_build_query($params) : '');
+}
+
+/**
+ * One piece of text from the address, e.g. get_text('q') for explore.php?q=monstera, or '' when it is not given.
+ * Anyone can type anything there: a hand-made address can send a list where one word belongs (q[]=x makes $_GET['q']
+ * an array, and string functions then fail) or bytes that are not real UTF-8 text (q=%FF, which e() prints as an empty
+ * string). Both count as "not given", so the page falls back to its default as for any other wrong value.
+ * Pages still check the text against what is allowed (a whitelist, ctype_digit() …) after reading it.
+ */
+function get_text($name)
+{
+    $value = $_GET[$name] ?? null;
+
+    return (is_string($value) && mb_check_encoding($value, 'UTF-8')) ? $value : '';
+}
+
+/**
+ * The same as get_text(), for a field of a form sent with method="post": post_text('note').
+ * A hand-made request can send note[]=x just as easily as an address can.
+ */
+function post_text($name)
+{
+    $value = $_POST[$name] ?? null;
+
+    return (is_string($value) && mb_check_encoding($value, 'UTF-8')) ? $value : '';
+}
+
+/**
+ * The page to go back to after logging in, from login.php?next=…, or '' when it is not allowed.
+ * Only a few exact local addresses pass (today: listing.php?id=<number>, for "Log in to show interest" on P11).
+ * Anything else — https://evil.example, //evil.example, listing.php?id=8&x=… — is refused, so nobody can use our
+ * Log in page to send people on to another site after they log in (an "open redirect").
+ * \z means "the very end of the text": a plain $ would also accept a hidden line break at the end.
+ */
+function return_path($value)
+{
+    return (is_string($value) && preg_match('/^listing\.php\?id=[1-9][0-9]{0,9}\z/', $value)) ? $value : '';
+}
+
 /** The file name of the page the browser asked for, e.g. "garden.php". */
 function current_page()
 {
     return basename($_SERVER['SCRIPT_NAME']);
+}
+
+/**
+ * The aria-current attribute of a navigation link, so a screen reader hears which link is lit, as the eye sees it.
+ * $is_lit is the same test that gives the link its .is-active class. A lit link that opens this very page gets
+ * aria-current="page" (Exchange on exchange.php); a lit link whose area the page only belongs to gets
+ * aria-current="true", "the current item of this set" (Exchange on listing.php, My Garden on a plant's profile).
+ * A link that is not lit gets nothing. Print the result without e(): it is fixed text.
+ */
+function nav_current($is_lit, $href)
+{
+    if (!$is_lit) {
+        return '';
+    }
+    // 'garden.php' and a full address like http://localhost/plantfolio/public/user.php?u=… both give the file name
+    $page = basename((string) parse_url($href, PHP_URL_PATH));
+
+    return $page === current_page() ? ' aria-current="page"' : ' aria-current="true"';
 }
 
 /**
@@ -124,6 +223,12 @@ function initials($full_name)
     $last  = count($words) > 1 ? mb_substr(end($words), 0, 1) : '';
 
     return mb_strtoupper($first . $last);
+}
+
+/** The first name, for friendly sentences: "Ruwan Rathnayake" gives "Ruwan" ("Contact Ruwan to arrange the swap"). */
+function first_name($full_name)
+{
+    return preg_split('/\s+/', trim($full_name))[0];
 }
 
 /**
@@ -209,6 +314,25 @@ function care_due($next_due)
     return ['state' => 'upcoming', 'text' => 'In ' . $days . ' days'];
 }
 
+/**
+ * The next-care hint for a plant (wireframe p11, element 6), from its soonest reminder: next_due and task.
+ * The same as care_due(), except that a task due today names the job: "Water today", not "Due today".
+ * Returns null for a plant that has no reminder yet. Used by the plant card and My Garden's list view.
+ */
+function care_hint($plant)
+{
+    if (empty($plant['next_due'])) {
+        return null;
+    }
+
+    $due = care_due($plant['next_due']);
+    if ($due['state'] === 'due') {
+        $due['text'] = task_label($plant['task']) . ' today';
+    }
+
+    return $due;
+}
+
 /** How long ago something happened, in the wireframes' wording: "Today", "2 days ago", "1 week ago". */
 function time_ago($datetime)
 {
@@ -236,6 +360,12 @@ function time_ago($datetime)
 function format_day($date)
 {
     return date('j M', strtotime($date));
+}
+
+/** "1 plant" or "13 plants": the number and the right form of the word. */
+function count_words($count, $singular, $plural)
+{
+    return $count . ' ' . ($count === 1 ? $singular : $plural);
 }
 
 /**

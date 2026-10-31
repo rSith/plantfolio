@@ -106,12 +106,6 @@
 
 /* ── Form details ───────────────────────────────────── */
 
-/* "(optional)" after a label: quieter than the label itself */
-.field-optional {
-  color: var(--color-muted);
-  font-weight: var(--weight-regular);
-}
-
 /* Password strength: four bars and a word (p9, element 3). Week 6 JavaScript fills the bars as the user types; */
 /* until then they show the empty state. data-level 1–4 on .strength colours that many bars. */
 .strength {

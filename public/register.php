@@ -5,14 +5,23 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
-// Stage B, in this order:
-//   a signed-in member is sent to their Dashboard: if ($current_user) { header('Location: ' . url('dashboard.php')); exit; }
-//   on POST: check the CSRF token, validate every field, check that username and email are free,
+// Stage B, on POST: check the CSRF token, validate every field, check that username and email are free,
 //   save the row with password_hash(), log the member in and open the empty Dashboard (wireframe p9, UX notes).
 
-$page_title    = 'Sign up';
-$page_css      = 'auth.css';
-$simple_header = true;
+// Stage F: Create account "logs in" without saving anything and opens the empty Dashboard (state S1),
+// which is what a brand-new member sees (p9). The browser's own checks (required fields, pattern) run first.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    mock_log_in_and_go('dashboard.php', true);
+}
+
+// A logged-in member does not need this page: they go to their Dashboard, as stage B will do (wireframe p8).
+if ($current_user) {
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
+
+$page_title = 'Sign up';
+$page_css   = 'auth.css';
 
 include __DIR__ . '/../includes/header.php';
 ?>

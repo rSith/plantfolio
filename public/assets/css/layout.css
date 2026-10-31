@@ -212,6 +212,13 @@ body {
   display: none;
 }
 
+/* Log in, Join free and Add plant stay 44 x 44 px on a tablet and a desktop too, like the round buttons beside them:
+   a tablet is a touch screen, so .btn-sm's compact 36 px from 768 px (components.css) is too small to tap here */
+.header-actions .btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 /* A round target around the avatar that opens the account menu */
 .avatar-toggle {
   display: inline-flex;

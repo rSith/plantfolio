@@ -1,0 +1,521 @@
+/* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
+/* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
+   Phone: one column, photo first (p23). Desktop: gallery beside the identity, then tabs beside the reminders card. */
+
+.plant-breadcrumb {
+  margin-bottom: var(--space-16);
+}
+
+/* ── Top: gallery and identity ──────────────────────── */
+
+.plant-top {
+  display: grid;
+  gap: var(--space-24);
+  margin-bottom: var(--space-32);
+}
+
+.plant-gallery,
+.plant-info {
+  min-width: 0;
+}
+
+/* 4:3 like every card photo; object-fit crops instead of stretching */
+.plant-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-card);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+/* Five equal squares: up to four photos and the Add tile */
+.plant-thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.plant-thumb {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+}
+
+.plant-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-fast);
+}
+
+.plant-thumb:hover img {
+  transform: scale(1.05);
+}
+
+/* The dashed Add tile, also used at the end of the Photos tab */
+.plant-thumb-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.plant-thumb-add:hover {
+  border-color: var(--color-leaf);
+  color: var(--color-forest);
+}
+
+.plant-name {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+}
+
+.plant-species {
+  margin-bottom: var(--space-8);
+  color: var(--color-muted);
+}
+
+.plant-species .scientific-name {
+  color: var(--color-ink);
+}
+
+/* Status badge and key dates on one line, wrapping on a phone */
+.plant-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+  margin-bottom: var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.plant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+/* ── Care at a glance ───────────────────────────────── */
+
+.care-glance {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+}
+
+.care-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  min-width: 0;
+  padding: var(--space-12);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.care-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-leaf);
+}
+
+.care-tile-label,
+.care-tile-value {
+  display: block;
+}
+
+.care-tile-label {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+}
+
+.care-tile-value {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1.35;
+}
+
+/* The next watering stands out: terracotta tint when due today, red tint when overdue (design system rule) */
+.care-tile-due {
+  border-color: transparent;
+  background: var(--color-terracotta-tint);
+}
+
+.care-tile-due .care-tile-icon {
+  background: var(--color-white);
+  color: var(--color-terracotta);
+}
+
+.care-tile-overdue {
+  border-color: transparent;
+  background: var(--color-danger-bg);
+}
+
+.care-tile-overdue .care-tile-icon {
+  background: var(--color-white);
+  color: var(--color-danger);
+}
+
+/* "Mark watered": a small text button inside the tile */
+.care-tile-action {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-terracotta-dark);
+  font-family: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.care-tile-overdue .care-tile-action {
+  color: var(--color-danger);
+}
+
+.care-source {
+  margin: var(--space-8) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+@media (min-width: 1024px) {
+  .plant-top {
+    grid-template-columns: 5fr 7fr;
+    gap: var(--space-32);
+    align-items: start;
+  }
+}
+
+/* ── Bottom: tabs and reminders card ────────────────── */
+
+.plant-bottom {
+  display: grid;
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.plant-main {
+  min-width: 0;
+}
+
+.tab-panel {
+  padding-top: var(--space-24);
+}
+
+@media (min-width: 1024px) {
+  .plant-bottom {
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-32);
+  }
+}
+
+/* ── Story: a timeline ──────────────────────────────── */
+/* A vertical line on the left with a dot for each entry; the newest dot is filled */
+
+.story {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-entry {
+  position: relative;
+  padding: 0 0 var(--space-24) var(--space-32);
+}
+
+/* The line: from this dot down to the next one */
+.story-entry::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: -4px;
+  left: 6px;
+  width: 2px;
+  background: var(--color-line);
+}
+
+.story-entry:last-child::before {
+  display: none;
+}
+
+/* The dot */
+.story-entry::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 1px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-leaf);
+  border-radius: 50%;
+  background: var(--color-cream);
+}
+
+.story-entry:first-child::after {
+  background: var(--color-leaf);
+}
+
+.story-date {
+  margin-bottom: var(--space-8);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.story-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.story-body {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.story-note,
+.story-ai {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.story-ai {
+  display: flex;
+  gap: 6px;
+  color: var(--color-muted);
+}
+
+.story-ai .icon {
+  margin-top: 0.2em;
+  color: var(--color-leaf);
+}
+
+/* ── Care guide tab ─────────────────────────────────── */
+
+.care-guide {
+  display: grid;
+  margin: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.care-guide > div {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.care-guide > div:first-child {
+  border-top: 0;
+}
+
+.care-guide dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.care-guide dt .icon {
+  color: var(--color-leaf);
+}
+
+.care-guide dd {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* Tablet and up: the label and the value side by side */
+@media (min-width: 768px) {
+  .care-guide > div {
+    grid-template-columns: 180px 1fr;
+    gap: var(--space-16);
+  }
+}
+
+.care-notes {
+  margin: var(--space-16) 0 0;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
+}
+
+/* ── Reminders tab ──────────────────────────────────── */
+
+.reminder-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.reminder-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8) var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.reminder-item:first-child {
+  border-top: 0;
+}
+
+.reminder-text {
+  display: grid;
+  flex: 1;
+  min-width: 160px;
+  font-size: var(--text-body-sm);
+}
+
+/* ── Photos tab ─────────────────────────────────────── */
+
+/* minmax(0, 1fr) keeps the columns equal: a plain 1fr may grow to fit a wide item */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.photo-grid-item {
+  margin: 0;
+}
+
+.photo-grid-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.photo-grid-item figcaption {
+  margin-top: var(--space-4);
+}
+
+/* align-self: start stops the tile stretching to the row's height (photo plus caption), which, being square,
+   would then make it wider than its column */
+.photo-grid-add {
+  align-self: start;
+  aspect-ratio: 1 / 1;
+  font-size: var(--text-small);
+}
+
+/* ── Reminders card ─────────────────────────────────── */
+
+.side-reminders,
+.plant-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-body-sm);
+}
+
+.side-reminders li,
+.plant-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
+}
+
+.side-reminders .icon,
+.plant-facts .icon {
+  color: var(--color-muted);
+}
+
+.side-due {
+  margin-left: auto;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.side-due-due {
+  color: var(--color-terracotta);
+}
+
+.side-due-overdue {
+  color: var(--color-danger);
+}
+
+.side-due-upcoming {
+  color: var(--color-muted);
+  font-weight: var(--weight-regular);
+}
+
+.plant-facts {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
+
+/* ── Owner card (read-only view) ────────────────────── */
+
+.owner-card .label {
+  margin-bottom: var(--space-12);
+}
+
+.owner-card-member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.owner-card-member > span {
+  display: grid;
+  line-height: 1.4;
+}
+
+.owner-card-btn {
+  width: 100%;
+  margin-top: var(--space-16);
+}

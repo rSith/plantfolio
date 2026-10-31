@@ -1,0 +1,687 @@
+/* The two Plant Tools: Plant Identifier (P07, wireframe p14, ML-12) and Health Check (P08, wireframe p15, ML-14). */
+/* Loaded by identify.php and health-check.php through $page_css: they share one layout, so they share one file.
+   Functional style. Phone: one column, photo first. Desktop: the photo and tips on the left, the result on the right. */
+
+/* ── Page head ──────────────────────────────────────── */
+
+.tool-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.tool-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-4);
+}
+
+.tool-title {
+  margin-bottom: var(--space-4);
+}
+
+.tool-intro {
+  max-width: 46ch;   /* p14 and p15 break the sentence onto two short lines */
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* The switch is as wide as the page on a phone, and as wide as its words from tablet up */
+.tool-head > .tool-switch,
+.tool-head > .tool-plant {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .tool-head > .tool-switch {
+    width: auto;
+    min-width: 300px;
+  }
+}
+
+/* ── Columns ────────────────────────────────────────── */
+
+.tool-grid {
+  display: grid;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+/* Phone and tablet: one column. display: contents lets the cards of both columns line up as one list, so once there
+   is a result it can come straight after the photo, and the tips (useful before a photo, and holding nothing to click)
+   move to the end. */
+.tool-side,
+.tool-main {
+  display: contents;
+}
+
+.tool-grid.has-result .tool-tips {
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .tool-grid {
+    grid-template-columns: 5fr 7fr;
+    gap: var(--gutter);
+  }
+
+  .tool-side,
+  .tool-main {
+    display: grid;
+    gap: var(--space-16);
+    min-width: 0;
+  }
+}
+
+/* Card headings in Poppins: the tools are Functional style (p14, p15) */
+.tool-card-title {
+  margin-bottom: var(--space-12);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+/* ── The photo (element 2) ──────────────────────────── */
+
+.tool-submit {
+  width: 100%;
+  margin-top: var(--space-16);
+}
+
+.tool-upload .field-error {
+  margin: var(--space-8) 0 0;
+}
+
+.tool-photo-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-input);
+}
+
+.tool-photo-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.tool-photo-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.tool-photo-name {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.tool-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* The file fields are hidden, so their keyboard focus is shown on their buttons */
+.tool-photo-actions label:has(+ input:focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+/* "Identify this photo" appears only once a new photo is chosen. A required file field counts as :valid as soon as
+   it holds a file, and :has() lets the form react to that without JavaScript. */
+.tool-photo-send {
+  display: none;
+}
+
+.tool-photo-foot:has(input[type="file"]:valid) .tool-photo-send {
+  display: inline-flex;
+}
+
+/* While analysing (S2): a soft light line moves down the photo */
+.tool-photo-scan {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-white);
+  box-shadow: 0 0 16px 6px rgba(255, 255, 255, 0.7);
+  animation: tool-scan 2s ease-in-out infinite alternate;
+}
+
+@keyframes tool-scan {
+  from { top: 8%; }
+  to   { top: 92%; }
+}
+
+/* ── Photo tips (P07, element 3) ────────────────────── */
+
+.tips-list {
+  display: grid;
+  gap: var(--space-8) var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-body-sm);
+}
+
+@media (min-width: 480px) {
+  .tips-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.tips-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.tip-do .icon {
+  color: var(--color-leaf);
+}
+
+.tip-dont .icon {
+  color: var(--color-danger);
+}
+
+/* ── Result card (P07 element 4, P08 element 3) ─────── */
+
+/* Outlined in Leaf like the AI card on the plant form: a result to read, not a form to fill in */
+.tool-result {
+  border-color: var(--color-leaf);
+}
+
+.tool-result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.tool-result-head .label {
+  margin: 0;
+}
+
+/* The confidence word as a badge: green for High, amber for Medium (Not sure never reaches this card) */
+.badge-confidence-high {
+  background: var(--status-thriving-bg);
+  color: var(--status-thriving-text);
+}
+
+.badge-confidence-medium {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.badge-confidence-high .icon,
+.badge-confidence-medium .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.match-photo {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.match-name {
+  margin: 0;
+  font-size: var(--text-h2);
+}
+
+.match-scientific {
+  margin: 0;
+}
+
+.confidence-note {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Care and safety chips (P07, element 5) */
+.care-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-16) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.care-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-small);
+}
+
+.care-chip-warning {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.tool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+  margin-top: var(--space-24);
+}
+
+/* "Read care guide": a <details> whose summary looks like a button. Once open it takes a whole line, so the guide
+   appears under the buttons instead of squeezed beside them. */
+.care-guide > summary {
+  list-style: none;
+}
+
+.care-guide > summary::-webkit-details-marker {
+  display: none;
+}
+
+.care-guide[open] {
+  flex-basis: 100%;
+}
+
+.care-guide-list {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-16) 0 var(--space-8);
+  padding: var(--space-16);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+}
+
+.care-guide-list div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-8);
+}
+
+.care-guide-list dt {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.care-guide-list dd {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.care-guide-notes {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* ── Before a photo: what the result will look like ── */
+
+.tool-waiting {
+  border-style: dashed;
+  background: transparent;
+}
+
+.tool-waiting-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.tool-waiting-title .icon {
+  color: var(--color-leaf);
+}
+
+.confidence-legend {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-16) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-body-sm);
+}
+
+.confidence-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.legend-dot {
+  flex-shrink: 0;
+  width: 24px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+}
+
+.legend-high { background: var(--color-leaf); }
+.legend-medium { background: var(--color-amber); }
+.legend-low { background: var(--color-meter-low); }
+
+/* ── Alternatives and honesty note (P07, element 7) ── */
+
+.alt-list {
+  display: grid;
+  gap: var(--space-16);
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  list-style: none;
+}
+
+.alt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+}
+
+.alt-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-leaf);
+}
+
+.alt-body {
+  display: grid;
+  flex: 1;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.alt-name {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.alt-name .scientific-name {
+  color: var(--color-ink);
+}
+
+.alt-common {
+  color: var(--color-muted);
+}
+
+/* Runners-up are never the answer, so their bars stay grey: green is kept for a High result */
+.alt .meter-fill {
+  background: var(--color-meter-low);
+}
+
+.alt .confidence-value {
+  font-size: var(--text-small);
+}
+
+.tool-honesty {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  margin: 0;
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.tool-honesty .icon {
+  margin-top: 2px;
+}
+
+/* People who ask their system for less motion get a still scan line (the spinner and bar: components.css) */
+@media (prefers-reduced-motion: reduce) {
+  .tool-photo-scan {
+    top: 50%;
+    animation: none;
+  }
+}
+
+/* ── The offline message: laid out like the Not sure card (S3, components.css), whose title, text and buttons it uses ── */
+
+.tool-offline {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+}
+
+.tool-offline .badge .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Health Check (P08) ─────────────────────────────── */
+
+/* The scope card moves to the end on a phone once there is a result, like the photo tips */
+.tool-grid.has-result .tool-scope {
+  order: 1;
+}
+
+.tool-plant-field {
+  margin: var(--space-16) 0 0;
+}
+
+/* "Check another photo" as wide as the card, under the time of the upload (p15) */
+.tool-photo-foot-stacked {
+  display: grid;
+  justify-content: stretch;
+}
+
+.tool-photo-foot-stacked .btn {
+  width: 100%;
+}
+
+/* Plant link (p15, element 1): a menu button showing the linked plant, above the diagnosis */
+.tool-plant {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.tool-plant-label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.tool-plant-menu {
+  width: 100%;
+}
+
+.tool-plant-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 48px;
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-white);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.tool-plant-toggle:hover {
+  border-color: var(--color-muted);
+}
+
+.tool-plant-toggle .menu-chevron {
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+.tool-plant-toggle > .icon {
+  color: var(--color-leaf);
+}
+
+.tool-plant-thumb {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--space-8);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.tool-plant-meta {
+  color: var(--color-muted);
+}
+
+/* The open menu is as wide as the button, so long plant names fit */
+.tool-plant-menu .menu-panel {
+  left: 0;
+  right: 0;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .tool-plant {
+    justify-self: end;
+    width: min(340px, 100%);
+  }
+}
+
+/* Scope statement (p15, element 7) */
+.tool-scope-text {
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-body-sm);
+}
+
+.tool-scope-more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-leaf);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.tool-scope-more > summary:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.crop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crop-list li {
+  padding: 2px var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-small);
+}
+
+/* Diagnosis (p15, elements 3 to 6) */
+.tool-alert {
+  margin: 0 0 var(--space-16);
+}
+
+.diagnosis-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.diagnosis-cause {
+  margin: var(--space-4) 0 0;
+}
+
+.diagnosis-confidence {
+  margin: var(--space-16) 0;
+  padding-bottom: var(--space-16);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.diagnosis-heading {
+  margin: var(--space-16) 0 var(--space-4);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.diagnosis-text {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* The four steps, each with its number in a small sage circle (p15, element 5). The numbers are the list's own
+   counter (counter-increment), so the HTML stays a plain <ol> that screen readers count too. */
+.action-plan {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-8) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  font-size: var(--text-body-sm);
+}
+
+.action-plan li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  counter-increment: step;
+}
+
+.action-plan li::before {
+  content: counter(step);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+
+.diagnosis-warning {
+  margin: var(--space-16) 0 0;
+}
+
+.diagnosis-actions {
+  margin-top: var(--space-16);
+}
+
+.diagnosis-actions form {
+  display: flex;
+}

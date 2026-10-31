@@ -1,0 +1,632 @@
+/* My Exchanges only (P13, wireframe p20, COM-10). Loaded by my-exchanges.php through $page_css. */
+/* Functional style. Mobile-first: the interest table is a pile of cards on a phone and a real table from tablet (p23). */
+
+/* ── Title and tabs (p20, element 1) ────────────────── */
+
+.exchanges-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16) var(--space-24);
+  margin-bottom: var(--space-16);
+}
+
+.exchanges-title {
+  margin-bottom: var(--space-4);
+}
+
+.exchanges-lead {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* Four long labels do not fit on a phone. Instead of scrolling sideways (which could hide the current tab), the tabs
+   wrap onto a second row there. */
+.exchanges-tabs {
+  flex-wrap: wrap;
+  gap: 0 var(--space-16);
+  margin-bottom: var(--space-24);
+}
+
+@media (min-width: 768px) {
+  .exchanges-tabs {
+    flex-wrap: nowrap;
+    gap: var(--space-24);
+  }
+}
+
+/* A rating is waiting: the count turns terracotta, the colour for "do this today" */
+.tab-count-due {
+  background: var(--color-terracotta-tint);
+  color: var(--color-terracotta-dark);
+}
+
+.exchanges-body {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.exchanges-alert {
+  margin: 0;
+}
+
+/* Open and Exchanged: the green and blue of p20, with the dot of a status badge */
+.badge-open,
+.badge-exchanged {
+  padding: 0 var(--space-8);
+  font-size: var(--text-label);
+}
+
+.badge-open {
+  background: var(--status-thriving-bg);
+  color: var(--status-thriving-text);
+}
+
+.badge-exchanged {
+  background: var(--status-stable-bg);
+  color: var(--status-stable-text);
+}
+
+.badge-open::before,
+.badge-exchanged::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Listing selector (p20, element 2) ──────────────── */
+/* Phone: one card under the other. From tablet: as many columns as fit, each at least 220 px wide. */
+
+.listing-picker {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .listing-picker {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-12);
+  }
+}
+
+.picker-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  height: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.picker-card:hover {
+  border-color: var(--color-line-strong);
+  color: var(--color-ink);
+}
+
+/* The chosen listing: a Leaf border and a sage tint, as on p20 */
+.picker-card[aria-current="true"] {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+  box-shadow: inset 0 0 0 1px var(--color-leaf);
+}
+
+.picker-text {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.picker-title {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.35;
+}
+
+.picker-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* ── Interest table (p20, elements 3 to 5) ──────────── */
+
+.interests-panel .panel-head {
+  flex-wrap: wrap;
+  margin-bottom: var(--space-12);
+}
+
+.interests-panel .panel-title {
+  font-size: var(--text-body);
+}
+
+.interests-filter > summary .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.interests-closed {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--status-stable-bg);
+  color: var(--status-stable-text);
+  font-size: var(--text-small);
+}
+
+.interests-closed .icon {
+  margin-top: 2px;
+}
+
+/* Phone: each row is a small card. The table, its body and its rows become ordinary blocks, the column headings are
+   hidden (each cell says what it is instead), and every row is a grid: the person and the status on top, the note
+   under them, then the date and the button. */
+.interest-table,
+.interest-table tbody {
+  display: block;
+  width: 100%;
+}
+
+.interest-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.interest-table tr {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-8) var(--space-12);
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.interest-table td {
+  display: block;
+  min-width: 0;
+}
+
+.interest-person { grid-column: 1; grid-row: 1; }
+.interest-status { grid-column: 2; grid-row: 1; justify-self: end; }
+.interest-note   { grid-column: 1 / -1; grid-row: 2; }
+.interest-date   { grid-column: 1; grid-row: 3; align-self: center; }
+.interest-action { grid-column: 2; grid-row: 3; justify-self: end; }
+
+/* ".interest-table td" above would make this cell a block again, so the selector names the table too */
+.interest-table .interest-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.interest-who {
+  display: grid;
+  line-height: 1.35;
+}
+
+.interest-who a {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.interest-who a:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.interest-who .rating {
+  font-size: var(--text-small);
+}
+
+.interest-note {
+  font-size: var(--text-body-sm);
+}
+
+.interest-none {
+  color: var(--color-muted);
+}
+
+.interest-date {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Tablet and up: a real table again, with its column headings */
+@media (min-width: 768px) {
+  .interest-table {
+    display: table;
+    border-collapse: collapse;
+  }
+
+  .interest-table thead {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    display: table-header-group;
+  }
+
+  .interest-table tbody {
+    display: table-row-group;
+  }
+
+  .interest-table tr {
+    display: table-row;
+  }
+
+  .interest-table th,
+  .interest-table td {
+    display: table-cell;
+    padding: var(--space-12) var(--space-8);
+    border-top: 1px solid var(--color-line);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .interest-table th {
+    border-top: 0;
+    color: var(--color-muted);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .interest-table th:first-child,
+  .interest-table td:first-child {
+    padding-left: 0;
+  }
+
+  .interest-table th:last-child,
+  .interest-table td:last-child {
+    padding-right: 0;
+    text-align: right;
+  }
+
+  .interest-table .interest-person {
+    display: table-cell;
+    min-width: 170px;
+  }
+
+  /* display: table-cell above undoes the flex, so the avatar and the name are lined up again inside the cell */
+  .interest-person .avatar {
+    margin-right: var(--space-8);
+    vertical-align: middle;
+  }
+
+  .interest-who {
+    display: inline-grid;
+    vertical-align: middle;
+  }
+
+  .interest-date {
+    white-space: nowrap;
+  }
+
+  .interest-cell-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .interest-action .btn {
+    white-space: nowrap;
+  }
+}
+
+/* ── My listings and Interests sent: one row per listing ── */
+
+.exchange-rows {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Phone: the photo beside the text, the buttons on a line under both. Tablet: the buttons at the right end. */
+.exchange-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.exchange-row-photo {
+  width: 64px;
+  height: 64px;
+  align-self: start;
+}
+
+.exchange-row-text {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.exchange-row-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.35;
+}
+
+.exchange-row-title a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.exchange-row-title a:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.exchange-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.exchange-row-meta .rating {
+  font-size: var(--text-small);
+}
+
+/* On a photo the Swap badge is white; on a white row it needs the sage tint to show, as on Listing Detail */
+.exchange-row .badge-type-swap,
+.exchange-row .badge-type-either {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.exchange-row-note {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  font-size: var(--text-small);
+}
+
+.exchange-row-note-label {
+  margin-right: var(--space-4);
+  font-weight: var(--weight-semibold);
+}
+
+.exchange-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .exchange-row {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .exchange-row-actions {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
+/* ── Ratings ────────────────────────────────────────── */
+
+.exchanges-section {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.exchanges-section-title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+.rate-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.rate-card-title {
+  margin-bottom: var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+.rate-card-text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.rate-form {
+  max-width: 560px;
+}
+
+.rate-stars {
+  margin-bottom: var(--space-16);
+}
+
+.rate-stars-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Each star is the label of a hidden radio button: a 44 px target around a 28 px star */
+.rate-stars-row label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-input);
+  color: var(--color-line-strong);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.rate-stars-row .icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* The star under the mouse and every star before it light up: "label:has(~ label:hover)" is a label with a hovered
+   label somewhere after it */
+.rate-stars-row label:hover,
+.rate-stars-row label:has(~ label:hover) {
+  color: var(--color-amber);
+}
+
+/* The chosen score fills its star and the stars before it. :has() finds the checked radio; :nth-of-type(-n+3) means
+   "the first three labels". One rule per score, because CSS cannot count the stars by itself. */
+.rate-stars-row:has(input[value="1"]:checked) label:nth-of-type(-n+1),
+.rate-stars-row:has(input[value="2"]:checked) label:nth-of-type(-n+2),
+.rate-stars-row:has(input[value="3"]:checked) label:nth-of-type(-n+3),
+.rate-stars-row:has(input[value="4"]:checked) label:nth-of-type(-n+4),
+.rate-stars-row:has(input[value="5"]:checked) label:nth-of-type(-n+5) {
+  color: var(--color-amber);
+}
+
+.rate-stars-row:has(input:checked) label .icon {
+  fill: none;
+}
+
+.rate-stars-row:has(input[value="1"]:checked) label:nth-of-type(-n+1) .icon,
+.rate-stars-row:has(input[value="2"]:checked) label:nth-of-type(-n+2) .icon,
+.rate-stars-row:has(input[value="3"]:checked) label:nth-of-type(-n+3) .icon,
+.rate-stars-row:has(input[value="4"]:checked) label:nth-of-type(-n+4) .icon,
+.rate-stars-row:has(input[value="5"]:checked) label:nth-of-type(-n+5) .icon {
+  fill: currentColor;
+}
+
+/* The radio itself is hidden, so its keyboard focus is drawn on its star */
+.rate-stars-row input:focus-visible + label {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+}
+
+/* The word for the chosen score, "Great" (S4, p24). Hidden until a star is chosen. */
+.rate-words {
+  margin-left: var(--space-8);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+}
+
+.rate-word {
+  display: none;
+}
+
+.rate-stars-row:has(input[value="1"]:checked) .rate-word-1,
+.rate-stars-row:has(input[value="2"]:checked) .rate-word-2,
+.rate-stars-row:has(input[value="3"]:checked) .rate-word-3,
+.rate-stars-row:has(input[value="4"]:checked) .rate-word-4,
+.rate-stars-row:has(input[value="5"]:checked) .rate-word-5 {
+  display: inline;
+}
+
+/* Ratings you gave */
+.given-list {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.given-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.given-who {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.given-who:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.given-comment {
+  margin: var(--space-8) 0 var(--space-4);
+}
+
+.given-meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.exchanges-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Rating prompt (p20, element 6) ─────────────────── */
+/* A terracotta strip under the tab: a finished exchange is waiting for a rating */
+
+.rate-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-card);
+  background: var(--color-terracotta-tint);
+}
+
+.rate-prompt-icon {
+  display: inline-flex;
+  color: var(--color-terracotta);
+}
+
+.rate-prompt-icon .icon {
+  fill: currentColor;
+}
+
+.rate-prompt-text {
+  flex: 1 1 240px;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+}

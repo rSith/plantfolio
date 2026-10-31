@@ -330,6 +330,27 @@ img {
   color: var(--color-leaf);
 }
 
+/* A menu item that acts on this page (Delete) is a <button>: undo the browser's button look */
+button.menu-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Destructive: red, the colour kept for overdue care and destructive actions */
+.menu-item-danger,
+.menu-item-danger .icon {
+  color: var(--color-danger);
+}
+
+.menu-item-danger:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
 /* Who is signed in, at the top of the account menu */
 .menu-head {
   display: grid;
@@ -448,8 +469,10 @@ img {
   border: 0;
 }
 
+/* align-content: start keeps the label and input at their natural height when a field sits beside a taller one */
 .field {
   display: grid;
+  align-content: start;
   gap: var(--space-4);
   margin-bottom: var(--space-16);
 }
@@ -457,6 +480,12 @@ img {
 .field-label {
   font-size: var(--text-small);
   font-weight: var(--weight-semibold);
+}
+
+/* "(optional)" after a label: quieter than the label itself. Moved here from auth.css: the plant form uses it too. */
+.field-optional {
+  color: var(--color-muted);
+  font-weight: var(--weight-regular);
 }
 
 .field-hint,
@@ -556,6 +585,18 @@ textarea.input {
 @media (min-width: 768px) {
   .input {
     font-size: var(--text-body-sm);
+  }
+}
+
+/* Two fields side by side from tablet up. Moved here from plant-form.css: Settings uses it too. */
+.field-row {
+  display: grid;
+  gap: 0 var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -719,6 +760,177 @@ textarea.input {
   outline-offset: 2px;
 }
 
+/* ── Form pages ─────────────────────────────────────── */
+/* The page head, white form cards, sections and photo drop area of a form page. Moved here from plant-form.css:
+   Add Plant (P06), Create Listing (P12) and the Plant Tools (P07, P08) all use them. */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
+}
+
+.form-title {
+  margin-bottom: var(--space-4);
+}
+
+.form-intro {
+  margin-bottom: var(--space-24);
+  color: var(--color-muted);
+}
+
+/* A white box, like the Dashboard's panels */
+.form-card {
+  min-width: 0;
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+@media (min-width: 768px) {
+  .form-card {
+    padding: var(--space-24);
+  }
+}
+
+.form-card-title {
+  margin-bottom: var(--space-16);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+/* A <fieldset> without the browser's frame: it groups radio buttons for screen readers, nothing more */
+.form-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-fieldset legend {
+  padding: 0;
+}
+
+/* A part of a long form, with a line above it */
+.form-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.form-section-title {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+.form-section-hint {
+  margin: 0 0 var(--space-8);
+}
+
+/* The whole box is the <label> of the file input, so a click anywhere opens the picker */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  aspect-ratio: 4 / 3;
+  padding: var(--space-16);
+  border: 2px dashed var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dropzone:hover {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+}
+
+/* The file input itself is hidden, so its focus is shown on the box around it */
+.dropzone:has(+ input:focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-leaf);
+}
+
+.dropzone-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.dropzone-title {
+  font-weight: var(--weight-semibold);
+}
+
+.dropzone-text {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.photo-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-8) 0 0;
+}
+
+/* A photo that is already there, with "Change photo" on its corner (p13): the edit forms of P06 and P12 */
+.photo-current {
+  position: relative;
+}
+
+.photo-current img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.photo-change {
+  position: absolute;
+  right: var(--space-12);
+  bottom: var(--space-12);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The file input is hidden, so its keyboard focus is shown on the Change photo button */
+.photo-current:has(~ input:focus-visible) .photo-change {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+/* "Please check 2 fields" above a form that came back with errors */
+.form-errors {
+  margin-bottom: var(--space-16);
+}
+
 /* ── Tabs ───────────────────────────────────────────── */
 /* A row of links; the current one gets .is-active. JavaScript for switching without a reload comes in week 5. */
 
@@ -782,6 +994,7 @@ textarea.input {
 }
 
 .breadcrumb a {
+  padding: 13px 0;   /* a 44 px tall tap area; padding on an inline link does not make the row taller */
   color: var(--color-muted);
   text-decoration: none;
 }
@@ -887,6 +1100,23 @@ textarea.input {
   box-shadow: var(--shadow-sm);
 }
 
+/* The plant card's badges share one row along the top of the photo. Two separately placed badges overlap on a narrow
+   card ("Needs attention" under the likes); in a row that wraps, the second one moves down a line instead. */
+.card-media-badges {
+  position: absolute;
+  top: var(--space-12);
+  right: var(--space-12);
+  left: var(--space-12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.card-media-badges .badge {
+  position: static;   /* placed by the row, not by the .card-media .badge rule above */
+}
+
 .card-body {
   display: flex;
   flex: 1;
@@ -927,13 +1157,37 @@ textarea.input {
 }
 
 .plant-card:hover,
-.listing-card:hover {
+.listing-card:hover,
+.member-card:hover {
   border-color: var(--color-line-strong);
   box-shadow: var(--shadow-card);
   transform: translateY(-2px);
 }
 
 /* Plant card (p11) */
+
+/* The ⋯ menu sits on the photo's top-right corner. z-index lifts it above the stretched card link,
+   so a click on it opens the menu instead of the plant's profile. */
+.plant-card .plant-menu {
+  position: absolute;
+  top: var(--space-8);
+  right: var(--space-8);
+  z-index: 1;
+}
+
+/* 44px on a phone (touch target); a mouse can use a smaller, quieter button */
+.plant-menu-btn {
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .plant-menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .plant-card-name {
   font-family: var(--font-display);
   color: var(--color-forest);
@@ -956,6 +1210,42 @@ textarea.input {
 
 .plant-card-collection {
   margin-left: auto;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left */
+.plant-card-community .plant-card-collection {
+  margin-left: 0;
+}
+
+/* Community plant card (p16): likes at the right end of the badge row, the owner along the bottom */
+.card-media .plant-card-likes {
+  margin-left: auto;   /* to the right, also when it has wrapped onto a line of its own */
+  background: var(--color-white);
+  color: var(--color-ink);
+}
+
+/* margin-top: auto keeps the owner rows level across cards whose names wrap differently */
+.plant-card-owner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: auto;
+  padding-top: var(--space-8);
+  font-size: var(--text-small);
+}
+
+.plant-card-username {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plant-card-town {
   color: var(--color-muted);
   white-space: nowrap;
 }
@@ -1033,6 +1323,117 @@ textarea.input {
   text-overflow: ellipsis;
 }
 
+/* Member card (p16): Explore's People tab. The whole card opens the member's Public Profile.
+   Phone: avatar beside the text, so a list of members stays short. Tablet and up: upright, centred under the avatar. */
+.member-card {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-16);
+}
+
+/* min-width: 0 lets a long username shorten with "…" instead of widening the card */
+.member-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.member-card-body > * {
+  margin: 0;
+}
+
+/* The profile's 96px avatar would crowd a card a third of the page wide */
+.member-card .avatar-lg {
+  width: 72px;
+  height: 72px;
+  font-size: var(--text-h2);
+}
+
+.member-card-username {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-card-name {
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.member-card-town {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.member-card-town .icon,
+.member-card-match .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.member-card-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  font-size: var(--text-small);
+}
+
+.member-card .member-card-match {
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .member-card {
+    flex-direction: column;
+    gap: var(--space-12);
+    padding: var(--space-24) var(--space-16);
+    text-align: center;
+  }
+
+  .member-card-body {
+    align-items: center;
+  }
+
+  .member-card-stats {
+    justify-content: center;
+  }
+}
+
+/* The compact card of the "Plant lovers matching" row (p16, element 6): avatar on the left, two short lines.
+   It comes after the rules above, so at every screen width it wins over the upright layout. */
+.member-card-compact {
+  flex-direction: row;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  text-align: left;
+}
+
+.member-card-compact .member-card-body {
+  align-items: flex-start;
+  gap: 0;
+}
+
+.member-card-compact .member-card-username {
+  font-size: var(--text-body-sm);
+}
+
+.member-card-compact .member-card-stats {
+  justify-content: flex-start;
+  color: var(--color-muted);
+}
+
 /* ── Rating ─────────────────────────────────────────── */
 /* Printed by partials/rating.php: ★ 4.9 (23) */
 
@@ -1055,11 +1456,12 @@ textarea.input {
   color: var(--color-muted);
 }
 
-/* Five stars in a row, e.g. on a profile or in the Rate a trader dialog. Filled ones get .is-filled. */
+/* Five stars in a row, e.g. on a profile or in the Rate a trader dialog. Filled ones get .is-filled.
+   An empty star is a thin outline in the muted text colour: the lighter line colour (1.5:1 on white) almost vanished. */
 .stars {
   display: inline-flex;
   gap: 2px;
-  color: var(--color-line-strong);
+  color: var(--color-muted);
 }
 
 .stars .icon {
@@ -1073,6 +1475,19 @@ textarea.input {
 
 .star.is-filled .icon {
   fill: currentColor;
+}
+
+/* Small stars beside a review's author (partials/stars.php with 'size' => 'sm') */
+.stars-sm .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The score in figures after the stars, "4/5" ('show_score' => true): readable where the stars alone are too faint */
+.stars-score {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
 }
 
 /* ── Care row ───────────────────────────────────────── */
@@ -1165,6 +1580,183 @@ textarea.input {
   }
 }
 
+/* ── Results bar: count, active filters, sort ───────── */
+/* Above a list of search results. Moved here from explore.css: the Exchange page (P10) uses it too. */
+
+.results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.results-count {
+  margin: 0 var(--space-4) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* An active filter: tinted sage, with an × that removes it.
+   44 px tall on every screen: a chip that removes a filter is tapped on tablets too (other chips are 36 px from 768 px) */
+.filter-chip {
+  min-height: 44px;
+  border-color: var(--color-sage);
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.filter-chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.results-clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+/* margin-left: auto pushes the sort to the right end of the row, as on p16 and p17 */
+.sort-menu {
+  margin-left: auto;
+}
+
+.sort-menu > summary .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Panels ─────────────────────────────────────────── */
+/* A white box with a heading row. Moved here from dashboard.css: My Garden, Plant Profile and Settings use it too. */
+
+.panel {
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-8);
+}
+
+/* Functional pages use Poppins for section headings (H3 style on p6), not the Lora used on warm pages */
+.panel-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+.panel-link,
+.panel-count {
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+.panel-link {
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.panel-link:hover {
+  text-decoration: underline;
+}
+
+.panel-count {
+  color: var(--color-muted);
+}
+
+.panel-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: var(--space-8) 0;
+  color: var(--color-muted);
+}
+
+/* The last row of a panel, as a link: "Coming up this week · 5 tasks  >" */
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;   /* touch target */
+  margin: var(--space-8) calc(var(--space-16) * -1) calc(var(--space-16) * -1);
+  padding: 0 var(--space-16);
+  border-top: 1px solid var(--color-line);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  background: var(--color-cream);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-decoration: none;
+}
+
+.panel-foot:hover {
+  color: var(--color-ink);
+}
+
+.panel-foot strong {
+  color: var(--color-ink);
+}
+
+@media (min-width: 768px) {
+  .panel {
+    padding: var(--space-24);
+  }
+
+  .panel-foot {
+    margin: var(--space-8) calc(var(--space-24) * -1) calc(var(--space-24) * -1);
+    padding: 0 var(--space-24);
+  }
+}
+
+/* ── Empty state ────────────────────────────────────── */
+/* Printed by partials/empty-state.php (S1, wireframe p24): picture, message, one clear next step */
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  padding: var(--space-32) var(--space-16);
+  overflow-wrap: anywhere;   /* a long word someone searched for breaks instead of pushing the page sideways */
+  text-align: center;
+}
+
+.empty-state-image {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-16);
+}
+
+.empty-state-title {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-h2);   /* the same size when it is the page's h1 (a "not found" page) */
+}
+
+.empty-state-text {
+  margin-bottom: var(--space-24);
+  color: var(--color-muted);
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-8);
+}
+
 /* ── Confidence meter ───────────────────────────────── */
 /* Printed by partials/confidence-meter.php. The class confidence-high / -medium / -low picks the bar colour. */
 
@@ -1221,6 +1813,162 @@ textarea.input {
   min-width: 4ch;   /* room for "100%", so bars in a list all end at the same place */
   text-align: right;
   font-size: var(--text-body-sm);
+}
+
+/* ── Tool switcher ──────────────────────────────── */
+/* Printed by partials/tool-switch.php: Identify · Health check (P07, P08), two links drawn like the segmented control.
+   Moved here from tools.css, so the style guide can show it. */
+
+.tool-switch {
+  display: flex;
+  padding: var(--space-4);
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+}
+
+.tool-switch-link {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: var(--space-4) var(--space-16);
+  border-radius: calc(var(--radius-input) - var(--space-4));
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.tool-switch-link:hover {
+  color: var(--color-ink);
+}
+
+.tool-switch-link.is-active {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Analysing (S2) ─────────────────────────────── */
+/* Printed by partials/analysing-state.php (wireframe p24) while the ML service works. Moved here from tools.css. */
+
+.analysing {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+  padding-top: var(--space-48);
+  padding-bottom: var(--space-48);
+  text-align: center;
+}
+
+.analysing-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+.analysing-text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* A ring with one gap, turning */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-sage);
+  border-top-color: var(--color-leaf);
+  border-radius: 50%;
+  animation: tool-spin 0.8s linear infinite;
+}
+
+@keyframes tool-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* A short bar sliding along its track: work is going on, without pretending to know how much is left */
+.analysing-bar {
+  position: relative;
+  width: min(240px, 100%);
+  height: 6px;
+  margin: var(--space-8) 0;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+}
+
+.analysing-bar span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf);
+  animation: tool-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes tool-slide {
+  from { left: -40%; }
+  to   { left: 100%; }
+}
+
+/* People who ask their system for less motion get still versions: the words already say what is happening */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .analysing-bar span {
+    animation: none;
+  }
+
+  .analysing-bar span {
+    left: 30%;
+  }
+}
+
+/* ── Not sure (S3) ───────────────────────────────── */
+/* Printed by partials/not-sure.php (wireframe p24): below 60% a result is never an answer. Moved here from tools.css. */
+
+.not-sure {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+}
+
+.not-sure .badge .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.not-sure-title {
+  margin: 0;
+  font-size: var(--text-h2);
+}
+
+.not-sure-meter {
+  width: 100%;
+}
+
+.not-sure-meter .meter-fill {
+  background: var(--color-meter-low);
+}
+
+.not-sure-text {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.not-sure-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-4);
 }
 
 /* ── Toast ──────────────────────────────────────────── */
