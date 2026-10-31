@@ -10,6 +10,7 @@
 | `api-contract.md` | `/predict/species` and `/predict/disease`: request, JSON response, errors, timeout | DES-10 | Week 1–2 |
 | `conventions.md` | PHP, CSS, JS and SQL naming, file layout, include pattern, error and flash handling | DES-11 | Week 1 |
 | `security-checklist.md` | Hashing, prepared statements, escaping, CSRF, sessions, uploads, access control | DES-12 | Week 1 |
+| `PlantFolio — Database Design Document.pdf` | 37 pages: 14-table ERD, relational schema, table structures, foreign keys, flowcharts, draft `schema.sql`, key queries. Seven later changes (towns, remember_tokens, custom_species …) are in `database/README.md` and still to go into the PDF | DES-06 – DES-08 | 🟡 Draft (31 Oct 2026)
 | `erd.png` | ER diagram (copy of `database/erd.png`) | DES-06 | Week 1–2 |
 | `credits.md` | Sources and licences of mock photos, icons and datasets | — | From week 1 |
 | `report/` | Technical report drafts, one file per section (DEP-09 – DEP-14) | DEP-09 – DEP-15 | Start drafting in week 4 |
