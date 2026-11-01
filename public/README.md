@@ -14,6 +14,8 @@ One PHP file per page (wireframes p25):
 | P07 | `identify.php` | P15 | `settings.php` |
 | P08 | `health-check.php` | dev | `styleguide.php` — component gallery, removed or protected before release |
 
+`about.php` is an extra public page that is not in the wireframes: About, Community guidelines and Contact, linked from the footer.
+
 - `api/` — small JSON endpoints for `fetch()` calls (e.g. `check-username.php` for CORE-08, later Mark done and likes)
 - `assets/css/` — `variables.css` (design tokens) · `components.css` (buttons, forms, badges, cards) · `layout.css` (grid, navigation, breakpoints)
 - `assets/js/` — `app.js` (tabs, modals, toasts, nav) · `forms.js` (validation, upload preview) · `filters.js` (chips, sort, query strings)

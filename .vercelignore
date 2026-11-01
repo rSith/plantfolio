@@ -1,0 +1,9 @@
+# Files the Vercel preview does not need (DEP: stage F UI preview).
+# Every PHP page function receives the whole upload, so keep it to the site itself.
+docs/
+ml-service/
+database/
+.github/
+*.md
+*.docx
+*.pdf

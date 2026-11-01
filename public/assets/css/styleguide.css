@@ -1,0 +1,35 @@
+/* Layout of the style guide page only (sg- = style guide). Dev only: removed together with styleguide.php. */
+/* Loaded through $page_css in includes/header.php, after the three shared stylesheets. */
+
+.sg-intro { margin-bottom: var(--space-32); color: var(--color-muted); }
+.sg-card { background: var(--color-white); border: 1px solid var(--color-line); border-radius: var(--radius-card);
+           padding: var(--space-24) var(--space-16); margin-bottom: var(--space-24); }
+.sg-card > .label { margin-bottom: var(--space-16); }
+.sg-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); margin-bottom: var(--space-16); }
+.sg-row:last-child { margin-bottom: 0; }
+.sg-row-spaced { margin-top: var(--space-16); }
+.sg-row > .confidence, .sg-row > .alert { flex: 1; }
+.sg-swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-12); }
+.sg-swatch { border: 1px solid var(--color-line); border-radius: var(--radius-input); overflow: hidden; }
+.sg-swatch-colour { height: 56px; border-bottom: 1px solid var(--color-line); }
+.sg-swatch-text { padding: var(--space-8) var(--space-12); }
+.sg-swatch-text strong { display: block; }
+.sg-code { font-family: Consolas, monospace; font-size: var(--text-label); color: var(--color-muted); white-space: nowrap; }
+.sg-type-row { display: grid; gap: var(--space-4); padding: var(--space-12) 0; border-top: 1px solid var(--color-line); }
+.sg-type-row:first-of-type { border-top: 0; padding-top: 0; }
+.sg-type-row > * { margin: 0; }
+.sg-status-row { display: grid; gap: var(--space-4); padding: var(--space-8) 0; border-top: 1px solid var(--color-line); }
+.sg-status-row > * { justify-self: start; }
+.sg-grid-2 { display: grid; gap: var(--space-24); }
+.sg-grid-2 > * { min-width: 0; }
+.sg-note { margin: var(--space-16) 0 0; }
+/* auto-fill fits as many columns as there is room for: 1 on a phone, 2 on a tablet, 3–4 on a desktop (p23) */
+.sg-cards { display: grid; gap: var(--space-16); grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.sg-cards-wide { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+@media (min-width: 768px) {
+  .sg-card { padding: var(--space-24); }
+  .sg-swatches { grid-template-columns: repeat(4, 1fr); }
+  .sg-grid-2 { grid-template-columns: 1fr 1fr; }
+  .sg-type-row { grid-template-columns: 210px 1fr; align-items: baseline; gap: var(--space-24); }
+  .sg-status-row { grid-template-columns: 210px 1fr auto; align-items: center; gap: var(--space-24); }
+}

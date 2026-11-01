@@ -24,3 +24,17 @@ include __DIR__ . '/../includes/header.php';
 <!-- page HTML -->
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 ```
+
+## Previewing in stage F
+
+The preview works like a real login, kept in the session: a new browser starts as a **visitor**. Press **Log in**
+(no checks yet) to become Nimali (`@nimali.grows`), **Create account** to become a brand-new member with no plants,
+and **Log out** (account menu) to be a visitor again. A logged-in member who opens the Landing page, Log in or
+Sign up is sent to the Dashboard, as on the real site. Shortcuts, added to any address:
+
+| Add | You see | Lasts |
+|---|---|---|
+| `?member` | Nimali, logged in | Until Log out or `?guest` |
+| `?guest` | The site as a visitor who is not logged in | Until Log in or `?member` |
+| `?empty` | Nimali as a brand-new member with no plants yet (state S1) | Until `?member` or Log in. Create account turns it on |
+In stage B the session holds the real login and these switches are deleted with `mock-data.php`.

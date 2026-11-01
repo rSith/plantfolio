@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: echeveria rosette. Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#E6ECDC"/>
+  <rect y="232" width="400" height="68" fill="#D9E2CC"/>
+  <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
+  <g fill="#8FB3A6">
+    <path d="M200 200Q140 196 118 176Q160 166 200 192Z"/>
+    <path d="M200 200Q260 196 282 176Q240 166 200 192Z"/>
+    <path d="M200 196Q150 170 146 140Q184 150 204 190Z"/>
+    <path d="M200 196Q250 170 254 140Q216 150 196 190Z"/>
+  </g>
+  <g fill="#A9C7BB">
+    <path d="M200 192Q164 170 168 136Q196 152 206 188Z"/>
+    <path d="M200 192Q236 170 232 136Q204 152 194 188Z"/>
+    <path d="M200 190Q184 154 200 120Q216 154 200 190Z"/>
+  </g>
+  <g fill="#C9DDD3">
+    <path d="M200 188Q182 166 188 146Q202 160 204 186Z"/>
+    <path d="M200 188Q218 166 212 146Q198 160 196 186Z"/>
+  </g>
+  <g fill="#D88C8C" opacity=".7">
+    <circle cx="118" cy="176" r="3"/><circle cx="282" cy="176" r="3"/>
+    <circle cx="146" cy="140" r="3"/><circle cx="254" cy="140" r="3"/><circle cx="200" cy="120" r="3"/>
+  </g>
+  <path d="M164 198h72l-8 54a6 6 0 0 1 -6 5h-44a6 6 0 0 1 -6 -5z" fill="#B5552F"/>
+  <rect x="158" y="190" width="84" height="14" rx="4" fill="#C4633C"/>
+</svg>

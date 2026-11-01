@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Placeholder illustration: a tomato leaf with early blight spots (Health Check, P08). Replace with a real photo when one is available. -->
+  <rect width="400" height="300" fill="#EEE8DB"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
+  <ellipse cx="200" cy="262" rx="120" ry="8" fill="#2B2B28" opacity=".08"/>
+  <g transform="rotate(-32 200 150)">
+    <path d="M44 150Q50 140 64 150" fill="none" stroke="#3C7C49" stroke-width="6" stroke-linecap="round"/>
+    <path d="M64 150C120 66 286 58 352 150C286 242 120 234 64 150Z" fill="#4A8A55"/>
+    <path d="M64 150C120 66 286 58 352 150" fill="none" stroke="#3C7C49" stroke-width="3" opacity=".5"/>
+    <path d="M64 150H346" fill="none" stroke="#2F6B3B" stroke-width="4" stroke-linecap="round"/>
+    <g fill="none" stroke="#2F6B3B" stroke-width="2.5" stroke-linecap="round" opacity=".7">
+      <path d="M110 150L136 110M110 150L136 190M160 150L190 102M160 150L190 198M212 150L242 104M212 150L242 196M264 150L290 114M264 150L290 186"/>
+    </g>
+    <g>
+      <circle cx="150" cy="128" r="20" fill="#C9B458" opacity=".55"/>
+      <circle cx="150" cy="128" r="13" fill="#8F5A2B"/>
+      <circle cx="150" cy="128" r="8" fill="none" stroke="#5C3A1E" stroke-width="2.5"/>
+      <circle cx="150" cy="128" r="3" fill="#3B2412"/>
+    </g>
+    <g>
+      <circle cx="214" cy="176" r="22" fill="#C9B458" opacity=".55"/>
+      <circle cx="214" cy="176" r="15" fill="#8F5A2B"/>
+      <circle cx="214" cy="176" r="10" fill="none" stroke="#5C3A1E" stroke-width="2.5"/>
+      <circle cx="214" cy="176" r="4" fill="#3B2412"/>
+    </g>
+    <g>
+      <circle cx="252" cy="122" r="17" fill="#C9B458" opacity=".55"/>
+      <circle cx="252" cy="122" r="11" fill="#8F5A2B"/>
+      <circle cx="252" cy="122" r="6" fill="none" stroke="#5C3A1E" stroke-width="2"/>
+      <circle cx="252" cy="122" r="2.5" fill="#3B2412"/>
+    </g>
+    <g>
+      <circle cx="120" cy="170" r="12" fill="#C9B458" opacity=".55"/>
+      <circle cx="120" cy="170" r="8" fill="#8F5A2B"/>
+      <circle cx="120" cy="170" r="2.5" fill="#3B2412"/>
+    </g>
+    <g>
+      <circle cx="296" cy="164" r="11" fill="#C9B458" opacity=".55"/>
+      <circle cx="296" cy="164" r="7" fill="#8F5A2B"/>
+      <circle cx="296" cy="164" r="2" fill="#3B2412"/>
+    </g>
+  </g>
+</svg>

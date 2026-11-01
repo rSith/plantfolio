@@ -1,0 +1,369 @@
+/* My Garden only (P04, wireframe p11, CORE-14 and CORE-15). Loaded by garden.php through $page_css. */
+/* Mobile-first: one card column on a phone, two on a tablet, four on a desktop (breakpoints on p23). */
+
+/* ── Header ─────────────────────────────────────────── */
+
+.garden-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.garden-title {
+  margin-bottom: var(--space-4);
+}
+
+.garden-summary {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.garden-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* ── Collection tabs ────────────────────────────────── */
+
+/* One line of chips. On a phone the line is wider than the screen, so it scrolls sideways on its own
+   instead of making the whole page scroll. The padding leaves room for the focus outline.
+   position: relative makes this row the box that the visually hidden "Private:" word inside a chip is placed in;
+   without it that word was placed against the page and stretched it 17 px sideways at 375 px. */
+.collection-tabs {
+  position: relative;
+  display: flex;
+  gap: var(--space-8);
+  margin: 0 calc(var(--space-16) * -1) var(--space-16);
+  padding: var(--space-4) var(--space-16);
+  overflow-x: auto;
+  scrollbar-width: none;   /* the chips cut off at the edge already show there is more */
+}
+
+.collection-tabs .chip {
+  flex-shrink: 0;
+}
+
+/* The lock keeps the chip's text colour, so it turns white on the selected chip like the words */
+.collection-tabs .chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+@media (min-width: 768px) {
+  .collection-tabs {
+    flex-wrap: wrap;
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+    overflow: visible;
+  }
+}
+
+/* ── Search, filter, sort ───────────────────────────── */
+
+/* Phone: the search box with Apply beside it, then each list on its own full-width line
+   ("Sort: Recently updated" does not fit in half a phone). Week 6 moves these into a bottom sheet (p23). */
+.garden-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-8);
+  margin-bottom: var(--space-24);
+}
+
+.garden-apply {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+/* The grid/list switch shares the last line with Sort */
+.view-toggle {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.toolbar-select {
+  grid-column: 1 / -1;
+}
+
+/* A list with its name in front, "Status: All", drawn as one box like on p11.
+   The words are inside the <label>, so a click on them opens the list too. */
+.toolbar-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.toolbar-select-label {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  pointer-events: none;
+}
+
+.toolbar-select .input {
+  padding-left: calc(var(--space-48) + var(--space-8));
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+/* "Sort:" is shorter than "Status:" */
+.toolbar-select:nth-of-type(2) .input {
+  padding-left: var(--space-48);
+}
+
+.toolbar-select:nth-of-type(2) {
+  grid-column: 1;
+}
+
+@media (min-width: 768px) {
+  .garden-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* The search box takes whatever room the lists and Apply leave, so all four fit on one line */
+  .garden-search {
+    flex: 1 1 160px;
+  }
+
+  .toolbar-select .input {
+    width: auto;
+  }
+
+  /* margin-left: auto pushes the switch to the right end of the row, as on p11 */
+  .view-toggle {
+    margin-left: auto;
+  }
+}
+
+/* A desktop has more room than the search needs; a 320px box matches p11 */
+@media (min-width: 1024px) {
+  .garden-search {
+    max-width: 320px;
+  }
+}
+
+/* "2 plants match · Clear filters" */
+.garden-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-16);
+  margin: calc(var(--space-8) * -1) 0 var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.garden-results a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  font-weight: var(--weight-medium);
+}
+
+/* ── Plant grid ─────────────────────────────────────── */
+
+.plant-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .plant-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .plant-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gutter);
+  }
+}
+
+/* ── Grid / list switch ─────────────────────────────── */
+/* Two icon links in one box; the current view is tinted sage */
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-white);
+}
+
+.view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: calc(var(--radius-input) - 3px);
+  color: var(--color-muted);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.view-toggle-btn:hover {
+  color: var(--color-forest);
+}
+
+.view-toggle-btn.is-active {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+/* ── List view ──────────────────────────────────────── */
+/* Phone first: each row becomes a two-line block, because five columns do not fit in 375px.
+   Photo on the left, menu on the right, and name, status and next care as three lines between them.
+   The Collection column is left out on a phone; the tabs above already say which collection is shown. */
+
+.garden-table {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.garden-table thead,
+.garden-table .cell-collection {
+  display: none;
+}
+
+.garden-table tbody {
+  display: block;
+}
+
+/* grid-template-areas draws the layout with names: each cell is then placed by its area name */
+.garden-table tr {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  grid-template-areas:
+    "photo name   menu"
+    "photo status menu"
+    "photo care   menu";
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.garden-table tbody tr:first-child {
+  border-top: 0;
+}
+
+.garden-table td {
+  display: block;
+  min-width: 0;
+}
+
+.cell-photo { grid-area: photo; }
+.cell-name { grid-area: name; }
+.cell-status { grid-area: status; justify-self: start; }
+.cell-care { grid-area: care; font-size: var(--text-small); }
+.cell-menu { grid-area: menu; }
+
+/* max-width: none stops the photo shrinking with its narrow column ("img { max-width: 100% }" in components.css) */
+.cell-photo .thumb {
+  display: block;
+  max-width: none;
+}
+
+.cell-name {
+  line-height: 1.35;
+}
+
+/* Name and species on two lines. A rule on the <td> itself would lose to ".garden-table td" below. */
+.garden-table-name,
+.cell-name .scientific-name {
+  display: block;
+}
+
+.garden-table-name {
+  color: var(--color-forest);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.garden-table-name:hover {
+  text-decoration: underline;
+}
+
+.cell-name .scientific-name {
+  font-size: var(--text-small);
+}
+
+/* Tablet and up: a real table again, with its header row and all five columns */
+@media (min-width: 768px) {
+  .garden-table {
+    display: table;
+    border-collapse: separate;   /* "collapse" would ignore the rounded corners */
+    border-spacing: 0;
+  }
+
+  .garden-table thead {
+    display: table-header-group;
+  }
+
+  .garden-table tbody {
+    display: table-row-group;
+  }
+
+  .garden-table tr {
+    display: table-row;
+  }
+
+  .garden-table th,
+  .garden-table td {
+    display: table-cell;
+    padding: var(--space-12) var(--space-16);
+    vertical-align: middle;
+    text-align: left;
+  }
+
+  .garden-table td {
+    border-top: 1px solid var(--color-line);
+  }
+
+  .garden-table th {
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-muted);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .garden-table tbody tr:first-child td {
+    border-top: 0;
+  }
+
+  /* Needs .garden-table in front: the phone rule that hides it is that specific too */
+  .garden-table .cell-collection {
+    display: table-cell;
+    color: var(--color-muted);
+    font-size: var(--text-body-sm);
+  }
+
+  /* width: 1% shrinks the photo and menu columns to their content; the others share the rest */
+  .garden-table .cell-photo,
+  .garden-table .cell-menu {
+    width: 1%;
+  }
+
+  .garden-table .cell-photo {
+    padding-right: 0;
+  }
+}

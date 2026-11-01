@@ -1,0 +1,383 @@
+/* Explore and Search only (P09, wireframe p16, COM-01 to COM-03). Loaded by explore.php through $page_css. */
+/* Mobile-first: one card column on a phone, two on a tablet, three beside the filters on a desktop (p23). */
+
+/* ── Top band: title, search, tabs ──────────────────── */
+
+/* White, so the search reads as the start of the page; the results sit on the cream background below it */
+.explore-top {
+  padding-top: var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-white);
+}
+
+.explore-title {
+  margin-bottom: var(--space-16);
+}
+
+/* The box takes all the room the Search button leaves */
+.explore-search {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.explore-search-box {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The two tabs drawn like the segmented control of the design system (p16, element 2).
+   Each tab is 44px tall, the smallest touch target the project allows (the shared control is still 40px). */
+.explore-tabs {
+  display: inline-flex;
+  gap: var(--space-4);
+  margin: var(--space-16) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+}
+
+.explore-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  padding: var(--space-4) var(--space-16);
+  border-radius: calc(var(--radius-input) - var(--space-4));
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.explore-tab:hover {
+  color: var(--color-ink);
+}
+
+.explore-tab[aria-current="page"] {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .explore-top {
+    padding-top: var(--space-32);
+  }
+}
+
+/* ── Filters (p16, element 3) ───────────────────────── */
+/* Phone and tablet: a "Filters" button; pressing it opens the form below it as a white panel.
+   Desktop: a column on the left, always open, with no button (see the 1024px rule at the end). */
+
+.filter-panel {
+  margin-bottom: var(--space-16);
+}
+
+/* The <summary> is drawn as a button: remove the triangle browsers put in front of it */
+.filter-panel > summary {
+  list-style: none;
+}
+
+.filter-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-toggle .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* How many filters are on, in a small leaf-green circle */
+.filter-toggle-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf);
+  color: var(--color-white);
+  font-size: var(--text-label);
+}
+
+.filter-form {
+  margin-top: var(--space-12);
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+/* 44px tall, the height of its "Clear all" link, with or without the link: on a desktop "Filters" then always
+   sits on the same line as the first heading of the results column, as on p16 */
+.filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  min-height: 44px;
+  margin-bottom: var(--space-8);
+}
+
+.filter-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* A <fieldset> comes with a border, padding and a minimum width; none of them suit a sidebar */
+.filter-group {
+  min-width: 0;
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  border: 0;
+}
+
+.filter-group > .label,
+.filter-group > legend {
+  display: block;
+  margin-bottom: var(--space-8);
+  padding: 0;
+}
+
+/* One species per line: the box, the name, and its count pushed to the right */
+.filter-check {
+  display: flex;
+  width: 100%;
+  font-size: var(--text-body-sm);
+}
+
+.filter-check-name {
+  flex: 1;
+}
+
+.filter-check-count {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* "+ 3 more" opens the rest of the species list in place */
+.filter-more > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-leaf);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  list-style: none;
+  cursor: pointer;
+}
+
+.filter-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-more[open] > summary {
+  display: none;   /* once open, the list itself is the answer; nothing to close */
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* Health chips are radio buttons. The radio stays in the page for the keyboard and screen readers, only the
+   chip after it is seen; "+" picks the chip that comes straight after a checked or focused radio. */
+.chip-choice {
+  position: relative;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-choice input:checked + .chip {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip-choice input:focus-visible + .chip {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.filter-apply {
+  width: 100%;
+}
+
+/* The results bar (count, active filter chips, Clear all, sort) is in components.css: the Exchange page uses it too */
+
+/* ── Plant grid ─────────────────────────────────────── */
+
+.explore-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .explore-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .explore-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Desktop: filters beside the results ────────────── */
+/* minmax(0, 1fr) lets the results column shrink below its content's width instead of pushing the page wider */
+
+@media (min-width: 1024px) {
+  .explore-body.has-filters {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-32);
+  }
+
+  /* A closed <details> hides everything except its <summary>. ::details-content is the box holding the rest,
+     so making it visible keeps the filters open without the button, and without JavaScript.
+     @supports checks the browser knows it first: an older browser keeps the Filters button instead. */
+  @supports selector(::details-content) {
+    .filter-panel > summary {
+      display: none;
+    }
+
+    .filter-panel::details-content {
+      content-visibility: visible;
+    }
+
+    .filter-panel {
+      margin-bottom: 0;
+    }
+
+    /* On the desktop the sidebar sits straight on the page, as on p16: no white panel around it */
+    .filter-form {
+      margin-top: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .filter-check {
+      min-height: 32px;
+    }
+  }
+}
+
+/* ── Section headings inside the results ────────────── */
+/* "Plant lovers matching …" and "Popular plants": Poppins like the result count, as on p16 */
+
+.explore-section-title {
+  margin: 0;
+  overflow-wrap: anywhere;   /* the search word is printed here, and it can be one very long word */
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Plant lovers matching the search (p16, element 6) ─ */
+
+.people-row {
+  margin-bottom: var(--space-16);
+}
+
+/* 44px tall even when there is no "See all" link, so the heading lines up with "Filters" (see .filter-head) */
+.people-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-12);
+  min-height: 44px;
+}
+
+/* The whole line is the touch target, not just the words */
+.people-row-head .panel-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* Phone: one strip that scrolls sideways, each card snapping into place. Only the strip scrolls, never the page.
+   The negative margins let it run to the edges of the screen. Every card is 240px wide, narrower than the
+   smallest phone (320px), so part of the next card always peeks in and invites a swipe. */
+.people-row-list {
+  display: grid;
+  grid-auto-columns: 240px;
+  grid-auto-flow: column;
+  gap: var(--space-12);
+  margin: 0 calc(var(--space-16) * -1);
+  padding: var(--space-4) var(--space-16) var(--space-8);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding: 0 var(--space-16);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;   /* phones draw no scroll bar anyway; a mouse gets a slim one */
+}
+
+.people-row-list > * {
+  scroll-snap-align: start;
+}
+
+/* Tablet and desktop: all three fit side by side, so the strip becomes a plain row */
+@media (min-width: 768px) {
+  .people-row-list {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--space-4) 0 0;
+    overflow: visible;
+  }
+}
+
+/* ── People tab ─────────────────────────────────────── */
+
+/* Why these people: on its own line under the count */
+.results-note {
+  flex-basis: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.people-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .people-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .people-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── No results: popular plants instead of a blank page ─ */
+
+.popular-plants {
+  margin-top: var(--space-32);
+}
+
+.popular-text {
+  margin: var(--space-4) 0 var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}

@@ -1,0 +1,109 @@
+/* Design tokens — every colour, font, size and spacing value from wireframe p6 (CORE-04). */
+/* Other CSS files use these names with var(...); they never repeat a hex code or pixel size. */
+
+:root {
+  /* Brand palette */
+  --color-forest: #2E4A2B;      /* headings, logo, selected states */
+  --color-leaf: #4A7043;        /* primary buttons, links, bars (5.7:1 with white) */
+  --color-sage: #E4ECDC;        /* tags, tints, highlighted areas */
+  --color-cream: #F7F4EC;       /* page background */
+  --color-terracotta: #B5552F;  /* accent, "due today" */
+  --color-ink: #2B2B28;         /* body text */
+  --color-muted: #6E6C62;       /* secondary text */
+  --color-line: #E6E0D2;        /* borders and dividers */
+  --color-white: #FFFFFF;       /* card backgrounds */
+
+  /* Health status — named after the database values; always shown with the word, never colour alone */
+  --status-thriving-text: #2F6E3C;
+  --status-thriving-bg: #E3F1E4;
+  --status-stable-text: #3F5F84;
+  --status-stable-bg: #E4ECF5;
+  --status-needs-attention-text: #8A5A0B;
+  --status-needs-attention-bg: #FBEFD5;
+  --status-sick-text: #9A3524;
+  --status-sick-bg: #F7E0DA;
+
+  /* Red is only for overdue care and destructive actions; p6 has no separate red, so it reuses Sick */
+  --color-danger: var(--status-sick-text);
+  --color-danger-bg: var(--status-sick-bg);
+
+  /* Not listed on p6: chosen by eye from wireframe p7 and kept as the project's values */
+  --color-leaf-dark: #3D5E37;         /* hover and pressed: primary button, links */
+  --color-terracotta-dark: #8F3F1F;   /* hover: accent button; text on the terracotta tint (5.8:1) */
+  --color-terracotta-tint: #F6E1D6;   /* "Due today" background */
+  --color-neutral-bg: #ECE8DD;        /* "Neutral" tag background */
+  --color-neutral-text: #5A584F;      /* Muted is only 4.3:1 on the neutral background, this is 5.8:1 */
+  --color-disabled-bg: #E6E0D2;
+  --color-disabled-text: #9A968A;
+  --color-line-strong: #CFC8B6;       /* input borders, switched-off toggle */
+  --color-amber: #D9A02B;             /* Medium confidence bar, rating stars (never used for text) */
+  --color-meter-low: #B8B2A4;         /* "Not sure" confidence bar */
+  --avatar-tint-1: #DCE8D2;           /* backgrounds behind a member's initials */
+  --avatar-tint-2: #DCE5F0;
+  --avatar-tint-3: #F5DACB;
+  --avatar-tint-4: #F1E4C3;
+
+  /* Interaction */
+  --focus-outline: 2px solid var(--color-leaf);            /* keyboard focus, shown by :focus-visible */
+  --focus-ring: 0 0 0 3px var(--color-sage);               /* soft ring around a focused input */
+  --focus-ring-danger: 0 0 0 3px var(--color-danger-bg);   /* the same ring on an input with an error */
+  --transition-fast: 150ms ease;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(43, 43, 40, 0.14);      /* toggle knob, selected segment, badges on photos */
+  --shadow-card: 0 8px 20px rgba(46, 74, 43, 0.12);   /* a card being hovered */
+  --shadow-toast: 0 8px 24px rgba(43, 43, 40, 0.24);
+
+  /* Fonts — the names after the first are fallbacks if Google Fonts fails to load */
+  --font-display: 'Lora', Georgia, serif;             /* names, headings, scientific names */
+  --font-body: 'Poppins', system-ui, sans-serif;      /* buttons, labels, forms, numbers */
+
+  /* Type scale — rem so text grows with the user's browser font size (1rem = 16px) */
+  --text-display: 2.875rem;   /* 46px */
+  --text-h1: 2rem;            /* 32px */
+  --text-h2: 1.5rem;          /* 24px */
+  --text-h3: 1.125rem;        /* 18px */
+  --text-base: 1rem;          /* 16px: form inputs on phones (smaller text makes iOS Safari zoom in) */
+  --text-body: 0.9375rem;     /* 15px */
+  --text-body-sm: 0.875rem;   /* 14px */
+  --text-small: 0.8125rem;    /* 13px */
+  --text-label: 0.75rem;      /* 12px, used in capitals */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  --leading-display: 1.1;
+  --leading-body: 1.6;
+
+  /* Spacing — 8-point scale, named by pixel value */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  /* Corners */
+  --radius-input: 10px;
+  --radius-card: 14px;
+  --radius-pill: 999px;   /* fully round badges and tags */
+
+  /* Layout */
+  --content-width: 1040px;
+  --gutter: 24px;
+  --header-height: 56px;       /* top bar on a phone; grows at the tablet breakpoint below */
+  --bottom-bar-height: 64px;   /* phone navigation, fixed to the bottom of the screen */
+
+  /* Breakpoints (mobile-first). CSS cannot use var() inside @media, so type these numbers directly:
+     tablet  @media (min-width: 768px)
+     desktop @media (min-width: 1024px) */
+}
+
+/* A token can change at a breakpoint: everything that reads it follows without its own media query */
+@media (min-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+}
