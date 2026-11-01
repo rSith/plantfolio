@@ -107,8 +107,7 @@ $values = [
     'species'         => '',
     'size'            => '',
     'plant_condition' => '',
-    'location'        => $current_user['location'],            // the member's town, the usual pick-up place
-    'approx_area'     => $current_user['show_listing_area'],   // the default chosen in Settings (p22)
+    'location'        => $current_user['location'],   // the member's town, the usual pick-up place
     'share_email'     => 1,
     'share_phone'     => 0,   // my choice: the phone number is shared only when the member ticks it
 ];
@@ -124,7 +123,6 @@ if ($is_edit) {
         'size'            => $listing['size'] ?? '',
         'plant_condition' => $listing['plant_condition'] ?? '',
         'location'        => $listing['location'],
-        'approx_area'     => $listing['approx_area'],
         'share_email'     => $listing['share_email'],
         'share_phone'     => $listing['share_phone'],
     ];
@@ -154,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'size'            => trim(post_text('size')),
         'plant_condition' => trim(post_text('plant_condition')),
         'location'        => trim(post_text('location')),
-        'approx_area'     => post_text('approx_area') === '1' ? 1 : 0,
         'share_email'     => post_text('share_email') === '1' ? 1 : 0,
         'share_phone'     => $has_phone && post_text('share_phone') === '1' ? 1 : 0,
     ];
@@ -421,15 +418,13 @@ include __DIR__ . '/../includes/header.php';
               <div class="input-icon">
                 <?= icon('map-pin') ?>
                 <input class="input" type="text" id="location" name="location" value="<?= e($values['location']) ?>"
-                       autocomplete="address-level2" maxlength="100" required<?= $describe('location') ?>>
+                       autocomplete="address-level2" maxlength="100" required<?= $describe('location', 'location-hint') ?>>
               </div>
               <?php if (isset($errors['location'])): ?>
                 <span class="field-error" id="location-error"><?= e($errors['location']) ?></span>
               <?php endif; ?>
-              <label class="check">
-                <input type="checkbox" name="approx_area" value="1"<?= $values['approx_area'] ? ' checked' : '' ?>>
-                <span>Show approximate area only</span>
-              </label>
+              <?php // The site never stores an address (DES-07), so this is a promise, not a choice ?>
+              <span class="field-hint" id="location-hint">Only your town is shown, never an address.</span>
             </div>
 
             <?php // Contact sharing (p19, element 5): exactly which details an interested member will see ?>

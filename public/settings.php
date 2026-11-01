@@ -225,10 +225,6 @@ include __DIR__ . '/../includes/header.php';
               <span>New plants are public <span class="field-hint">Shown in Explore. You can still make one plant private.</span></span>
               <input type="checkbox" name="new_plants_public" value="1"<?= $current_user['new_plants_public'] ? ' checked' : '' ?>>
             </label>
-            <label class="toggle settings-toggle">
-              <span>Show approximate area on listings <span class="field-hint">Your town only, never your address.</span></span>
-              <input type="checkbox" name="show_listing_area" value="1"<?= $current_user['show_listing_area'] ? ' checked' : '' ?>>
-            </label>
             <button class="btn btn-secondary btn-sm settings-save" type="submit">Save privacy</button>
           </form>
         </section>

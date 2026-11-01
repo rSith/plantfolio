@@ -26,10 +26,9 @@ $current_user = [
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
     'created_at' => '2025-03-14 09:00:00',   // "Member since Mar 2025"
 
-    // Preferences from Settings (wireframe p22, cards 4 and 5). Not in the table plan yet: proposed users
-    // columns for DES-07, each a TINYINT 0/1. Names are my proposal.
+    // Preferences from Settings (wireframe p22, cards 4 and 5): users columns accepted in DES-07, each a TINYINT 0/1.
+    // No listing-area setting: a listing always shows the town only (DES-07 removed show_listing_area).
     'new_plants_public'   => 1,   // Privacy: new plants start Public on the Add Plant form
-    'show_listing_area'   => 1,   // Privacy: listings show the approximate area
     'dashboard_reminders' => 1,   // Reminders: care tasks appear on the Dashboard
 
     // Not columns of `users`: stage B calculates these with COUNT() and AVG() on other tables.
@@ -214,10 +213,9 @@ $mock_reminders = [
 // ages and interest counts. Echeveria (11) is p17's last card; its owner, the Monstera row (12, the 'either' example),
 // the philodendron row (13, the one far away) and every looking_for that p17 cuts off are invented.
 // The last two lines of each row hold the columns only the Listing Detail page (P11) prints:
-//   description, share_email, share_phone, approx_area — from the table plan. share_email and share_phone (TINYINT 0/1)
+//   description, share_email, share_phone — from the table plan. share_email and share_phone (TINYINT 0/1)
 //                    are the owner's choices on the listing form (P12): which contact details an interested member may see.
-//                    approx_area (TINYINT 0/1) is P12's "Show approximate area only" box: the listing names the town, never
-//                    an address. Every row has it ticked, the default from the owner's Settings (show_listing_area).
+//                    There is no area choice: a listing names the town, never an address (DES-07 removed approx_area).
 //   size, plant_condition — proposed exchange_listings columns for DES-07 (short optional text, p18's details list).
 //                    Not "condition": that word is reserved in MySQL.
 // Listing 7's are from p18; the others are invented.
@@ -232,7 +230,7 @@ $mock_listings = [
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 4, 'distance_km' => 3,
      'description' => 'Three healthy cuttings from my pothos Goldie, rooted in water for three weeks. Each has four to six leaves and roots about 5 cm long. Ready to pot.',
-     'size' => '3 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '3 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 
     ['id' => 8, 'user_id' => 5, 'plant_id' => 61, 'title' => 'Aloe vera pups (4)',
      'type' => 'free', 'looking_for' => 'nothing, free to a good home', 'location' => 'Kurunegala',
@@ -241,7 +239,7 @@ $mock_listings = [
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
      'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 2, 'distance_km' => 5,
      'description' => 'Four pups from my mother aloe, each with its own small roots. Aloe is very easy on a sunny windowsill, so these are perfect for a beginner. Bring a small pot or a bag.',
-     'size' => '4 pups, 8 to 12 cm tall', 'plant_condition' => 'Healthy, rooted, ready to pot', 'share_email' => 1, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '4 pups, 8 to 12 cm tall', 'plant_condition' => 'Healthy, rooted, ready to pot', 'share_email' => 1, 'share_phone' => 1],
 
     // Swap or free: the owner takes a plant in return, or gives it to a beginner for nothing. It appears under both
     // the Swap and the Free filter. Nobody is interested yet, so its card has no "interested" count.
@@ -252,7 +250,7 @@ $mock_listings = [
      'username' => 'ruwan.roots', 'full_name' => 'Ruwan Rathnayake', 'avatar' => null,
      'rating_avg' => 4.6, 'rating_count' => 9, 'interest_count' => 0, 'distance_km' => 5,
      'description' => 'A top cutting from Leafy with one leaf, a node and a short aerial root. It roots easily in water or damp moss. Happy to swap for a pothos or a philodendron, or to give it to someone starting out.',
-     'size' => '1 cutting with one leaf, about 25 cm', 'plant_condition' => 'Healthy, not rooted yet', 'share_email' => 0, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '1 cutting with one leaf, about 25 cm', 'plant_condition' => 'Healthy, not rooted yet', 'share_email' => 0, 'share_phone' => 1],
 
     ['id' => 9, 'user_id' => 4, 'plant_id' => 59, 'title' => "Snake plant 'Laurentii'",
      'type' => 'swap', 'looking_for' => 'any fern', 'location' => 'Kuliyapitiya',
@@ -261,7 +259,7 @@ $mock_listings = [
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 1, 'distance_km' => 18,
      'description' => 'A Laurentii pup with yellow edges, separated from Spike with its own roots and potted in a 10 cm pot. Snake plants forgive almost everything, even a missed watering.',
-     'size' => '1 pup in a 10 cm pot, about 20 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0, 'approx_area' => 1],
+     'size' => '1 pup in a 10 cm pot, about 20 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0],
 
     // Kandy is 42 km from Kurunegala, beyond the 25 km a member sees first: it proves the distance filter hides far
     // listings, and appears with "50 km" or "Any distance". Visitors see it, as they see every listing.
@@ -272,7 +270,7 @@ $mock_listings = [
      'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
      'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 1, 'distance_km' => 42,
      'description' => 'Four cuttings from my philodendron Hugo, two leaves each, rooting in a jar of water. The first roots are already showing. I can meet in Kandy town.',
-     'size' => '4 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, roots starting in water', 'share_email' => 1, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '4 cuttings, 15 to 20 cm', 'plant_condition' => 'Healthy, roots starting in water', 'share_email' => 1, 'share_phone' => 1],
 
     // p17: "Wariyapola · 14 km · 1 week ago", 3 interested. Kavindi (Kandy) keeps it: her bio promises seedlings to give away.
     ['id' => 10, 'user_id' => 3, 'plant_id' => null, 'title' => 'Tomato seedlings (6)',
@@ -282,7 +280,7 @@ $mock_listings = [
      'username' => 'kandy.jungle', 'full_name' => 'Kavindi Jayawardena', 'avatar' => null,
      'rating_avg' => 5.0, 'rating_count' => 11, 'interest_count' => 3, 'distance_km' => 14,
      'description' => 'Six tomato seedlings grown from saved seed, about three weeks old, each in a small paper pot that can go straight into the ground. Pick-up in Wariyapola, where I spend the weekends.',
-     'size' => '6 seedlings, about 10 cm tall', 'plant_condition' => 'Healthy, in paper pots', 'share_email' => 1, 'share_phone' => 0, 'approx_area' => 1],
+     'size' => '6 seedlings, about 10 cm tall', 'plant_condition' => 'Healthy, in paper pots', 'share_email' => 1, 'share_phone' => 0],
 
     // Nimali's second open listing, from wireframe p17 ("Peace lily division · Kurunegala · 1 km · 1 week ago"),
     // so her profile's "See listings (2)" matches p21. It offers her Lily (plant 48). looking_for is invented
@@ -294,7 +292,7 @@ $mock_listings = [
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 1, 'distance_km' => 1,
      'description' => 'A division from my peace lily Lily, with its own roots and five leaves. Potted in fresh soil last week, and a new leaf is already coming.',
-     'size' => '1 division, about 30 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0, 'approx_area' => 1],
+     'size' => '1 division, about 30 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 0],
 
     // p17: "Echeveria cuttings (5) · Pannala · 22 km", 2 interested. Cuttings, so no plant row: the proposed species_id.
     ['id' => 11, 'user_id' => 4, 'plant_id' => null, 'title' => 'Echeveria cuttings (5)',
@@ -304,7 +302,7 @@ $mock_listings = [
      'username' => 'dinesh.greens', 'full_name' => 'Dinesh Gunasekara', 'avatar' => null,
      'rating_avg' => 4.7, 'rating_count' => 15, 'interest_count' => 2, 'distance_km' => 22,
      'description' => 'Five rosette cuttings from my echeveria, dried for a week and now growing tiny roots. Keep them dry and in bright light until they settle.',
-     'size' => '5 rosettes, 3 to 5 cm across', 'plant_condition' => 'Healthy, roots starting', 'share_email' => 1, 'share_phone' => 0, 'approx_area' => 1],
+     'size' => '5 rosettes, 3 to 5 cm across', 'plant_condition' => 'Healthy, roots starting', 'share_email' => 1, 'share_phone' => 0],
 
     // A finished give-away that is not rated yet, so My exchanges (P13) has an exchange waiting for Nimali's rating
     // (p20, element 6). Sergeant's two pups (its story: "Two new pups at the base") went to Amaya two days ago. A give-away
@@ -318,7 +316,7 @@ $mock_listings = [
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 2, 'distance_km' => 1,
      'description' => 'Two pups from my snake plant Sergeant, each with its own roots, in small pots. Free to anyone starting out with plants.',
-     'size' => '2 pups, about 15 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '2 pups, about 15 cm tall', 'plant_condition' => 'Healthy, potted in soil', 'share_email' => 1, 'share_phone' => 1],
 
     // A finished swap, so the marketplace can prove that closed listings stay hidden (p17, UX notes). It is listing 5 of
     // the reviews below: Nimali swapped these cuttings with Dinesh (exchanged_with 4), and they rated each other on 14 Sep.
@@ -330,7 +328,7 @@ $mock_listings = [
      'username' => 'nimali.grows', 'full_name' => 'Nimali Perera', 'avatar' => null,
      'rating_avg' => 4.9, 'rating_count' => 23, 'interest_count' => 3, 'distance_km' => 2,
      'description' => 'Three Marble Queen cuttings with cream and green leaves, rooted in water for a month.',
-     'size' => '3 cuttings, about 15 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1, 'approx_area' => 1],
+     'size' => '3 cuttings, about 15 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 ];
 
 // A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
