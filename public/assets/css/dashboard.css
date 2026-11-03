@@ -365,6 +365,32 @@
   outline-offset: 2px;
 }
 
+/* The last card: a dashed "+ Add plant" link, like the other dashed Add tiles */
+.plant-pick-add {
+  align-content: center;
+  border-style: dashed;
+  border-color: var(--color-line-strong);
+  color: var(--color-forest);
+  text-decoration: none;
+}
+
+.plant-pick-add:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.plant-pick-add-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  color: var(--color-leaf);
+}
+
 .plant-pick-photo {
   width: 56px;
   height: 56px;

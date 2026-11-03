@@ -404,6 +404,11 @@ include __DIR__ . '/../includes/header.php';
                   <span class="plant-pick-meta"><?= e($plant['collection_name']) ?></span>
                 </label>
               <?php endforeach; ?>
+              <?php // The plant is not in the garden yet: add it first (P06), then come back for its reminder ?>
+              <a class="plant-pick plant-pick-add" href="<?= e(url('plant-form.php')) ?>">
+                <span class="plant-pick-add-icon"><?= icon('plus') ?></span>
+                <span class="plant-pick-name">Add plant</span>
+              </a>
             </div>
             <?php if (isset($reminder_errors['plant'])): ?>
               <p class="field-error" id="reminder-plant-error"><?= e($reminder_errors['plant']) ?></p>
