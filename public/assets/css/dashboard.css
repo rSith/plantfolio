@@ -141,6 +141,75 @@
   border-radius: 50%;
 }
 
+/* One line per collection: name, how many plants, and up to three small photos with "+4" for the rest */
+.glance-collections {
+  margin: var(--space-16) 0 0;
+  padding: var(--space-8) 0 0;
+  border-top: 1px solid var(--color-line);
+  list-style: none;
+}
+
+.glance-collection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;   /* touch target */
+  padding: var(--space-4) 0;
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  text-decoration: none;
+}
+
+.glance-collection:hover {
+  color: var(--color-forest);
+}
+
+.glance-collection:hover .glance-collection-name {
+  text-decoration: underline;
+}
+
+.glance-collection-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.glance-collection-name .icon {
+  color: var(--color-muted);
+}
+
+/* The photos overlap a little, like the avatar stack on the Landing page */
+.glance-photos {
+  display: flex;
+  align-items: center;
+}
+
+.glance-photos img,
+.glance-more {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+  background: var(--color-sage);
+  object-fit: cover;
+}
+
+.glance-photos > * + * {
+  margin-left: -8px;
+}
+
+.glance-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-cream);
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+}
+
 /* The status colours: the strong text colour of each health badge. Needs attention uses the amber of
    the rating stars, because its brown text colour is too close to Sick's red in a thin bar. */
 .health-bar-thriving { background: var(--status-thriving-text); }

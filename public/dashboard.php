@@ -321,6 +321,29 @@ include __DIR__ . '/../includes/header.php';
               <li><span class="health-dot health-bar-<?= e(str_replace('_', '-', $status)) ?>"></span> <?= e(health_label($status)) ?> <strong><?= e($count) ?></strong></li>
             <?php endforeach; ?>
           </ul>
+
+          <?php // Where the plants are: one line per collection with its count and a few photos; each opens it in My Garden.
+                // Stage B: the collections query My Garden already uses (plant_count and three cover photos per row). ?>
+          <ul class="glance-collections">
+            <?php foreach ($mock_collections as $collection): ?>
+              <?php $more = $collection['plant_count'] - count($collection['cover_photos']); ?>
+              <li>
+                <a class="glance-collection" href="<?= e(url('garden.php?collection=' . $collection['id'])) ?>">
+                  <span class="glance-collection-name">
+                    <?= e($collection['name']) ?>
+                    <?php if (!$collection['is_public']): ?><?= icon('lock') ?><span class="visually-hidden">(private)</span><?php endif; ?>
+                  </span>
+                  <strong class="glance-collection-count"><?= e($collection['plant_count']) ?></strong>
+                  <span class="glance-photos" aria-hidden="true">
+                    <?php foreach ($collection['cover_photos'] as $photo): ?>
+                      <img src="<?= e(photo_url($photo)) ?>" alt="" loading="lazy">
+                    <?php endforeach; ?>
+                    <?php if ($more > 0): ?><span class="glance-more">+<?= e($more) ?></span><?php endif; ?>
+                  </span>
+                </a>
+              </li>
+            <?php endforeach; ?>
+          </ul>
         </section>
       <?php endif; ?>
     </div>
