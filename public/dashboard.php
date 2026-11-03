@@ -114,11 +114,7 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?>
             <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
           <?php endif; ?>
-
-          <a class="panel-foot" href="<?= e(url('garden.php')) ?>">
-            <span>Coming up this week · <strong><?= e($mock_garden_stats['upcoming_count']) ?> <?= $mock_garden_stats['upcoming_count'] === 1 ? 'task' : 'tasks' ?></strong></span>
-            <?= icon('chevron-right') ?>
-          </a>
+          <?php // No "Coming up this week" row: All reminders (top right) already shows the days ahead ?>
         </section>
       <?php endif; ?>
     </div>

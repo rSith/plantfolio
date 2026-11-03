@@ -499,10 +499,8 @@ $mock_quote_member = [
 
 // Numbers for Nimali's whole garden, which the Dashboard cannot count from the short lists above.
 // Stage B: SELECT health_status, COUNT(*) FROM plants WHERE user_id = ? GROUP BY health_status
-//          SELECT COUNT(*) FROM care_reminders … WHERE next_due BETWEEN tomorrow AND 7 days from today
 $mock_garden_stats = [
-    'health_counts'  => ['thriving' => 13, 'stable' => 3, 'needs_attention' => 1, 'sick' => 1],   // adds up to 18 plants
-    'upcoming_count' => 5,   // "Coming up this week · 5 tasks"
+    'health_counts' => ['thriving' => 13, 'stable' => 3, 'needs_attention' => 1, 'sick' => 1],   // adds up to 18 plants
 ];
 
 
@@ -1163,8 +1161,7 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_received_interests = [];
     $mock_new_interests = [];
     $mock_garden_stats  = [
-        'health_counts'  => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
-        'upcoming_count' => 0,
+        'health_counts' => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
     ];
 
     // A new account has no listings yet, and nothing to count on its public profile
