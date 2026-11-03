@@ -77,10 +77,13 @@ $page_css   = 'dashboard.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
-  <?php // Just the greeting and the date: the counts are in the sections below, so they are not repeated here ?>
+  <?php // Greeting banner: just the greeting and the date (the counts are in the sections below), with leaves on the right ?>
   <div class="dash-head">
-    <h1 class="dash-title"><?= e($greeting) ?>, <?= e($first_name) ?></h1>
-    <p class="dash-date"><?= e(date('l, j F')) ?></p>
+    <div class="dash-head-text">
+      <h1 class="dash-title"><?= e($greeting) ?>, <?= e($first_name) ?></h1>
+      <p class="dash-date"><?= icon('calendar') ?> <?= e(date('l, j F')) ?></p>
+    </div>
+    <img class="dash-head-art" src="<?= e(url('assets/img/dashboard-leaves.svg')) ?>" alt="">
   </div>
 
   <div class="dash-grid">

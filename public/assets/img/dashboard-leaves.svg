@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <!-- Decoration for the Dashboard greeting banner (P03): a cluster of big leaves growing in from the bottom right.
+       Drawn for PlantFolio in the flat style and greens of the mock plant drawings. -->
+  <defs>
+    <!-- One leaf pointing straight up from (0, 0); each <use> below turns, sizes and colours it -->
+    <g id="leaf">
+      <path d="M0 0C34 -36 38 -104 0 -150C-38 -104 -34 -36 0 0Z"/>
+      <g fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="2" stroke-linecap="round">
+        <path d="M0 -4Q3 -70 0 -142"/>
+        <path d="M1 -38Q14 -48 22 -62M-1 -38Q-14 -48 -22 -62"/>
+        <path d="M2 -70Q14 -80 20 -94M-2 -70Q-14 -80 -20 -94"/>
+        <path d="M2 -102Q10 -110 13 -120M-2 -102Q-10 -110 -13 -120"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Back to front, so the darker leaves overlap the lighter ones -->
+  <use href="#leaf" fill="#6E9E58" transform="translate(250 215) rotate(-58) scale(1.05)"/>
+  <use href="#leaf" fill="#4A8A55" transform="translate(240 215) rotate(-82) scale(0.85)"/>
+  <use href="#leaf" fill="#3C7C49" transform="translate(270 215) rotate(-32) scale(1.25)"/>
+  <use href="#leaf" fill="#4A8A55" transform="translate(305 215) rotate(18) scale(1.1)"/>
+  <use href="#leaf" fill="#2F6B3D" transform="translate(290 215) rotate(-8) scale(1.3)"/>
+  <use href="#leaf" fill="#82B26A" transform="translate(285 215) rotate(-50) scale(0.8)"/>
+</svg>

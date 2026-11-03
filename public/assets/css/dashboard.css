@@ -3,18 +3,57 @@
 
 /* ── Greeting ───────────────────────────────────────── */
 
+/* A sage banner, like the Public Profile's cover band: the greeting on the left, leaves growing in on the right.
+   overflow: hidden crops the leaves at the banner's edge, so they look as if they grow from outside it. */
 .dash-head {
+  position: relative;
+  overflow: hidden;
   margin-bottom: var(--space-24);
+  padding: var(--space-24);
+  border-radius: var(--radius-card);
+  background: var(--color-sage);
+}
+
+/* Above the leaves, so a long greeting on a phone stays readable */
+.dash-head-text {
+  position: relative;
+  z-index: 1;
+  max-width: 70%;
 }
 
 .dash-title {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
 .dash-date {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-forest);
   font-size: var(--text-body-sm);
+}
+
+.dash-date .icon {
+  margin-right: var(--space-4);
+  color: var(--color-leaf);
+}
+
+.dash-head-art {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  max-width: none;   /* the base img rule would shrink it; the banner's overflow crops it instead */
+  height: 70%;       /* phone: small, so the leaves stay clear of the date */
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .dash-head {
+    padding: var(--space-32) var(--space-48);
+  }
+
+  .dash-head-art {
+    height: 150%;   /* taller than the banner, so the top leaves run off its edge too */
+  }
 }
 
 /* ── Columns ────────────────────────────────────────── */
