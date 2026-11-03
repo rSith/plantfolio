@@ -505,24 +505,6 @@ $mock_garden_stats = [
     'upcoming_count' => 5,   // "Coming up this week · 5 tasks"
 ];
 
-// Plants marked Sick or Needs attention (wireframe p10, element 4) — plants rows joined with:
-//   plant_species  → common_name          collections → collection_name
-//   health_logs    → log_note, log_source, logged_at of the plant's newest entry
-//   ml_predictions → predicted_label, confidence, when that entry came from a Health Check (source 'ml')
-//   care_reminders → task, next_due of the plant's soonest reminder
-$mock_attention = [
-    ['id' => 47, 'nickname' => 'Tommy', 'photo' => 'mock/tommy.svg', 'health_status' => 'sick',
-     'common_name' => 'Tomato', 'collection_name' => 'Balcony',
-     'log_note' => 'Brown rings on the lower leaves.', 'log_source' => 'ml', 'logged_at' => mock_date(-1) . ' 07:46:00',
-     'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
-     'task' => 'water', 'next_due' => mock_date(1)],
-
-    ['id' => 43, 'nickname' => 'Goldie', 'photo' => 'mock/goldie.svg', 'health_status' => 'needs_attention',
-     'common_name' => 'Golden pothos', 'collection_name' => 'Living room',
-     'log_note' => 'Leaves may start to droop.', 'log_source' => 'manual', 'logged_at' => mock_date(-3) . ' 18:10:00',
-     'predicted_label' => null, 'confidence' => null,
-     'task' => 'water', 'next_due' => mock_date(-2)],
-];
 
 // New interest in Nimali's listings (wireframe p10, element 7): $mock_new_interests, the rows of
 // $mock_received_interests with status 'new'. It is built in the My Exchanges section below, from the same rows.
@@ -1178,7 +1160,6 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_health_logs   = [];
     $mock_plant_photos  = [];
     $mock_reminders     = [];
-    $mock_attention     = [];
     $mock_received_interests = [];
     $mock_new_interests = [];
     $mock_garden_stats  = [

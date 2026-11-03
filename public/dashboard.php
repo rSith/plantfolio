@@ -1,7 +1,9 @@
 <?php
 // Dashboard (P03, wireframe p10): the home screen after login — "What do my plants need today?" and
-// "Is anything wrong?" in one glance (CORE-24, UI half). With no plants it shows state S1 instead (CORE-25).
-// Members only. Reads the reminders, plants needing attention and garden counts from mock data.
+// a garden overview in one glance (CORE-24, UI half). With no plants it shows state S1 instead (CORE-25).
+// Members only. Reads the reminders and garden counts from mock data.
+// No "Needs attention" panel (p10, element 4): the member learns a plant is unwell from a Health Check they run
+// themselves, not from the Dashboard guessing for them.
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
@@ -19,13 +21,6 @@ $first_name = explode(' ', $current_user['full_name'])[0];
 
 $care_count = count($mock_reminders);   // due today or overdue
 $has_plants = $current_user['plant_count'] > 0;
-
-// Each plant appears once on the page: a plant already in Today's care is left out of Needs attention.
-// Overdue care is therefore always in Today's care, so Needs attention only explains a Health Check or a note.
-// Stage B: … AND plants.id NOT IN (the plant_id of every reminder due today or overdue).
-$care_plant_ids  = array_column($mock_reminders, 'plant_id');
-$attention       = array_values(array_filter($mock_attention, fn ($plant) => !in_array($plant['id'], $care_plant_ids, true)));
-$attention_count = count($attention);
 
 // All reminders popup: every reminder of the member, soonest first, grouped by day.
 // Stage B: SELECT care_reminders.*, plants.nickname, plants.photo FROM care_reminders JOIN plants …
@@ -125,58 +120,6 @@ include __DIR__ . '/../includes/header.php';
             <?= icon('chevron-right') ?>
           </a>
         </section>
-
-        <?php if ($attention_count > 0): ?>
-          <section class="panel" aria-labelledby="attention-title">
-            <div class="panel-head">
-              <h2 class="panel-title" id="attention-title">Needs attention</h2>
-              <span class="panel-count"><?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant' : 'plants' ?></span>
-            </div>
-
-            <div class="panel-list">
-              <?php foreach ($attention as $plant): ?>
-                <?php
-                // The reason: a Health Check result, else the newest note
-                $from_check = $plant['log_source'] === 'ml' && $plant['predicted_label'] !== null;
-                $plant_url  = url('plant.php?id=' . $plant['id']);
-                // A Health Check result is always a disease prediction
-                $condition  = $from_check ? prediction_name(['type' => 'disease', 'predicted_label' => $plant['predicted_label']]) : '';
-                ?>
-                <article class="attention-item">
-                  <img class="attention-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>">
-                  <div class="attention-body">
-                    <h3 class="attention-name">
-                      <a href="<?= e($plant_url) ?>"><?= e($plant['nickname']) ?></a>
-                      <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-                    </h3>
-                    <p class="attention-meta"><?= e($plant['common_name']) ?> · <?= e($plant['collection_name']) ?></p>
-
-                    <p class="attention-reason">
-                      <?php if ($from_check): ?>
-                        <?= icon('sparkles') ?>
-                        <span>Health check found <strong><?= e(mb_strtolower($condition)) ?></strong>
-                          (<?= e(round($plant['confidence'] * 100)) ?>% confidence) on <?= e(format_day($plant['logged_at'])) ?>.</span>
-                      <?php else: ?>
-                        <?= icon('info') ?>
-                        <span><?= e($plant['log_note']) ?></span>
-                      <?php endif; ?>
-                    </p>
-
-                    <div class="attention-actions">
-                      <?php if ($from_check): ?>
-                        <?php // The care plan lives on the plant's profile; "Log update" opens a modal there from week 5 ?>
-                        <a class="btn btn-primary btn-sm" href="<?= e($plant_url) ?>">View care plan</a>
-                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                      <?php else: ?>
-                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                </article>
-              <?php endforeach; ?>
-            </div>
-          </section>
-        <?php endif; ?>
       <?php endif; ?>
     </div>
 
