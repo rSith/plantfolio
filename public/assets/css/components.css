@@ -457,6 +457,19 @@ button.menu-item {
 /* Wrap each control in .field with a .field-label; messages go in .field-hint or .field-error */
 
 /* Hidden from sight but still read by screen readers */
+/* A list that scrolls inside its box with no scrollbar drawn: the wheel, a finger and the Tab key still scroll it.
+   The list sets its own max-height. Used by the Dashboard's two boxes. */
+.scroll-quiet {
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* reaching the end of the list does not start scrolling the page */
+  scrollbar-width: none;
+}
+
+/* The same for Safari, which does not know scrollbar-width */
+.scroll-quiet::-webkit-scrollbar {
+  display: none;
+}
+
 /* The hidden attribute always wins: without this, a rule such as .field { display: grid } would show it again */
 [hidden] {
   display: none !important;

@@ -253,7 +253,8 @@ include __DIR__ . '/../includes/header.php';
   <div class="dash-grid">
     <div class="dash-main">
       <?php // S1 (a new member, no plants yet): the same boxes and options, each with a short first-step message ?>
-        <section class="panel" aria-labelledby="care-title">
+        <?php // Both boxes are .dash-box: on a desktop they are the same fixed height, side by side (dashboard.css) ?>
+        <section class="panel dash-box" aria-labelledby="care-title">
           <div class="panel-head">
             <h2 class="panel-title" id="care-title">Today's care
               <?php if ($care_count > 0): ?><span class="badge badge-neutral"><?= e($care_count) ?> due</span><?php endif; ?>
@@ -262,8 +263,10 @@ include __DIR__ . '/../includes/header.php';
             <a class="panel-link" href="<?= e(url('garden.php?sort=care')) ?>" data-dialog="all-reminders" aria-haspopup="dialog">All reminders</a>
           </div>
 
+          <div class="dash-box-body">
           <?php if ($care_count > 0): ?>
-            <div class="panel-list">
+            <?php // Three tasks show; more scroll inside the box, with no scrollbar drawn (.scroll-quiet) ?>
+            <div class="care-list scroll-quiet">
               <?php foreach ($mock_reminders as $reminder): ?>
                 <?php partial('care-row', ['reminder' => $reminder]); ?>
               <?php endforeach; ?>
@@ -273,6 +276,7 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?>
             <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
           <?php endif; ?>
+          </div>
           <?php // No "Coming up this week" row: All reminders (top right) already shows the days ahead ?>
 
           <?php // Opens the Add a reminder popup below (app.js) ?>
@@ -282,10 +286,11 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // No Quick actions panel: Add plant is at the bottom of Garden at a glance, the AI tools in Plant Tools ?>
     <div class="dash-side">
-        <section class="panel" aria-labelledby="glance-title">
+        <section class="panel dash-box" aria-labelledby="glance-title">
           <div class="panel-head">
             <h2 class="panel-title" id="glance-title">Garden at a glance</h2>
           </div>
+          <div class="dash-box-body">
           <?php if (!$has_plants): ?>
             <p class="panel-empty"><?= icon('sprout') ?> No plants yet. Start by adding your first plant.</p>
           <?php else: ?>
@@ -296,7 +301,7 @@ include __DIR__ . '/../includes/header.php';
 
           <?php // Where the plants are: one line per collection with its count and a few photos; each opens it in My Garden.
                 // Stage B: the collections query My Garden already uses (plant_count and three cover photos per row). ?>
-          <ul class="glance-collections">
+          <ul class="glance-collections scroll-quiet">
             <?php foreach ($mock_collections as $collection): ?>
               <?php $more = $collection['plant_count'] - count($collection['cover_photos']); ?>
               <li>
@@ -317,6 +322,7 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </ul>
           <?php endif; ?>
+          </div>
 
           <?php // The box ends like Today's care: a dashed add button, here to Add Plant (P06) ?>
           <a class="dash-add-btn" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
