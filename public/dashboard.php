@@ -133,31 +133,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
             'message'  => 'Reminder added: ' . task_label($reminder['task']) . ' ' . $plant['nickname'] . ' · ' . schedule_words($reminder),
             'key'      => $reminder['plant_id'] . '-' . $reminder['task'],
             'previous' => $previous,
+            'undone'   => 'Reminder cancelled.',
         ];
         header('Location: ' . url('dashboard.php'));   // POST, then redirect: a reload cannot add it twice
         exit;
     }
 }
 
-// Undo in the toast: cancels the reminder just added. Only the session knows which one, so nothing in the form can
-// point it at another member's reminder.
+// ── Mark done (CORE-23) ─────────────────────────────────
+// The task leaves Today's care: last_done becomes today and next_due moves on by the reminder's own rule. A one-off
+// reminder is finished, so it goes. Only a reminder in Today's care (Nimali's, due today or overdue) can be marked.
+// Stage B: UPDATE care_reminders SET last_done = CURDATE(), next_due = … WHERE id = ? (owner checked through plants),
+//          or DELETE for a one-off reminder.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'done') {
+    $key = post_text('reminder');
+    $row = null;
+    foreach ($mock_reminders as $due_row) {
+        if ($due_row['plant_id'] . '-' . $due_row['task'] === $key) {
+            $row = $due_row;
+        }
+    }
+
+    if ($row) {
+        $reminder = array_diff_key($row, array_flip(['nickname', 'photo', 'common_name']));   // the care_reminders columns only
+        $done     = task_done_label($row['task']) . ' ' . $row['nickname'];
+
+        if (($reminder['repeat_type'] ?? 'interval') === 'once') {
+            $updated = ['plant_id' => $reminder['plant_id'], 'task' => $reminder['task'], 'deleted' => true];
+            $message = $done . ' · reminder finished';
+        } else {
+            $updated = array_merge($reminder, ['last_done' => $today, 'next_due' => next_due_after($reminder, $today)]);
+            $message = $done . ' · next on ' . format_day($updated['next_due']);
+        }
+
+        $_SESSION['reminder_toast'] = [
+            'message'  => $message,
+            'key'      => $key,
+            'previous' => mock_add_reminder($updated),
+            'undone'   => task_label($row['task']) . ' ' . $row['nickname'] . ' is back on today\'s list.',
+            'icon'     => 'check',
+        ];
+    }
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
+
+// Undo in the toast: takes back the last Add reminder or Mark done. Only the session knows which reminder that was,
+// so nothing in the form can point it at another member's reminder.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'undo_reminder') {
     $undo = $_SESSION['reminder_undo'] ?? null;
     unset($_SESSION['reminder_undo']);
     if ($undo) {
         mock_undo_reminder($undo['key'], $undo['previous']);
-        $_SESSION['reminder_toast'] = ['message' => 'Reminder cancelled.', 'key' => null, 'previous' => null];
+        $_SESSION['reminder_toast'] = ['message' => $undo['undone'], 'key' => null, 'previous' => null, 'undone' => null];
     }
     header('Location: ' . url('dashboard.php'));
     exit;
 }
 
 // The toast shows once: it is taken out of the session as soon as it is read. Its Undo stays possible until the
-// next reminder is added.
+// next Add reminder or Mark done.
 $toast = $_SESSION['reminder_toast'] ?? null;
 unset($_SESSION['reminder_toast']);
 if ($toast && $toast['key']) {
-    $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous']];
+    $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous'], 'undone' => $toast['undone']];
+}
+
+/**
+ * The next due day after a task was done on $done_day (Mark done): the next chosen weekday for "On chosen days",
+ * otherwise $done_day plus interval_days (1 for every day), the rule next_due = last_done + interval_days.
+ */
+function next_due_after($reminder, $done_day)
+{
+    if (($reminder['repeat_type'] ?? 'interval') === 'days') {
+        return first_due(date('Y-m-d', strtotime($done_day . ' +1 day')), 'days', $reminder['repeat_days']);
+    }
+    return date('Y-m-d', strtotime($done_day . ' +' . (int) $reminder['interval_days'] . ' days'));
 }
 
 /**
@@ -462,11 +513,11 @@ include __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 
   <?php if ($toast): ?>
-    <?php // The popup message after Add reminder (CORE-23 toast): stays until the member closes it. Undo is a POST,
+    <?php // The popup message after Add reminder or Mark done (CORE-23 toast): stays until the member closes it. Undo is a POST,
           // because it changes data. Without JavaScript the × is a link that loads the page again, without the toast. ?>
     <div class="toast-region">
       <div class="toast" role="status">
-        <?= icon('bell') ?>
+        <?= icon($toast['icon'] ?? 'bell') ?>
         <span class="toast-message"><?= e($toast['message']) ?></span>
         <?php if ($toast['key']): ?>
           <form method="post" action="<?= e(url('dashboard.php')) ?>">

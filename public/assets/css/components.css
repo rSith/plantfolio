@@ -1539,9 +1539,14 @@ textarea.input {
   justify-self: start;
 }
 
-.care-row .btn {
+/* The Mark done form takes the button's place in the grid */
+.care-row-form {
   grid-column: 3;
   grid-row: 1 / span 2;
+  margin: 0;
+}
+
+.care-row .btn {
   min-width: 44px;
 }
 
@@ -1575,7 +1580,7 @@ textarea.input {
     grid-row: 1;
   }
 
-  .care-row .btn {
+  .care-row-form {
     grid-column: 4;
     grid-row: 1;
   }

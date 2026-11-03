@@ -442,7 +442,7 @@ function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
 }
 
 /**
- * Mock-only: "Add reminder" on the Dashboard (CORE-22). Kept in the session like an interest, and laid over
+ * Mock-only: "Add reminder" and "Mark done" on the Dashboard (CORE-22, CORE-23). Kept in the session like an interest, and laid over
  * $mock_plant_reminders at the end of this file, so All reminders, Today's care and the plant's page all show it.
  * The key is plant and task: UNIQUE (plant_id, task) allows one reminder per task per plant, so adding the same
  * pair again replaces the earlier one. Returns the row it replaced, or null, so that Undo can put it back.
@@ -1256,20 +1256,26 @@ $mock_site_stats['open_listing_count'] = count(array_filter($mock_listings, fn (
 // INSERT makes every COUNT() and AVG() on user_ratings include the new row.
 $mock_preview_ratings = array_values($_SESSION['preview_ratings'] ?? []);
 
-// Reminders Nimali added in the preview (mock_add_reminder()). Each replaces the mock row for the same plant and task,
-// as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due today or
-// earlier. Built after the ?empty switch, so a brand-new Nimali (no plants) gets none. The Landing page's collage
-// keeps the original mock rows: it shows Monty as a public sample, not Nimali's preview.
+// Reminders Nimali added or marked done in the preview (mock_add_reminder()). Each replaces the mock row for the same
+// plant and task, as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due
+// today or earlier. A row marked 'deleted' (a one-off reminder that was done) removes the pair from every list.
+// Built after the ?empty switch, so a brand-new Nimali (no plants) gets none. The Landing page's collage keeps the
+// original mock rows: it shows Monty as a public sample, not Nimali's preview.
 if (current_page() !== 'index.php') {
-    $own_plants = array_column($mock_plants, null, 'id');
+    $own_plants     = array_column($mock_plants, null, 'id');
+    $touched_plants = [];
     foreach ($_SESSION['preview_reminders'] ?? [] as $preview_row) {
         $plant = $own_plants[$preview_row['plant_id']] ?? null;
         if (!$plant) {
             continue;
         }
+        $touched_plants[$plant['id']] = true;
         $other_task = fn ($row) => !($row['plant_id'] === $preview_row['plant_id'] && $row['task'] === $preview_row['task']);
         $mock_plant_reminders   = array_values(array_filter($mock_plant_reminders, $other_task));
         $mock_reminders         = array_values(array_filter($mock_reminders, $other_task));
+        if (!empty($preview_row['deleted'])) {
+            continue;
+        }
         $mock_plant_reminders[] = $preview_row;
         if ($preview_row['next_due'] <= date('Y-m-d')) {
             $mock_reminders[] = $preview_row + [
@@ -1279,6 +1285,23 @@ if (current_page() !== 'index.php') {
     }
     // Overdue first, then A to Z within a day, as the mock rows were
     usort($mock_reminders, fn ($a, $b) => [$a['next_due'], $a['nickname']] <=> [$b['next_due'], $b['nickname']]);
+
+    // A plant card shows the plant's soonest reminder (task, next_due on each plants row), so a changed plant gets
+    // its soonest one again. Stage B finds it with a subquery on care_reminders.
+    foreach ($mock_plants as $index => $plant) {
+        if (empty($touched_plants[$plant['id']])) {
+            continue;
+        }
+        $soonest = null;
+        foreach ($mock_plant_reminders as $row) {
+            if ($row['plant_id'] === $plant['id'] && (!$soonest || $row['next_due'] < $soonest['next_due'])) {
+                $soonest = $row;
+            }
+        }
+        $mock_plants[$index]['task']          = $soonest['task'] ?? null;
+        $mock_plants[$index]['interval_days'] = $soonest['interval_days'] ?? null;
+        $mock_plants[$index]['next_due']      = $soonest['next_due'] ?? null;
+    }
 }
 
 // Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,

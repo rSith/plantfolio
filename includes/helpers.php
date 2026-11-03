@@ -297,6 +297,22 @@ function task_icon($task)
     return $icons[$task] ?? 'calendar';
 }
 
+/** A care task in the past tense, for the Mark done toast: "Watered Monty". */
+function task_done_label($task)
+{
+    $labels = [
+        'water'     => 'Watered',
+        'fertilise' => 'Fertilised',
+        'mist'      => 'Misted',
+        'rotate'    => 'Rotated',
+        'prune'     => 'Pruned',
+        'repot'     => 'Repotted',
+        'recheck'   => 'Re-checked',
+    ];
+
+    return $labels[$task] ?? 'Done:';
+}
+
 /**
  * How a reminder repeats, in words: "every 7 days", "every day", "on Mon, Wed, Fri" or "once".
  * The mock rows have no repeat_type yet: they repeat every interval_days, like every reminder before Add a reminder.
