@@ -150,8 +150,14 @@
   padding: var(--space-8) 0 0;
   overflow-y: auto;
   overscroll-behavior: contain;   /* scrolling to the end of the list does not start scrolling the page */
+  scrollbar-width: none;          /* the list still scrolls (wheel, finger, Tab key), but no scrollbar is drawn */
   border-top: 1px solid var(--color-line);
   list-style: none;
+}
+
+/* The same for Safari, which does not know scrollbar-width */
+.glance-collections::-webkit-scrollbar {
+  display: none;
 }
 
 .glance-collection {
