@@ -62,6 +62,7 @@ if (isset($_GET['member'])) {
     $_SESSION['preview_interests'] = [];      // … and the interests of the mock data (see mock_send_interest())
     $_SESSION['preview_exchanges'] = [];      // … the listings of the mock data, none marked exchanged (mock_mark_exchanged())
     $_SESSION['preview_ratings']   = [];      // … and no ratings given in the preview (mock_rate_exchange())
+    $_SESSION['preview_reminders'] = [];      // … and no reminders added in the preview (mock_add_reminder())
 }
 if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
@@ -88,6 +89,7 @@ function mock_log_in_and_go($page, $new_account = false)
         $_SESSION['preview_interests'] = [];   // a brand-new account has shown interest in nothing yet
         $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
         $_SESSION['preview_ratings']   = [];
+        $_SESSION['preview_reminders'] = [];   // … and has no reminders
     }
     header('Location: ' . url($page));
     exit;
@@ -437,6 +439,36 @@ function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
         'comment'    => $comment,
         'created_at' => date('Y-m-d H:i:s'),
     ];
+}
+
+/**
+ * Mock-only: "Add reminder" on the Dashboard (CORE-22). Kept in the session like an interest, and laid over
+ * $mock_plant_reminders at the end of this file, so All reminders, Today's care and the plant's page all show it.
+ * The key is plant and task: UNIQUE (plant_id, task) allows one reminder per task per plant, so adding the same
+ * pair again replaces the earlier one. Returns the row it replaced, or null, so that Undo can put it back.
+ * Stage B: INSERT INTO care_reminders (…) VALUES (…) ON DUPLICATE KEY UPDATE …
+ */
+function mock_add_reminder($reminder)
+{
+    $key      = $reminder['plant_id'] . '-' . $reminder['task'];
+    $previous = $_SESSION['preview_reminders'][$key] ?? null;
+    $_SESSION['preview_reminders'][$key] = $reminder;
+
+    return $previous;
+}
+
+/**
+ * Mock-only: Undo in the "Reminder added" toast. Puts back the reminder the new one replaced, or removes the new one;
+ * a replaced row of the mock data comes back by itself, because nothing lies over it any more.
+ * Stage B: DELETE FROM care_reminders WHERE id = ? (or an UPDATE back to the old values) after checking the owner.
+ */
+function mock_undo_reminder($key, $previous)
+{
+    if ($previous) {
+        $_SESSION['preview_reminders'][$key] = $previous;
+    } else {
+        unset($_SESSION['preview_reminders'][$key]);
+    }
 }
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -1141,6 +1173,7 @@ if (isset($_GET['empty'])) {
     $_SESSION['preview_interests'] = [];   // a brand-new member has shown interest in nothing yet
     $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
     $_SESSION['preview_ratings']   = [];
+    $_SESSION['preview_reminders'] = [];   // … and has no reminders
 }
 if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'index.php') {
     $current_user['plant_count']        = 0;
@@ -1222,6 +1255,31 @@ $mock_site_stats['open_listing_count'] = count(array_filter($mock_listings, fn (
 // "Waiting for your rating" to "Ratings you gave". The rated member's average and reviews follow in stage B, where the
 // INSERT makes every COUNT() and AVG() on user_ratings include the new row.
 $mock_preview_ratings = array_values($_SESSION['preview_ratings'] ?? []);
+
+// Reminders Nimali added in the preview (mock_add_reminder()). Each replaces the mock row for the same plant and task,
+// as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due today or
+// earlier. Built after the ?empty switch, so a brand-new Nimali (no plants) gets none. The Landing page's collage
+// keeps the original mock rows: it shows Monty as a public sample, not Nimali's preview.
+if (current_page() !== 'index.php') {
+    $own_plants = array_column($mock_plants, null, 'id');
+    foreach ($_SESSION['preview_reminders'] ?? [] as $preview_row) {
+        $plant = $own_plants[$preview_row['plant_id']] ?? null;
+        if (!$plant) {
+            continue;
+        }
+        $other_task = fn ($row) => !($row['plant_id'] === $preview_row['plant_id'] && $row['task'] === $preview_row['task']);
+        $mock_plant_reminders   = array_values(array_filter($mock_plant_reminders, $other_task));
+        $mock_reminders         = array_values(array_filter($mock_reminders, $other_task));
+        $mock_plant_reminders[] = $preview_row;
+        if ($preview_row['next_due'] <= date('Y-m-d')) {
+            $mock_reminders[] = $preview_row + [
+                'nickname' => $plant['nickname'], 'photo' => $plant['photo'], 'common_name' => $plant['common_name'],
+            ];
+        }
+    }
+    // Overdue first, then A to Z within a day, as the mock rows were
+    usort($mock_reminders, fn ($a, $b) => [$a['next_due'], $a['nickname']] <=> [$b['next_due'], $b['nickname']]);
+}
 
 // Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,
 // each joined with its owner (users: username, full_name, avatar, location), plus two calculated columns:

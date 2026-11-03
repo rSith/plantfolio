@@ -106,10 +106,12 @@ if ($is_edit) {
         }
     }
     foreach ($mock_plant_reminders as $reminder) {
-        if ($reminder['plant_id'] === $plant['id']) {
+        // The form has switches for water and fertilise only; reminders for other tasks are set on the Dashboard.
+        // A water reminder on chosen weekdays has no interval_days, so it shows the species' interval instead.
+        if ($reminder['plant_id'] === $plant['id'] && isset($reminder_values[$reminder['task']])) {
             $reminder_values[$reminder['task']] = [
                 'enabled'       => true,
-                'interval_days' => $reminder['interval_days'],
+                'interval_days' => $reminder['interval_days'] ?? $reminder_values[$reminder['task']]['interval_days'],
                 'start'         => $reminder['next_due'],   // "starting" = the next time it is due
             ];
         }

@@ -287,8 +287,8 @@ include __DIR__ . '/../includes/header.php';
                 <li class="reminder-item">
                   <span class="care-tile-icon"><?= icon(task_icon($reminder['task'])) ?></span>
                   <span class="reminder-text">
-                    <strong><?= e(task_label($reminder['task'])) ?> · every <?= e($reminder['interval_days']) ?> days</strong>
-                    <span class="text-small">Last done <?= e(format_day($reminder['last_done'])) ?> · next <?= e(format_day($reminder['next_due'])) ?></span>
+                    <strong><?= e(task_label($reminder['task'])) ?> · <?= e(schedule_words($reminder)) ?></strong>
+                    <span class="text-small"><?= $reminder['last_done'] ? 'Last done ' . e(format_day($reminder['last_done'])) : 'Not done yet' ?> · next <?= e(format_day($reminder['next_due'])) ?></span>
                   </span>
                   <span class="badge badge-<?= e($due['state']) ?>"><?= e($due['text']) ?></span>
                 </li>
@@ -325,7 +325,7 @@ include __DIR__ . '/../includes/header.php';
           <?php foreach ($reminders as $reminder): ?>
             <?php $due = care_due($reminder['next_due']); ?>
             <li>
-              <span><?= task_name($reminder['task']) ?> · every <?= e($reminder['interval_days']) ?> days</span>
+              <span><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
               <span class="side-due side-due-<?= e($due['state']) ?>"><?= e($due['state'] === 'upcoming' ? format_day($reminder['next_due']) : ($due['state'] === 'due' ? 'Today' : $due['text'])) ?></span>
             </li>
           <?php endforeach; ?>

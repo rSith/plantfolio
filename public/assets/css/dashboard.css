@@ -251,10 +251,6 @@
   background: var(--color-sage);
 }
 
-.dash-alert {
-  margin: 0 0 var(--space-16);
-}
-
 /* The three numbered steps of the popup. A <fieldset> groups each step's fields for screen readers. */
 /* Spacing goes on the margin, not the padding: a <legend> sits above a fieldset's padding, which would open a
    gap between each step's title and its fields */

@@ -1986,8 +1986,32 @@ textarea.input {
 }
 
 /* The usual green outline would not show on the dark toast */
-.toast-action:focus-visible {
+.toast-action:focus-visible,
+.toast-close:focus-visible {
   outline-color: var(--color-sage);
+}
+
+/* × at the end of a toast: closes the message, nothing else */
+.toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-input);
+  color: var(--color-white);
+  opacity: 0.8;
+}
+
+.toast-close:hover {
+  color: var(--color-white);
+  opacity: 1;
+}
+
+.toast > .icon {
+  flex-shrink: 0;
+  color: var(--color-sage);
 }
 
 /* Where toasts sit on a real page: fixed to the bottom of the screen, centred */

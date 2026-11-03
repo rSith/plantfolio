@@ -19,6 +19,15 @@ document.querySelectorAll('dialog[data-open-on-load]').forEach((dialog) => {
   dialog.showModal();
 });
 
+// The × of a toast removes the message from the page. It is also a link to the same page, so without
+// JavaScript it reloads the page, which no longer shows the toast.
+document.querySelectorAll('[data-toast-close]').forEach((button) => {
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    button.closest('.toast-region').remove();
+  });
+});
+
 // A click on the dimmed area closes the popup. Only there does the click land on the <dialog> itself,
 // because its content fills the whole box (see .modal in components.css).
 document.querySelectorAll('dialog.modal').forEach((dialog) => {

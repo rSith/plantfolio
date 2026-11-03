@@ -298,6 +298,32 @@ function task_icon($task)
 }
 
 /**
+ * How a reminder repeats, in words: "every 7 days", "every day", "on Mon, Wed, Fri" or "once".
+ * The mock rows have no repeat_type yet: they repeat every interval_days, like every reminder before Add a reminder.
+ */
+function repeat_words($reminder)
+{
+    $type = $reminder['repeat_type'] ?? 'interval';
+    if ($type === 'once') {
+        return 'once';
+    }
+    if ($type === 'days') {
+        return 'on ' . implode(', ', array_map('ucfirst', $reminder['repeat_days']));
+    }
+    $days = (int) $reminder['interval_days'];
+
+    return $days === 1 ? 'every day' : 'every ' . $days . ' days';
+}
+
+/** A reminder's schedule in one line: "every 7 days at 8:00 AM", or without the time when none was set. */
+function schedule_words($reminder)
+{
+    $time = $reminder['remind_time'] ?? null;
+
+    return repeat_words($reminder) . ($time ? ' at ' . date('g:i A', strtotime($time)) : '');
+}
+
+/**
  * A task's icon and name in the task's own colour, e.g. blue Water, olive Fertilise (.task in components.css).
  * Returns HTML like icon(), so print it with <?= task_name($task) ?>, not inside e().
  */

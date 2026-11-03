@@ -57,7 +57,8 @@ function reminder_day($date)
 
 // ── Add a reminder (popup) ──────────────────────────────
 // Set like an alarm on a phone: which plant, which care task, at what time from which day, and how it repeats.
-// Stage F: the form is checked here, then nothing is saved. Stage B: INSERT INTO care_reminders … (CORE-22).
+// Stage F: the form is checked here and the reminder is kept in the session (mock_add_reminder()), so it shows in
+// All reminders and on the plant's page. Stage B: INSERT INTO care_reminders … (CORE-22).
 
 $weekdays = ['mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday', 'thu' => 'Thursday',
              'fri' => 'Friday', 'sat' => 'Saturday', 'sun' => 'Sunday'];
@@ -112,17 +113,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
     }
 
     if (!$reminder_errors) {
-        header('Location: ' . url('dashboard.php?added=' . $plant_id . '&task=' . $reminder_values['task']));
+        $repeat   = $reminder_values['repeat'];
+        $reminder = [
+            'id'            => 900 + count($_SESSION['preview_reminders'] ?? []),   // made up: stage B's AUTO_INCREMENT
+            'plant_id'      => (int) $plant_id,
+            'task'          => $reminder_values['task'],
+            'interval_days' => $repeat === 'daily' ? 1 : ($repeat === 'interval' ? (int) $reminder_values['interval'] : null),
+            'last_done'     => null,
+            'next_due'      => first_due($reminder_values['start'], $repeat, $reminder_values['days']),
+            'remind_time'   => $reminder_values['time'],
+            'repeat_type'   => $repeat,
+            'repeat_days'   => $repeat === 'days' ? $reminder_values['days'] : [],
+        ];
+        $previous = mock_add_reminder($reminder);
+
+        // The toast on the next page; Undo needs the key and the row this one replaced, kept here, not in the form
+        $plant = $plants_by_id[$reminder['plant_id']];
+        $_SESSION['reminder_toast'] = [
+            'message'  => 'Reminder added: ' . task_label($reminder['task']) . ' ' . $plant['nickname'] . ' · ' . schedule_words($reminder),
+            'key'      => $reminder['plant_id'] . '-' . $reminder['task'],
+            'previous' => $previous,
+        ];
+        header('Location: ' . url('dashboard.php'));   // POST, then redirect: a reload cannot add it twice
         exit;
     }
 }
 
-// "Reminder added: Water Monty." after the redirect above; anything unknown in the address shows nothing
-$added_id    = get_text('added');
-$added_plant = ctype_digit($added_id) ? ($plants_by_id[(int) $added_id] ?? null) : null;
-$added_task  = get_text('task');
-if (!in_array($added_task, reminder_tasks(), true)) {
-    $added_plant = null;
+// Undo in the toast: cancels the reminder just added. Only the session knows which one, so nothing in the form can
+// point it at another member's reminder.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'undo_reminder') {
+    $undo = $_SESSION['reminder_undo'] ?? null;
+    unset($_SESSION['reminder_undo']);
+    if ($undo) {
+        mock_undo_reminder($undo['key'], $undo['previous']);
+        $_SESSION['reminder_toast'] = ['message' => 'Reminder cancelled.', 'key' => null, 'previous' => null];
+    }
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
+
+// The toast shows once: it is taken out of the session as soon as it is read. Its Undo stays possible until the
+// next reminder is added.
+$toast = $_SESSION['reminder_toast'] ?? null;
+unset($_SESSION['reminder_toast']);
+if ($toast && $toast['key']) {
+    $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous']];
+}
+
+/**
+ * The first day a new reminder is due: its start day, or for "On chosen days" the first chosen weekday from then.
+ * date('D') gives "Mon", which lowercased matches the day values of the form.
+ */
+function first_due($start, $repeat, $days)
+{
+    if ($repeat !== 'days') {
+        return $start;
+    }
+    for ($offset = 0; $offset < 7; $offset++) {
+        $day = date('Y-m-d', strtotime($start . ' +' . $offset . ' days'));
+        if (in_array(strtolower(date('D', strtotime($day))), $days, true)) {
+            return $day;
+        }
+    }
+    return $start;
 }
 
 /** aria-invalid and aria-describedby for a field with an error, so a screen reader reads the message with it. */
@@ -156,11 +209,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
     <img class="dash-head-art" src="<?= e(url('assets/img/dashboard-leaves.svg')) ?>" alt="">
   </div>
-
-  <?php if ($added_plant): ?>
-    <?php // Stage F: the reminder is not saved yet, so it does not appear in the lists; stage B saves it ?>
-    <p class="alert alert-success dash-alert" role="status"><?= icon('check') ?> Reminder added: <?= e(task_label($added_task)) ?> <?= e($added_plant['nickname']) ?>.</p>
-  <?php endif; ?>
 
   <div class="dash-grid">
     <div class="dash-main">
@@ -271,7 +319,7 @@ include __DIR__ . '/../includes/header.php';
                 <img class="thumb" src="<?= e(photo_url($reminder['photo'])) ?>" alt="">
                 <span class="reminder-row-text">
                   <a href="<?= e(url('plant.php?id=' . $reminder['plant_id'])) ?>"><strong><?= e($reminder['nickname']) ?></strong></a>
-                  <span class="reminder-row-task"><?= task_name($reminder['task']) ?> · every <?= e($reminder['interval_days']) ?> days</span>
+                  <span class="reminder-row-task"><?= task_name($reminder['task']) ?> · <?= e(schedule_words($reminder)) ?></span>
                 </span>
               </li>
             <?php endforeach; ?>
@@ -411,6 +459,25 @@ include __DIR__ . '/../includes/header.php';
         </div>
       </form>
     </dialog>
+  <?php endif; ?>
+
+  <?php if ($toast): ?>
+    <?php // The popup message after Add reminder (CORE-23 toast): stays until the member closes it. Undo is a POST,
+          // because it changes data. Without JavaScript the × is a link that loads the page again, without the toast. ?>
+    <div class="toast-region">
+      <div class="toast" role="status">
+        <?= icon('bell') ?>
+        <span class="toast-message"><?= e($toast['message']) ?></span>
+        <?php if ($toast['key']): ?>
+          <form method="post" action="<?= e(url('dashboard.php')) ?>">
+            <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+            <input type="hidden" name="form" value="undo_reminder">
+            <button class="toast-action">Undo</button>
+          </form>
+        <?php endif; ?>
+        <a class="toast-close" href="<?= e(url('dashboard.php')) ?>" data-toast-close aria-label="Close message"><?= icon('x') ?></a>
+      </div>
+    </div>
   <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
