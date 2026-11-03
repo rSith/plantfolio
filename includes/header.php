@@ -58,6 +58,8 @@ if ($is_member) {
   <?php if (!empty($page_css)): ?>
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/' . $page_css)) ?>">
   <?php endif; ?>
+  <?php // defer: the script waits until the whole page is read, so the elements it looks for exist ?>
+  <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>
 </head>
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>

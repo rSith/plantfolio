@@ -215,6 +215,63 @@
   width: 100%;
 }
 
+/* ── All reminders popup ────────────────────────────── */
+
+/* One heading per day; today in terracotta and overdue in red, as everywhere else */
+.reminder-day {
+  margin: var(--space-16) 0 var(--space-4);
+  color: var(--color-muted);
+}
+
+.reminder-day-due {
+  color: var(--color-terracotta);
+}
+
+.reminder-day-overdue {
+  color: var(--color-danger);
+}
+
+.reminder-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reminder-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.reminder-row:first-child {
+  border-top: 0;
+}
+
+.reminder-row-text {
+  display: grid;
+  min-width: 0;
+  font-size: var(--text-body-sm);
+}
+
+.reminder-row-text a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.reminder-row-text a:hover {
+  text-decoration: underline;
+}
+
+.reminder-row-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
 /* Tablet: the side panels sit two by two under the main column */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dash-side {

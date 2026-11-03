@@ -27,6 +27,39 @@ $care_plant_ids  = array_column($mock_reminders, 'plant_id');
 $attention       = array_values(array_filter($mock_attention, fn ($plant) => !in_array($plant['id'], $care_plant_ids, true)));
 $attention_count = count($attention);
 
+// All reminders popup: every reminder of the member, soonest first, grouped by day.
+// Stage B: SELECT care_reminders.*, plants.nickname, plants.photo FROM care_reminders JOIN plants …
+//          WHERE plants.user_id = ? ORDER BY next_due, nickname
+$plants_by_id  = array_column($mock_plants, null, 'id');
+$all_reminders = [];
+foreach ($mock_plant_reminders as $reminder) {
+    $plant           = $plants_by_id[$reminder['plant_id']];
+    $all_reminders[] = $reminder + ['nickname' => $plant['nickname'], 'photo' => $plant['photo']];
+}
+// Comparing two small arrays sorts by the date first, then by name within the same day
+usort($all_reminders, fn ($a, $b) => [$a['next_due'], $a['nickname']] <=> [$b['next_due'], $b['nickname']]);
+
+$reminder_days = [];   // '2026-11-03' => the reminders due that day
+foreach ($all_reminders as $reminder) {
+    $reminder_days[$reminder['next_due']][] = $reminder;
+}
+
+/** The heading over one day of the All reminders list: "Overdue · 1 Nov", "Today", "Tomorrow" or "Saturday 7 Nov". */
+function reminder_day($date)
+{
+    $days = days_until($date);
+    if ($days < 0) {
+        return 'Overdue · ' . format_day($date);
+    }
+    if ($days === 0) {
+        return 'Today';
+    }
+    if ($days === 1) {
+        return 'Tomorrow';
+    }
+    return date('l j M', strtotime($date));
+}
+
 // Garden at a glance: each status's share of the garden becomes the width of its part of the bar
 $health_counts = $mock_garden_stats['health_counts'];
 $plant_total   = array_sum($health_counts);
@@ -70,7 +103,8 @@ include __DIR__ . '/../includes/header.php';
             <h2 class="panel-title" id="care-title">Today's care
               <?php if ($care_count > 0): ?><span class="badge badge-neutral"><?= e($care_count) ?> due</span><?php endif; ?>
             </h2>
-            <a class="panel-link" href="<?= e(url('garden.php')) ?>">All reminders</a>
+            <?php // app.js opens the All reminders popup; without JavaScript the link shows My Garden sorted by next care ?>
+            <a class="panel-link" href="<?= e(url('garden.php?sort=care')) ?>" data-dialog="all-reminders" aria-haspopup="dialog">All reminders</a>
           </div>
 
           <?php if ($care_count > 0): ?>
@@ -188,5 +222,37 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
     </div>
   </div>
+
+  <?php if ($has_plants): ?>
+    <?php // All reminders popup (MOD-01). A <dialog> stays hidden until app.js calls showModal(). ?>
+    <dialog class="modal" id="all-reminders" aria-labelledby="all-reminders-title">
+      <div class="modal-head">
+        <h2 class="modal-title" id="all-reminders-title">All reminders</h2>
+        <?php // method="dialog": pressing this button closes the popup, no JavaScript needed ?>
+        <form method="dialog">
+          <button class="icon-btn" aria-label="Close"><?= icon('x') ?></button>
+        </form>
+      </div>
+      <div class="modal-body">
+        <?php if (!$reminder_days): ?>
+          <p class="panel-empty"><?= icon('info') ?> No reminders yet. Add them on a plant's Edit page.</p>
+        <?php endif; ?>
+        <?php foreach ($reminder_days as $date => $day_reminders): ?>
+          <h3 class="label reminder-day reminder-day-<?= e(care_due($date)['state']) ?>"><?= e(reminder_day($date)) ?></h3>
+          <ul class="reminder-rows">
+            <?php foreach ($day_reminders as $reminder): ?>
+              <li class="reminder-row">
+                <img class="thumb" src="<?= e(photo_url($reminder['photo'])) ?>" alt="">
+                <span class="reminder-row-text">
+                  <a href="<?= e(url('plant.php?id=' . $reminder['plant_id'])) ?>"><strong><?= e($reminder['nickname']) ?></strong></a>
+                  <span class="reminder-row-task"><?= icon(task_icon($reminder['task'])) ?> <?= e(task_label($reminder['task'])) ?> · every <?= e($reminder['interval_days']) ?> days</span>
+                </span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endforeach; ?>
+      </div>
+    </dialog>
+  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
