@@ -104,43 +104,6 @@
   line-height: 1;
 }
 
-/* One bar split into the four statuses; dashboard.php sets each part's width */
-.health-bar {
-  display: flex;
-  gap: 2px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--color-line);
-}
-
-.health-legend {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4) var(--space-16);
-  margin: var(--space-12) 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-small);
-}
-
-.health-legend li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.health-legend strong {
-  margin-left: auto;
-}
-
-.health-dot {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
 /* One line per collection: name, how many plants, and up to three small photos with "+4" for the rest */
 /* Room for three collections; with more, the list scrolls inside the box, so the box keeps its size.
    Each line is 44px tall (.glance-collection), so the height is the top padding plus three lines. */
@@ -221,13 +184,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* The status colours: the strong text colour of each health badge. Needs attention uses the amber of
-   the rating stars, because its brown text colour is too close to Sick's red in a thin bar. */
-.health-bar-thriving { background: var(--status-thriving-text); }
-.health-bar-stable { background: var(--status-stable-text); }
-.health-bar-needs-attention { background: var(--color-amber); }
-.health-bar-sick { background: var(--status-sick-text); }
-
 /* ── All reminders popup ────────────────────────────── */
 
 /* One heading per day; today in terracotta and overdue in red, as everywhere else */
@@ -287,8 +243,9 @@
 
 /* ── Add a reminder ─────────────────────────────────── */
 
-/* The dashed "+ Add a reminder" button at the bottom of Today's care, like the dashed Add tiles elsewhere */
-.add-reminder-btn {
+/* The dashed add button at the bottom of a box, like the dashed Add tiles elsewhere: "+ Add a reminder" in Today's
+   care (a <button> that opens a popup) and "+ Add plant" in Garden at a glance (a link to Add Plant) */
+.dash-add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -303,13 +260,15 @@
   font-family: inherit;
   font-size: var(--text-body-sm);
   font-weight: var(--weight-medium);
+  text-decoration: none;
   cursor: pointer;
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.add-reminder-btn:hover {
+.dash-add-btn:hover {
   border-color: var(--color-leaf);
   background: var(--color-sage);
+  color: var(--color-forest);   /* the link version would otherwise take the darker link colour */
 }
 
 /* The three numbered steps of the popup. A <fieldset> groups each step's fields for screen readers. */

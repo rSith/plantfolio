@@ -235,10 +235,6 @@ function reminder_error_attrs($field, $errors)
     return isset($errors[$field]) ? ' aria-invalid="true" aria-describedby="reminder-' . $field . '-error"' : '';
 }
 
-// Garden at a glance: each status's share of the garden becomes the width of its part of the bar
-$health_counts = $mock_garden_stats['health_counts'];
-$plant_total   = array_sum($health_counts);
-
 $page_title = 'Dashboard';
 $page_css   = 'dashboard.css';
 
@@ -290,12 +286,12 @@ include __DIR__ . '/../includes/header.php';
           <?php // No "Coming up this week" row: All reminders (top right) already shows the days ahead ?>
 
           <?php // Opens the Add a reminder popup below (app.js) ?>
-          <button type="button" class="add-reminder-btn" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
+          <button type="button" class="dash-add-btn" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
         </section>
       <?php endif; ?>
     </div>
 
-    <?php // No Quick actions panel: My Garden's Add plant and the header's Plant Tools (the + menu on a phone) do those jobs ?>
+    <?php // No Quick actions panel: Add plant is at the bottom of Garden at a glance, the AI tools in Plant Tools ?>
     <div class="dash-side">
       <?php if ($has_plants): ?>
         <section class="panel" aria-labelledby="glance-title">
@@ -306,20 +302,6 @@ include __DIR__ . '/../includes/header.php';
             <strong><?= e($current_user['plant_count']) ?></strong>
             <span>plants in<br><?= e($current_user['collection_count']) ?> collections</span>
           </p>
-
-          <?php // The bar repeats the numbers in the list below it, so screen readers skip it ?>
-          <div class="health-bar" aria-hidden="true">
-            <?php foreach ($health_counts as $status => $count): ?>
-              <?php if ($count > 0): ?>
-                <span class="health-bar-<?= e(str_replace('_', '-', $status)) ?>" style="width: <?= e(round($count / $plant_total * 100, 1)) ?>%"></span>
-              <?php endif; ?>
-            <?php endforeach; ?>
-          </div>
-          <ul class="health-legend">
-            <?php foreach ($health_counts as $status => $count): ?>
-              <li><span class="health-dot health-bar-<?= e(str_replace('_', '-', $status)) ?>"></span> <?= e(health_label($status)) ?> <strong><?= e($count) ?></strong></li>
-            <?php endforeach; ?>
-          </ul>
 
           <?php // Where the plants are: one line per collection with its count and a few photos; each opens it in My Garden.
                 // Stage B: the collections query My Garden already uses (plant_count and three cover photos per row). ?>
@@ -343,6 +325,9 @@ include __DIR__ . '/../includes/header.php';
               </li>
             <?php endforeach; ?>
           </ul>
+
+          <?php // The box ends like Today's care: a dashed add button, here to Add Plant (P06) ?>
+          <a class="dash-add-btn" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
         </section>
       <?php endif; ?>
     </div>

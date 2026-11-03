@@ -529,13 +529,8 @@ $mock_quote_member = [
 
 // ── Dashboard (P03, CORE-24 and CORE-25) ────────────────
 
-// Numbers for Nimali's whole garden, which the Dashboard cannot count from the short lists above.
-// Stage B: SELECT health_status, COUNT(*) FROM plants WHERE user_id = ? GROUP BY health_status
-$mock_garden_stats = [
-    'health_counts' => ['thriving' => 13, 'stable' => 3, 'needs_attention' => 1, 'sick' => 1],   // adds up to 18 plants
-];
-
-
+// The Dashboard reads the rows above: $mock_reminders (Today's care), $mock_plant_reminders (All reminders),
+// $mock_plants (the reminder popup) and $mock_collections (Garden at a glance).
 
 // ── Plant Profile (P05, CORE-18 and CORE-21) ───────────
 
@@ -1188,9 +1183,6 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_plant_photos  = [];
     $mock_reminders     = [];
     $mock_received_interests = [];
-    $mock_garden_stats  = [
-        'health_counts' => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
-    ];
 
     // A new account has no listings yet, and nothing to count on its public profile
     $mock_listings = array_values(array_filter($mock_listings, fn ($listing) => $listing['user_id'] !== $current_user['id']));
