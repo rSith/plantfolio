@@ -295,13 +295,12 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
     </div>
 
-    <?php // No Quick actions panel: the header's Add plant and Plant Tools (the + menu on a phone) already do those jobs ?>
+    <?php // No Quick actions panel: My Garden's Add plant and the header's Plant Tools (the + menu on a phone) do those jobs ?>
     <div class="dash-side">
       <?php if ($has_plants): ?>
         <section class="panel" aria-labelledby="glance-title">
           <div class="panel-head">
             <h2 class="panel-title" id="glance-title">Garden at a glance</h2>
-            <a class="panel-link" href="<?= e(url('garden.php')) ?>">My Garden</a>
           </div>
           <p class="glance-total">
             <strong><?= e($current_user['plant_count']) ?></strong>

@@ -95,8 +95,7 @@ if ($is_member) {
 
       <div class="header-actions">
         <?php if ($is_member): ?>
-          <a class="icon-btn" href="<?= e(url('explore.php')) ?>" aria-label="Search"><?= icon('search') ?></a>
-          <a class="btn btn-primary btn-sm header-add" href="<?= e(url('plant-form.php')) ?>" aria-label="Add plant"><?= icon('plus') ?> <span class="header-add-label">Add plant</span></a>
+          <?php // No Search or Add plant buttons here: search is on Explore, Add plant on My Garden (and the phone's + menu) ?>
           <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $bell_count > 0 ? ': ' . e($bell_count) . ' new' : '' ?>">
             <?= icon('bell') ?>
             <?php if ($bell_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>
