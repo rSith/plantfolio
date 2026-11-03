@@ -293,6 +293,7 @@ include __DIR__ . '/../includes/header.php';
     <h1 class="explore-title">Explore the community</h1>
 
     <form class="explore-search" method="get" action="<?= e(url('explore.php')) ?>" role="search">
+      <?= preview_field() ?>
       <?php // A new search starts without filters (their counts belong to the old search) but keeps the tab and sort ?>
       <?php if ($tab === 'people' && !$is_member_search): ?>
         <input type="hidden" name="tab" value="people">
@@ -335,6 +336,7 @@ include __DIR__ . '/../includes/header.php';
       </summary>
 
       <form class="filter-form" method="get" action="<?= e(url('explore.php')) ?>" aria-labelledby="filters-title">
+        <?= preview_field() ?>
         <?php // The search and the sort are chosen elsewhere on the page; hidden fields carry them through Apply ?>
         <?php if ($q !== ''): ?>
           <input type="hidden" name="q" value="<?= e($q) ?>">

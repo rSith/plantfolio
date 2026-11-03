@@ -250,6 +250,7 @@ include __DIR__ . '/../includes/header.php';
   <?php // Filters (p17, element 3): one GET form, so every choice ends up in the address. Without JavaScript the form
         // only sends when Search is pressed; week 6 sends it on every change and moves it into a bottom sheet on a phone. ?>
   <form class="exchange-filters" method="get" action="<?= e(url('exchange.php')) ?>" role="search" aria-label="Filter listings">
+    <?= preview_field() ?>
     <?php if ($filters['sort'] !== ''): ?>
       <input type="hidden" name="sort" value="<?= e($sort) ?>">
     <?php endif; ?>

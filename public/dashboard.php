@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
     if (!$reminder_errors) {
         $repeat   = $reminder_values['repeat'];
         $reminder = [
-            'id'            => 900 + count($_SESSION['preview_reminders'] ?? []),   // made up: stage B's AUTO_INCREMENT
+            'id'            => 900 + count($_SESSION[preview_key('reminders')] ?? []),   // made up: stage B's AUTO_INCREMENT
             'plant_id'      => (int) $plant_id,
             'task'          => $reminder_values['task'],
             'interval_days' => $repeat === 'daily' ? 1 : ($repeat === 'interval' ? (int) $reminder_values['interval'] : null),

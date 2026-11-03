@@ -54,7 +54,24 @@ date_default_timezone_set(config('timezone') ?? 'Asia/Colombo');
  */
 function url($path = '')
 {
-    return rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
+    $address = rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
+
+    // Stage F preview: on a page shown as a brand-new member (?empty=1, mock-data.php), every link to one of our pages
+    // keeps empty=1, so that browser tab stays in the preview while another tab shows the full garden. The mark goes
+    // before a #part, and never on images, styles or scripts.
+    if (!empty($GLOBALS['preview_empty'])) {
+        [$before, $hash] = array_pad(explode('#', $address, 2), 2, null);
+        if (str_ends_with(strtok($before, '?'), '.php')) {
+            $address = $before . (str_contains($before, '?') ? '&' : '?') . 'empty=1' . ($hash !== null ? '#' . $hash : '');
+        }
+    }
+    return $address;
+}
+
+/** Stage F preview: the hidden field that keeps ?empty=1 in a GET form (a GET form replaces the address's query). */
+function preview_field()
+{
+    return !empty($GLOBALS['preview_empty']) ? '<input type="hidden" name="empty" value="1">' : '';
 }
 
 /**
@@ -81,7 +98,9 @@ function query_url($page, array $params)
     // An empty list ([]) is dropped too: http_build_query() would print nothing for it and leave a bare "?"
     $params = array_filter($params, fn ($value) => $value !== null && $value !== '' && $value !== []);
 
-    return url($page) . ($params ? '?' . http_build_query($params) : '');
+    $address = url($page);   // may already end in ?empty=1 (the new-member preview)
+
+    return $address . ($params ? (str_contains($address, '?') ? '&' : '?') . http_build_query($params) : '');
 }
 
 /**

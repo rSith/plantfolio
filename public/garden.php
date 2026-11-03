@@ -161,6 +161,8 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Search, filter, sort (p11, element 3): a GET form, so the choices land in the address like the tabs ?>
     <form class="garden-toolbar" method="get" action="<?= e(url('garden.php')) ?>" role="search">
+      <?php // preview_field(): the new-member preview's ?empty=1, which a GET form would otherwise drop ?>
+      <?= preview_field() ?>
       <?php // Hidden fields carry the choices made outside the form, so Apply does not lose them ?>
       <?php if ($collection_id !== null): ?>
         <input type="hidden" name="collection" value="<?= e($collection_id) ?>">

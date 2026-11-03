@@ -57,22 +57,38 @@ if (isset($_GET['guest'])) {
     $_SESSION['preview_visitor'] = true;
 }
 if (isset($_GET['member'])) {
-    $_SESSION['preview_visitor']   = false;
-    $_SESSION['preview_empty']     = false;   // ?member is always Nimali with her full garden
-    $_SESSION['preview_interests'] = [];      // … and the interests of the mock data (see mock_send_interest())
-    $_SESSION['preview_exchanges'] = [];      // … the listings of the mock data, none marked exchanged (mock_mark_exchanged())
-    $_SESSION['preview_ratings']   = [];      // … and no ratings given in the preview (mock_rate_exchange())
-    $_SESSION['preview_reminders'] = [];      // … and no reminders added in the preview (mock_add_reminder())
+    $_SESSION['preview_visitor'] = false;
+    // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
+    // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder())
+    foreach (['interests', 'exchanges', 'ratings', 'reminders'] as $list) {
+        $_SESSION['preview_' . $list]          = [];
+        $_SESSION['preview_' . $list . '_new'] = [];
+    }
 }
 if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
+}
+
+// Preview switch: ?empty=1 shows Nimali as a brand-new member, before her first plant (state S1). It belongs to the
+// address, not the session, so each browser tab keeps its own: url() (helpers.php) copies empty=1 onto every link and
+// form of such a page, and a page opened without it shows her full garden. (In a session, a second tab opened as a
+// new member would have turned the first tab's next page empty too.) Create account starts it.
+$preview_empty = isset($_GET['empty']);
+
+/**
+ * Mock-only: the session key of one list of preview actions (interests, exchanges, ratings, reminders). The new-member
+ * preview keeps its own copy, so two tabs never mix what was done in each: preview_key('ratings') is 'preview_ratings'
+ * for the full garden and 'preview_ratings_new' for the new member.
+ */
+function preview_key($list)
+{
+    return 'preview_' . $list . (!empty($GLOBALS['preview_empty']) ? '_new' : '');
 }
 
 /** Mock-only: log out, i.e. switch the preview to visitor mode (logout.php). Returns null for $current_user. */
 function mock_become_visitor()
 {
     $_SESSION['preview_visitor'] = true;
-    $_SESSION['preview_empty']   = false;
     return null;
 }
 
@@ -84,12 +100,13 @@ function mock_become_visitor()
 function mock_log_in_and_go($page, $new_account = false)
 {
     $_SESSION['preview_visitor'] = false;
-    $_SESSION['preview_empty']   = $new_account;
     if ($new_account) {
-        $_SESSION['preview_interests'] = [];   // a brand-new account has shown interest in nothing yet
-        $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
-        $_SESSION['preview_ratings']   = [];
-        $_SESSION['preview_reminders'] = [];   // … and has no reminders
+        // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
+        foreach (['interests', 'exchanges', 'ratings', 'reminders'] as $list) {
+            $_SESSION['preview_' . $list . '_new'] = [];
+        }
+        header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
+        exit;
     }
     header('Location: ' . url($page));
     exit;
@@ -397,8 +414,8 @@ $seeded_interest_ids = array_column(
  */
 function mock_send_interest($listing_id, $user_id, $message)
 {
-    $_SESSION['preview_interests'][$listing_id] = [
-        'id'         => $_SESSION['preview_interests'][$listing_id]['id'] ?? 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
+    $_SESSION[preview_key('interests')][$listing_id] = [
+        'id'         => $_SESSION[preview_key('interests')][$listing_id]['id'] ?? 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
         'listing_id' => $listing_id,
         'user_id'    => $user_id,
         'message'    => $message,
@@ -410,7 +427,7 @@ function mock_send_interest($listing_id, $user_id, $message)
 /** Mock-only: "Withdraw interest". Stage B: UPDATE listing_interests SET status = 'withdrawn' WHERE id = ? AND user_id = ?. */
 function mock_withdraw_interest($interest)
 {
-    $_SESSION['preview_interests'][$interest['listing_id']] = array_merge($interest, ['status' => 'withdrawn']);
+    $_SESSION[preview_key('interests')][$interest['listing_id']] = array_merge($interest, ['status' => 'withdrawn']);
 }
 
 /**
@@ -420,7 +437,7 @@ function mock_withdraw_interest($interest)
  */
 function mock_mark_exchanged($listing_id, $user_id)
 {
-    $_SESSION['preview_exchanges'][$listing_id] = ['exchanged_with' => $user_id, 'exchanged_at' => date('Y-m-d H:i:s')];
+    $_SESSION[preview_key('exchanges')][$listing_id] = ['exchanged_with' => $user_id, 'exchanged_at' => date('Y-m-d H:i:s')];
 }
 
 /**
@@ -430,7 +447,7 @@ function mock_mark_exchanged($listing_id, $user_id)
  */
 function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
 {
-    $_SESSION['preview_ratings'][$listing_id] = [
+    $_SESSION[preview_key('ratings')][$listing_id] = [
         'id'         => 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
         'rater_id'   => $rater_id,
         'rated_id'   => $rated_id,
@@ -451,8 +468,8 @@ function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
 function mock_add_reminder($reminder)
 {
     $key      = $reminder['plant_id'] . '-' . $reminder['task'];
-    $previous = $_SESSION['preview_reminders'][$key] ?? null;
-    $_SESSION['preview_reminders'][$key] = $reminder;
+    $previous = $_SESSION[preview_key('reminders')][$key] ?? null;
+    $_SESSION[preview_key('reminders')][$key] = $reminder;
 
     return $previous;
 }
@@ -465,9 +482,9 @@ function mock_add_reminder($reminder)
 function mock_undo_reminder($key, $previous)
 {
     if ($previous) {
-        $_SESSION['preview_reminders'][$key] = $previous;
+        $_SESSION[preview_key('reminders')][$key] = $previous;
     } else {
-        unset($_SESSION['preview_reminders'][$key]);
+        unset($_SESSION[preview_key('reminders')][$key]);
     }
 }
 
@@ -1155,18 +1172,10 @@ $mock_received_interests = [
 ];
 
 
-// Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
-// Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
-// stay empty until ?member or Log in brings her garden back. Create account turns it on.
-// It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
-if (isset($_GET['empty'])) {
-    $_SESSION['preview_empty']     = true;
-    $_SESSION['preview_interests'] = [];   // a brand-new member has shown interest in nothing yet
-    $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
-    $_SESSION['preview_ratings']   = [];
-    $_SESSION['preview_reminders'] = [];   // … and has no reminders
-}
-if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'index.php') {
+// The new-member preview ($preview_empty, set near the top from ?empty=1): every page agrees, because every link of
+// such a page carries empty=1. It empties only her own rows. The Landing page ignores it: its collage borrows Monty
+// as a public sample.
+if ($preview_empty && $current_user && current_page() !== 'index.php') {
     $current_user['plant_count']        = 0;
     $current_user['collection_count']   = 0;
     $current_user['new_interest_count'] = 0;
@@ -1205,7 +1214,7 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
 // Nimali's interests as the preview changed them (mock_send_interest(), mock_withdraw_interest()): a row kept in the
 // session replaces the mock row of the same listing. Built here, after the ?empty switch, so a brand-new Nimali starts
 // with none but keeps the ones she sends. A visitor's pages count them too: they are Nimali's rows, whoever looks.
-foreach ($_SESSION['preview_interests'] ?? [] as $preview_row) {
+foreach ($_SESSION[preview_key('interests')] ?? [] as $preview_row) {
     $mock_listing_interests = array_values(array_filter(
         $mock_listing_interests,
         fn ($interest) => $interest['listing_id'] !== $preview_row['listing_id']
@@ -1228,7 +1237,7 @@ foreach ($mock_listings as $index => $listing) {
 // Listings Nimali marked as exchanged in the preview (mock_mark_exchanged()): closed, with the member and the date, as
 // stage B's UPDATE leaves them. Only an open listing can change, so an old row in the session can do no harm.
 // Like the interests above, they count for every viewer: a visitor no longer finds the listing on the Exchange page.
-foreach ($_SESSION['preview_exchanges'] ?? [] as $listing_id => $exchange) {
+foreach ($_SESSION[preview_key('exchanges')] ?? [] as $listing_id => $exchange) {
     foreach ($mock_listings as $index => $listing) {
         if ($listing['id'] === $listing_id && $listing['status'] === 'open') {
             $mock_listings[$index] = array_merge($listing, ['status' => 'closed'], $exchange);
@@ -1241,7 +1250,7 @@ $mock_site_stats['open_listing_count'] = count(array_filter($mock_listings, fn (
 // Ratings Nimali gave in the preview (mock_rate_exchange()). Only My exchanges reads them: the exchange moves from
 // "Waiting for your rating" to "Ratings you gave". The rated member's average and reviews follow in stage B, where the
 // INSERT makes every COUNT() and AVG() on user_ratings include the new row.
-$mock_preview_ratings = array_values($_SESSION['preview_ratings'] ?? []);
+$mock_preview_ratings = array_values($_SESSION[preview_key('ratings')] ?? []);
 
 // Reminders Nimali added or marked done in the preview (mock_add_reminder()). Each replaces the mock row for the same
 // plant and task, as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due
@@ -1251,7 +1260,7 @@ $mock_preview_ratings = array_values($_SESSION['preview_ratings'] ?? []);
 if (current_page() !== 'index.php') {
     $own_plants     = array_column($mock_plants, null, 'id');
     $touched_plants = [];
-    foreach ($_SESSION['preview_reminders'] ?? [] as $preview_row) {
+    foreach ($_SESSION[preview_key('reminders')] ?? [] as $preview_row) {
         $plant = $own_plants[$preview_row['plant_id']] ?? null;
         if (!$plant) {
             continue;
