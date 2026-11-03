@@ -245,7 +245,7 @@ include __DIR__ . '/../includes/header.php';
                 <img class="thumb" src="<?= e(photo_url($reminder['photo'])) ?>" alt="">
                 <span class="reminder-row-text">
                   <a href="<?= e(url('plant.php?id=' . $reminder['plant_id'])) ?>"><strong><?= e($reminder['nickname']) ?></strong></a>
-                  <span class="reminder-row-task"><?= icon(task_icon($reminder['task'])) ?> <?= e(task_label($reminder['task'])) ?> · every <?= e($reminder['interval_days']) ?> days</span>
+                  <span class="reminder-row-task"><?= task_name($reminder['task']) ?> · every <?= e($reminder['interval_days']) ?> days</span>
                 </span>
               </li>
             <?php endforeach; ?>

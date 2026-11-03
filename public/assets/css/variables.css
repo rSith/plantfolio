@@ -55,6 +55,11 @@
   --shadow-toast: 0 8px 24px rgba(43, 43, 40, 0.24);
   --color-scrim: rgba(43, 43, 40, 0.45);              /* the dimmed page behind a popup */
 
+  /* Care tasks: each has its own colour, always shown with its word. All above 5:1 on white and cream. */
+  --task-water: #2C6A9E;       /* blue */
+  --task-fertilise: #6B6B16;   /* olive, plant food; not the amber of "Needs attention" */
+  --task-recheck: #6A4C9C;     /* violet */
+
   /* Fonts — the names after the first are fallbacks if Google Fonts fails to load */
   --font-display: 'Lora', Georgia, serif;             /* names, headings, scientific names */
   --font-body: 'Poppins', system-ui, sans-serif;      /* buttons, labels, forms, numbers */

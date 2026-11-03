@@ -370,7 +370,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="reminder-row">
               <label class="toggle">
                 <input type="checkbox" name="<?= e($task) ?>_enabled" value="1"<?= $reminder['enabled'] ? ' checked' : '' ?>>
-                <span class="reminder-task"><?= icon(task_icon($task)) ?> <?= e(task_label($task)) ?> every</span>
+                <span class="reminder-task"><?= task_name($task) ?> every</span>
               </label>
               <span class="reminder-when">
                 <label class="visually-hidden" for="<?= e($task) ?>-interval"><?= e(task_label($task)) ?> every how many days</label>

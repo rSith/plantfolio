@@ -259,15 +259,26 @@ function health_label($status)
 /** The word for a care_reminders.task value: water gives "Water". */
 function task_label($task)
 {
-    $labels = ['water' => 'Water', 'fertilise' => 'Fertilise'];
+    $labels = ['water' => 'Water', 'fertilise' => 'Fertilise', 'recheck' => 'Re-check'];
 
     return $labels[$task] ?? ucfirst($task);
 }
 
-/** The icon for a care task: a droplet for watering, a sprout for fertilising. */
+/** The icon for a care task: rain for watering, a flask of plant food for fertilising, a stethoscope for a re-check. */
 function task_icon($task)
 {
-    return $task === 'fertilise' ? 'sprout' : 'droplet';
+    $icons = ['water' => 'cloud-rain', 'fertilise' => 'flask-conical', 'recheck' => 'stethoscope'];
+
+    return $icons[$task] ?? 'calendar';
+}
+
+/**
+ * A task's icon and name in the task's own colour: blue Water, olive Fertilise, violet Re-check (.task in
+ * components.css). Returns HTML like icon(), so print it with <?= task_name($task) ?>, not inside e().
+ */
+function task_name($task)
+{
+    return '<span class="task task-' . e($task) . '">' . icon(task_icon($task)) . ' ' . e(task_label($task)) . '</span>';
 }
 
 /** The words and icon for an exchange_listings.type value (swap, free or either). */

@@ -325,8 +325,7 @@ include __DIR__ . '/../includes/header.php';
           <?php foreach ($reminders as $reminder): ?>
             <?php $due = care_due($reminder['next_due']); ?>
             <li>
-              <?= icon(task_icon($reminder['task'])) ?>
-              <span><?= e(task_label($reminder['task'])) ?> · every <?= e($reminder['interval_days']) ?> days</span>
+              <span><?= task_name($reminder['task']) ?> · every <?= e($reminder['interval_days']) ?> days</span>
               <span class="side-due side-due-<?= e($due['state']) ?>"><?= e($due['state'] === 'upcoming' ? format_day($reminder['next_due']) : ($due['state'] === 'due' ? 'Today' : $due['text'])) ?></span>
             </li>
           <?php endforeach; ?>

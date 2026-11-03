@@ -467,7 +467,7 @@
   padding: var(--space-8) 0;
 }
 
-.side-reminders .icon,
+/* Reminder icons keep their task colour (.task); only the facts' icons are grey */
 .plant-facts .icon {
   color: var(--color-muted);
 }

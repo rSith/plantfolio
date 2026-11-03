@@ -2063,6 +2063,19 @@ textarea.input {
   color: var(--color-danger);
 }
 
+/* ── Task name (task_name() in helpers.php) ─────────── */
+/* "Water" with its icon, both in the task's colour; the text around it keeps its own colour.
+   Plain inline text (not flex), so it shares the baseline of the words next to it; .icon lines itself up. */
+
+.task {
+  font-weight: var(--weight-medium);
+  white-space: nowrap;   /* the icon never wraps away from its word */
+}
+
+.task-water { color: var(--task-water); }
+.task-fertilise { color: var(--task-fertilise); }
+.task-recheck { color: var(--task-recheck); }
+
 /* ── Modal (popup, MOD-01) ──────────────────────────── */
 /* A native <dialog>. showModal() (app.js) shows it above a dimmed page, keeps Tab inside it and closes it on Esc.
    No padding on the box itself: its head and body fill it, so a click that lands on the <dialog> is a click on
