@@ -110,10 +110,12 @@ $page_css   = 'garden.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
+  <?php // Banner: like the Dashboard's greeting banner, but with a shelf of potted plants for the garden page ?>
   <div class="garden-head">
-    <div>
+    <div class="garden-head-text">
       <h1 class="garden-title">My Garden</h1>
       <p class="garden-summary">
+        <?= icon('sprout') ?>
         <?php if ($has_plants): ?>
           <?= e($plant_count) ?> <?= $plant_count === 1 ? 'plant' : 'plants' ?> in <?= e($coll_count) ?> <?= $coll_count === 1 ? 'collection' : 'collections' ?>
         <?php else: ?>
@@ -121,6 +123,7 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </p>
     </div>
+    <img class="garden-head-art" src="<?= e(url('assets/img/garden-shelf.svg')) ?>" alt="">
     <div class="garden-actions">
       <?php // Stage F: does nothing yet. Creating a collection is saved in stage B (CORE-13). ?>
       <button type="button" class="btn btn-secondary"><?= icon('folder-plus') ?> New collection</button>

@@ -3,28 +3,76 @@
 
 /* ── Header ─────────────────────────────────────────── */
 
+/* A sage banner like the Dashboard's (dashboard.css .dash-head), but with a shelf of potted plants on the right
+   instead of leaves. overflow: hidden crops the trailing pothos at the banner's bottom edge. */
 .garden-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-16) var(--space-24);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--space-16);
   margin-bottom: var(--space-24);
+  padding: var(--space-24);
+  border-radius: var(--radius-card);
+  background: var(--color-sage);
+}
+
+/* Text and buttons stay above the drawing */
+.garden-head-text,
+.garden-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.garden-head-text {
+  max-width: 60%;
 }
 
 .garden-title {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
 .garden-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
+}
+
+.garden-summary .icon {
+  color: var(--color-leaf);
 }
 
 .garden-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
+}
+
+/* Phone: small, in the bottom right corner beside the stacked buttons, clear of the title */
+.garden-head-art {
+  position: absolute;
+  right: calc(var(--space-4) * -1);
+  bottom: var(--space-8);
+  width: auto;
+  max-width: none;   /* the base img rule would shrink it; the banner's overflow crops it instead */
+  height: 72px;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .garden-head {
+    padding: var(--space-32) var(--space-48);
+  }
+
+  /* Tablet and up: the shelf stands on the bottom edge, and the plants grow up beside the text */
+  .garden-head-art {
+    top: auto;
+    right: var(--space-24);
+    bottom: -14px;   /* the brackets and the trailing pothos run off the edge */
+    height: 92%;
+  }
 }
 
 /* ── Collection tabs ────────────────────────────────── */
