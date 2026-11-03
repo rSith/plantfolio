@@ -55,6 +55,82 @@ function reminder_day($date)
     return date('l j M', strtotime($date));
 }
 
+// ── Add a reminder (popup) ──────────────────────────────
+// Set like an alarm on a phone: which plant, which care task, at what time from which day, and how it repeats.
+// Stage F: the form is checked here, then nothing is saved. Stage B: INSERT INTO care_reminders … (CORE-22).
+
+$weekdays = ['mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday', 'thu' => 'Thursday',
+             'fri' => 'Friday', 'sat' => 'Saturday', 'sun' => 'Sunday'];
+$repeat_options = [
+    'once'     => 'Does not repeat',
+    'daily'    => 'Every day',
+    'days'     => 'On chosen days',
+    'interval' => 'Every few days',
+];
+
+// The member's own plants, A to Z, for the plant picker. Only these ids are accepted (ownership check).
+$pick_plants = $mock_plants;
+usort($pick_plants, fn ($a, $b) => strcasecmp($a['nickname'], $b['nickname']));
+
+$today           = date('Y-m-d');
+$reminder_values = ['plant' => '', 'task' => 'water', 'time' => '08:00', 'start' => $today,
+                    'repeat' => 'interval', 'days' => [], 'interval' => '7'];
+$reminder_errors = [];   // field name => message, printed under that field in the popup
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
+    foreach (['plant', 'task', 'time', 'start', 'repeat', 'interval'] as $name) {
+        $reminder_values[$name] = post_text($name);
+    }
+    // The day boxes arrive as a list (days[]=mon&days[]=wed): keep only text that is a known day
+    $posted_days = $_POST['days'] ?? [];
+    $posted_days = is_array($posted_days) ? array_filter($posted_days, 'is_string') : [];
+    $reminder_values['days'] = array_values(array_intersect(array_keys($weekdays), $posted_days));
+
+    // The same rules the browser checks, checked again here: the browser's checks can be switched off
+    $plant_id = $reminder_values['plant'];
+    if (!ctype_digit($plant_id) || !isset($plants_by_id[(int) $plant_id])) {
+        $reminder_errors['plant'] = 'Choose one of your plants.';
+    }
+    if (!in_array($reminder_values['task'], reminder_tasks(), true)) {
+        $reminder_errors['task'] = 'Choose a care task.';
+    }
+    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $reminder_values['time'])) {
+        $reminder_errors['time'] = 'Choose a time.';
+    }
+    // '!' starts the date at midnight; comparing it back as text rejects dates like 2026-02-31
+    $start = DateTime::createFromFormat('!Y-m-d', $reminder_values['start']);
+    if (!$start || $start->format('Y-m-d') !== $reminder_values['start'] || $reminder_values['start'] < $today) {
+        $reminder_errors['start'] = 'Choose today or a later day.';
+    }
+    if (!array_key_exists($reminder_values['repeat'], $repeat_options)) {
+        $reminder_errors['repeat'] = 'Choose how often it repeats.';
+    } elseif ($reminder_values['repeat'] === 'days' && !$reminder_values['days']) {
+        $reminder_errors['days'] = 'Choose at least one day.';
+    } elseif ($reminder_values['repeat'] === 'interval'
+        && (!ctype_digit($reminder_values['interval']) || $reminder_values['interval'] < 2 || $reminder_values['interval'] > 365)) {
+        $reminder_errors['interval'] = 'Use a number from 2 to 365.';
+    }
+
+    if (!$reminder_errors) {
+        header('Location: ' . url('dashboard.php?added=' . $plant_id . '&task=' . $reminder_values['task']));
+        exit;
+    }
+}
+
+// "Reminder added: Water Monty." after the redirect above; anything unknown in the address shows nothing
+$added_id    = get_text('added');
+$added_plant = ctype_digit($added_id) ? ($plants_by_id[(int) $added_id] ?? null) : null;
+$added_task  = get_text('task');
+if (!in_array($added_task, reminder_tasks(), true)) {
+    $added_plant = null;
+}
+
+/** aria-invalid and aria-describedby for a field with an error, so a screen reader reads the message with it. */
+function reminder_error_attrs($field, $errors)
+{
+    return isset($errors[$field]) ? ' aria-invalid="true" aria-describedby="reminder-' . $field . '-error"' : '';
+}
+
 // Garden at a glance: each status's share of the garden becomes the width of its part of the bar
 $health_counts = $mock_garden_stats['health_counts'];
 $plant_total   = array_sum($health_counts);
@@ -80,6 +156,11 @@ include __DIR__ . '/../includes/header.php';
     </div>
     <img class="dash-head-art" src="<?= e(url('assets/img/dashboard-leaves.svg')) ?>" alt="">
   </div>
+
+  <?php if ($added_plant): ?>
+    <?php // Stage F: the reminder is not saved yet, so it does not appear in the lists; stage B saves it ?>
+    <p class="alert alert-success dash-alert" role="status"><?= icon('check') ?> Reminder added: <?= e(task_label($added_task)) ?> <?= e($added_plant['nickname']) ?>.</p>
+  <?php endif; ?>
 
   <div class="dash-grid">
     <div class="dash-main">
@@ -115,6 +196,9 @@ include __DIR__ . '/../includes/header.php';
             <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
           <?php endif; ?>
           <?php // No "Coming up this week" row: All reminders (top right) already shows the days ahead ?>
+
+          <?php // Opens the Add a reminder popup below (app.js) ?>
+          <button type="button" class="add-reminder-btn" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
         </section>
       <?php endif; ?>
     </div>
@@ -194,6 +278,121 @@ include __DIR__ . '/../includes/header.php';
           </ul>
         <?php endforeach; ?>
       </div>
+    </dialog>
+
+    <?php // Add a reminder popup (MOD-01): one POST form. It opens at once when the server sent it back with an error. ?>
+    <dialog class="modal modal-wide" id="add-reminder" aria-labelledby="add-reminder-title"<?= $reminder_errors ? ' data-open-on-load' : '' ?>>
+      <form class="modal-form" method="post" action="<?= e(url('dashboard.php')) ?>">
+        <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+        <input type="hidden" name="form" value="reminder">
+
+        <div class="modal-head">
+          <h2 class="modal-title" id="add-reminder-title">Add a reminder</h2>
+          <?php // formmethod="dialog" closes the popup instead of sending the form; formnovalidate skips the checks ?>
+          <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+        </div>
+
+        <div class="modal-body">
+          <?php // 1. Which plant: the member's garden as small photo cards; each card is a radio button ?>
+          <fieldset class="reminder-step">
+            <legend class="reminder-step-title">1. Which plant?</legend>
+            <div class="plant-picks">
+              <?php foreach ($pick_plants as $plant): ?>
+                <label class="plant-pick">
+                  <input class="visually-hidden" type="radio" name="plant" value="<?= e($plant['id']) ?>" required<?= (string) $plant['id'] === $reminder_values['plant'] ? ' checked' : '' ?><?= reminder_error_attrs('plant', $reminder_errors) ?>>
+                  <img class="plant-pick-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
+                  <span class="plant-pick-name"><?= e($plant['nickname']) ?></span>
+                  <span class="plant-pick-meta"><?= e($plant['collection_name']) ?></span>
+                </label>
+              <?php endforeach; ?>
+            </div>
+            <?php if (isset($reminder_errors['plant'])): ?>
+              <p class="field-error" id="reminder-plant-error"><?= e($reminder_errors['plant']) ?></p>
+            <?php endif; ?>
+          </fieldset>
+
+          <?php // 2. Which care: the most common jobs (reminder_tasks() in helpers.php) ?>
+          <fieldset class="reminder-step">
+            <legend class="reminder-step-title">2. Which care?</legend>
+            <label class="visually-hidden" for="reminder-task">Care task</label>
+            <select class="input" id="reminder-task" name="task" required<?= reminder_error_attrs('task', $reminder_errors) ?>>
+              <?php foreach (reminder_tasks() as $task): ?>
+                <option value="<?= e($task) ?>"<?= $task === $reminder_values['task'] ? ' selected' : '' ?>><?= e(task_label($task)) ?></option>
+              <?php endforeach; ?>
+            </select>
+            <?php if (isset($reminder_errors['task'])): ?>
+              <p class="field-error" id="reminder-task-error"><?= e($reminder_errors['task']) ?></p>
+            <?php endif; ?>
+          </fieldset>
+
+          <?php // 3. When: like a phone alarm, a big time, a first day and a repeat rule ?>
+          <fieldset class="reminder-step">
+            <legend class="reminder-step-title">3. When?</legend>
+            <div class="alarm-row">
+              <div class="field">
+                <label class="field-label" for="reminder-time">Time</label>
+                <input class="input alarm-time" type="time" id="reminder-time" name="time" value="<?= e($reminder_values['time']) ?>" required<?= reminder_error_attrs('time', $reminder_errors) ?>>
+                <?php if (isset($reminder_errors['time'])): ?>
+                  <p class="field-error" id="reminder-time-error"><?= e($reminder_errors['time']) ?></p>
+                <?php endif; ?>
+              </div>
+              <div class="field">
+                <label class="field-label" for="reminder-start">Starting</label>
+                <input class="input" type="date" id="reminder-start" name="start" value="<?= e($reminder_values['start']) ?>" min="<?= e($today) ?>" required<?= reminder_error_attrs('start', $reminder_errors) ?>>
+                <?php if (isset($reminder_errors['start'])): ?>
+                  <p class="field-error" id="reminder-start-error"><?= e($reminder_errors['start']) ?></p>
+                <?php endif; ?>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="reminder-repeat">Repeat</label>
+              <select class="input" id="reminder-repeat" name="repeat"<?= reminder_error_attrs('repeat', $reminder_errors) ?>>
+                <?php foreach ($repeat_options as $value => $label): ?>
+                  <option value="<?= e($value) ?>"<?= $value === $reminder_values['repeat'] ? ' selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <?php if (isset($reminder_errors['repeat'])): ?>
+                <p class="field-error" id="reminder-repeat-error"><?= e($reminder_errors['repeat']) ?></p>
+              <?php endif; ?>
+            </div>
+
+            <?php // Shown only for "On chosen days" (data-show-when, app.js): the round day buttons of an alarm app ?>
+            <div class="field" data-show-when="repeat=days">
+              <span class="field-label" id="reminder-days-label">On these days</span>
+              <div class="weekdays" role="group" aria-labelledby="reminder-days-label">
+                <?php foreach ($weekdays as $value => $name): ?>
+                  <label class="weekday">
+                    <input class="visually-hidden" type="checkbox" name="days[]" value="<?= e($value) ?>"<?= in_array($value, $reminder_values['days'], true) ? ' checked' : '' ?><?= reminder_error_attrs('days', $reminder_errors) ?>>
+                    <span aria-hidden="true"><?= e($name[0]) ?></span>
+                    <span class="visually-hidden"><?= e($name) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+              <?php if (isset($reminder_errors['days'])): ?>
+                <p class="field-error" id="reminder-days-error"><?= e($reminder_errors['days']) ?></p>
+              <?php endif; ?>
+            </div>
+
+            <?php // Shown only for "Every few days" ?>
+            <div class="field" data-show-when="repeat=interval">
+              <label class="field-label" for="reminder-interval">Every how many days?</label>
+              <span class="interval-row">
+                <input class="input interval-input" type="number" id="reminder-interval" name="interval" value="<?= e($reminder_values['interval']) ?>" min="2" max="365" inputmode="numeric"<?= reminder_error_attrs('interval', $reminder_errors) ?>>
+                days
+              </span>
+              <?php if (isset($reminder_errors['interval'])): ?>
+                <p class="field-error" id="reminder-interval-error"><?= e($reminder_errors['interval']) ?></p>
+              <?php endif; ?>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+          <button class="btn btn-primary" type="submit"><?= icon('bell') ?> Add reminder</button>
+        </div>
+      </form>
     </dialog>
   <?php endif; ?>
 </div>

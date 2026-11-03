@@ -59,6 +59,10 @@
   --task-water: #2C6A9E;       /* blue */
   --task-fertilise: #6B6B16;   /* olive, plant food; not the amber of "Needs attention" */
   --task-recheck: #6A4C9C;     /* violet */
+  --task-mist: #1C7468;        /* teal */
+  --task-rotate: #4651A0;      /* indigo */
+  --task-prune: #A23E68;       /* rose */
+  --task-repot: #7A4E2D;       /* soil brown; darker than terracotta, which means "due today" */
 
   /* Fonts — the names after the first are fallbacks if Google Fonts fails to load */
   --font-display: 'Lora', Georgia, serif;             /* names, headings, scientific names */

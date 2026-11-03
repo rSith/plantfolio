@@ -256,25 +256,50 @@ function health_label($status)
     return $labels[$status] ?? 'Unknown';
 }
 
+/**
+ * The care tasks a member can choose in Add a reminder (Dashboard), in the order of the list.
+ * recheck is not here: only a Health Check creates one (P08).
+ */
+function reminder_tasks()
+{
+    return ['water', 'fertilise', 'mist', 'rotate', 'prune', 'repot'];
+}
+
 /** The word for a care_reminders.task value: water gives "Water". */
 function task_label($task)
 {
-    $labels = ['water' => 'Water', 'fertilise' => 'Fertilise', 'recheck' => 'Re-check'];
+    $labels = [
+        'water'     => 'Water',
+        'fertilise' => 'Fertilise',
+        'mist'      => 'Mist',
+        'rotate'    => 'Rotate',
+        'prune'     => 'Prune',
+        'repot'     => 'Repot',
+        'recheck'   => 'Re-check',
+    ];
 
     return $labels[$task] ?? ucfirst($task);
 }
 
-/** The icon for a care task: rain for watering, a flask of plant food for fertilising, a stethoscope for a re-check. */
+/** The icon for a care task, e.g. rain for watering, a flask of plant food for fertilising, scissors for pruning. */
 function task_icon($task)
 {
-    $icons = ['water' => 'cloud-rain', 'fertilise' => 'flask-conical', 'recheck' => 'stethoscope'];
+    $icons = [
+        'water'     => 'cloud-rain',
+        'fertilise' => 'flask-conical',
+        'mist'      => 'spray-can',
+        'rotate'    => 'rotate-cw',
+        'prune'     => 'scissors',
+        'repot'     => 'shovel',
+        'recheck'   => 'stethoscope',
+    ];
 
     return $icons[$task] ?? 'calendar';
 }
 
 /**
- * A task's icon and name in the task's own colour: blue Water, olive Fertilise, violet Re-check (.task in
- * components.css). Returns HTML like icon(), so print it with <?= task_name($task) ?>, not inside e().
+ * A task's icon and name in the task's own colour, e.g. blue Water, olive Fertilise (.task in components.css).
+ * Returns HTML like icon(), so print it with <?= task_name($task) ?>, not inside e().
  */
 function task_name($task)
 {
