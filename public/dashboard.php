@@ -252,19 +252,7 @@ include __DIR__ . '/../includes/header.php';
 
   <div class="dash-grid">
     <div class="dash-main">
-      <?php if (!$has_plants): ?>
-        <?php // S1, right after sign-up: one clear next step plus the AI shortcut, instead of empty lists (p24) ?>
-        <section class="panel">
-          <?php partial('empty-state', [
-              'title'   => 'Your garden is waiting',
-              'text'    => 'Add your first plant to start its story.',
-              'actions' => [
-                  ['label' => 'Add a plant',          'href' => 'plant-form.php', 'icon' => 'plus'],
-                  ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
-              ],
-          ]); ?>
-        </section>
-      <?php else: ?>
+      <?php // S1 (a new member, no plants yet): the same boxes and options, each with a short first-step message ?>
         <section class="panel" aria-labelledby="care-title">
           <div class="panel-head">
             <h2 class="panel-title" id="care-title">Today's care
@@ -280,6 +268,8 @@ include __DIR__ . '/../includes/header.php';
                 <?php partial('care-row', ['reminder' => $reminder]); ?>
               <?php endforeach; ?>
             </div>
+          <?php elseif (!$has_plants): ?>
+            <p class="panel-empty"><?= icon('sprout') ?> No reminders yet. Start by adding a plant.</p>
           <?php else: ?>
             <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
           <?php endif; ?>
@@ -288,16 +278,17 @@ include __DIR__ . '/../includes/header.php';
           <?php // Opens the Add a reminder popup below (app.js) ?>
           <button type="button" class="dash-add-btn" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
         </section>
-      <?php endif; ?>
     </div>
 
     <?php // No Quick actions panel: Add plant is at the bottom of Garden at a glance, the AI tools in Plant Tools ?>
     <div class="dash-side">
-      <?php if ($has_plants): ?>
         <section class="panel" aria-labelledby="glance-title">
           <div class="panel-head">
             <h2 class="panel-title" id="glance-title">Garden at a glance</h2>
           </div>
+          <?php if (!$has_plants): ?>
+            <p class="panel-empty"><?= icon('sprout') ?> No plants yet. Start by adding your first plant.</p>
+          <?php else: ?>
           <p class="glance-total">
             <strong><?= e($current_user['plant_count']) ?></strong>
             <span>plants in<br><?= e($current_user['collection_count']) ?> collections</span>
@@ -325,16 +316,15 @@ include __DIR__ . '/../includes/header.php';
               </li>
             <?php endforeach; ?>
           </ul>
+          <?php endif; ?>
 
           <?php // The box ends like Today's care: a dashed add button, here to Add Plant (P06) ?>
           <a class="dash-add-btn" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
         </section>
-      <?php endif; ?>
     </div>
   </div>
 
-  <?php if ($has_plants): ?>
-    <?php // All reminders popup (MOD-01). A <dialog> stays hidden until app.js calls showModal(). ?>
+  <?php // All reminders popup (MOD-01). A <dialog> stays hidden until app.js calls showModal(). ?>
     <dialog class="modal" id="all-reminders" aria-labelledby="all-reminders-title">
       <div class="modal-head">
         <h2 class="modal-title" id="all-reminders-title">All reminders</h2>
@@ -345,7 +335,7 @@ include __DIR__ . '/../includes/header.php';
       </div>
       <div class="modal-body">
         <?php if (!$reminder_days): ?>
-          <p class="panel-empty"><?= icon('info') ?> No reminders yet. Add them on a plant's Edit page.</p>
+          <p class="panel-empty"><?= icon('info') ?> No reminders yet.</p>
         <?php endif; ?>
         <?php foreach ($reminder_days as $date => $day_reminders): ?>
           <h3 class="label reminder-day reminder-day-<?= e(care_due($date)['state']) ?>"><?= e(reminder_day($date)) ?></h3>
@@ -380,6 +370,9 @@ include __DIR__ . '/../includes/header.php';
           <?php // 1. Which plant: the member's garden as small photo cards; each card is a radio button ?>
           <fieldset class="reminder-step">
             <legend class="reminder-step-title">1. Which plant?</legend>
+            <?php if (!$pick_plants): ?>
+              <p class="field-hint">No plants in your garden yet. Add one first.</p>
+            <?php endif; ?>
             <div class="plant-picks">
               <?php foreach ($pick_plants as $plant): ?>
                 <label class="plant-pick">
@@ -500,7 +493,6 @@ include __DIR__ . '/../includes/header.php';
         </div>
       </form>
     </dialog>
-  <?php endif; ?>
 
   <?php if ($toast): ?>
     <?php // The popup message after Add reminder or Mark done (CORE-23 toast): stays until the member closes it. Undo is a POST,
