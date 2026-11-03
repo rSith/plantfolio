@@ -29,6 +29,47 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
   });
 });
 
+// A dropdown of radio buttons, <details data-picker>: the closed box shows the chosen option.
+// Choosing with the mouse or a finger closes the menu; with the keyboard, arrows move the choice,
+// Enter or Esc closes it. A click anywhere else closes it too.
+document.querySelectorAll('details[data-picker]').forEach((picker) => {
+  const summary = picker.querySelector('summary');
+  const value = picker.querySelector('[data-picker-value]');
+  let byPointer = false;
+
+  const close = () => {
+    picker.open = false;
+    summary.focus();
+  };
+
+  picker.addEventListener('pointerdown', () => {
+    byPointer = true;
+  });
+
+  picker.addEventListener('keydown', (event) => {
+    byPointer = false;
+    // Enter on a radio button would send the form; Esc would close the whole popup
+    if (picker.open && (event.key === 'Escape' || (event.key === 'Enter' && event.target.type === 'radio'))) {
+      event.preventDefault();
+      close();
+    }
+  });
+
+  picker.addEventListener('change', (event) => {
+    const label = event.target.closest('label').querySelector('[data-picker-label]');
+    value.replaceChildren(label.cloneNode(true));   // a copy of the option's icon and word
+    if (byPointer) {
+      close();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (picker.open && !picker.contains(event.target)) {
+      picker.open = false;
+    }
+  });
+});
+
 // A part of a form that only belongs to one choice: <div data-show-when="repeat=days"> is shown only while
 // the field named "repeat" in the same form is set to "days". Without JavaScript every part stays visible.
 // A hidden part's fields are also disabled: the browser then neither checks them nor sends them.

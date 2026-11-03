@@ -314,12 +314,29 @@ include __DIR__ . '/../includes/header.php';
           <?php // 2. Which care: the most common jobs (reminder_tasks() in helpers.php) ?>
           <fieldset class="reminder-step">
             <legend class="reminder-step-title">2. Which care?</legend>
-            <label class="visually-hidden" for="reminder-task">Care task</label>
-            <select class="input" id="reminder-task" name="task" required<?= reminder_error_attrs('task', $reminder_errors) ?>>
-              <?php foreach (reminder_tasks() as $task): ?>
-                <option value="<?= e($task) ?>"<?= $task === $reminder_values['task'] ? ' selected' : '' ?>><?= e(task_label($task)) ?></option>
-              <?php endforeach; ?>
-            </select>
+            <?php // A dropdown that shows each task's icon and colour, which a <select> cannot: a <details> menu like
+                  // Plant Tools in the header, holding one radio button per task. app.js copies the choice into the
+                  // closed box and closes the menu. ?>
+            <details class="menu task-picker" data-picker>
+              <summary class="input task-picker-summary">
+                <span data-picker-value>
+                  <?php if (in_array($reminder_values['task'], reminder_tasks(), true)): ?>
+                    <?= task_name($reminder_values['task']) ?>
+                  <?php else: ?>
+                    <span class="task-picker-empty">Choose a care task</span>
+                  <?php endif; ?>
+                </span>
+                <span class="menu-chevron"><?= icon('chevron-down') ?></span>
+              </summary>
+              <div class="menu-panel task-picker-panel">
+                <?php foreach (reminder_tasks() as $task): ?>
+                  <label class="menu-item task-picker-option">
+                    <input class="visually-hidden" type="radio" name="task" value="<?= e($task) ?>" required<?= $task === $reminder_values['task'] ? ' checked' : '' ?><?= reminder_error_attrs('task', $reminder_errors) ?>>
+                    <span data-picker-label><?= task_name($task) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </details>
             <?php if (isset($reminder_errors['task'])): ?>
               <p class="field-error" id="reminder-task-error"><?= e($reminder_errors['task']) ?></p>
             <?php endif; ?>
