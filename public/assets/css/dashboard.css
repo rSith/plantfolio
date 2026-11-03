@@ -148,25 +148,6 @@
 .health-bar-needs-attention { background: var(--color-amber); }
 .health-bar-sick { background: var(--status-sick-text); }
 
-/* ── Exchange activity ──────────────────────────────── */
-
-.exchange-news {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  margin: var(--space-12) 0;
-}
-
-.exchange-news p {
-  margin: 0;
-  font-size: var(--text-body-sm);
-  line-height: 1.4;
-}
-
-.exchange-btn {
-  width: 100%;
-}
-
 /* ── All reminders popup ────────────────────────────── */
 
 /* One heading per day; today in terracotta and overdue in red, as everywhere else */
@@ -448,11 +429,4 @@
 
 .interval-input {
   width: 96px;
-}
-
-/* Tablet: the side panels sit two by two under the main column */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .dash-side {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }

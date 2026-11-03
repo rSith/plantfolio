@@ -239,13 +239,6 @@ function reminder_error_attrs($field, $errors)
 $health_counts = $mock_garden_stats['health_counts'];
 $plant_total   = array_sum($health_counts);
 
-// Exchange activity: "4 people are interested in your Pothos 'Golden' …", or "in 2 of your listings"
-$interest_count  = count($mock_new_interests);
-$interest_titles = array_unique(array_column($mock_new_interests, 'title'));
-$interest_target = count($interest_titles) === 1
-    ? 'your ' . reset($interest_titles)
-    : count($interest_titles) . ' of your listings';
-
 $page_title = 'Dashboard';
 $page_css   = 'dashboard.css';
 
@@ -328,21 +321,6 @@ include __DIR__ . '/../includes/header.php';
               <li><span class="health-dot health-bar-<?= e(str_replace('_', '-', $status)) ?>"></span> <?= e(health_label($status)) ?> <strong><?= e($count) ?></strong></li>
             <?php endforeach; ?>
           </ul>
-        </section>
-      <?php endif; ?>
-
-      <?php if ($interest_count > 0): ?>
-        <section class="panel" aria-labelledby="exchange-title">
-          <h2 class="panel-title" id="exchange-title">Exchange activity</h2>
-          <div class="exchange-news">
-            <span class="avatar-stack">
-              <?php foreach (array_slice($mock_new_interests, 0, 3) as $interest): ?>
-                <?php partial('avatar', ['member' => $interest, 'size' => 'sm']); ?>
-              <?php endforeach; ?>
-            </span>
-            <p><strong><?= e($interest_count) ?> <?= $interest_count === 1 ? 'person is' : 'people are' ?></strong> interested in <?= e($interest_target) ?></p>
-          </div>
-          <a class="btn btn-secondary btn-sm exchange-btn" href="<?= e(url('my-exchanges.php')) ?>">View interests</a>
         </section>
       <?php endif; ?>
     </div>

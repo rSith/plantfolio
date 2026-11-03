@@ -536,8 +536,6 @@ $mock_garden_stats = [
 ];
 
 
-// New interest in Nimali's listings (wireframe p10, element 7): $mock_new_interests, the rows of
-// $mock_received_interests with status 'new'. It is built in the My Exchanges section below, from the same rows.
 
 // ── Plant Profile (P05, CORE-18 and CORE-21) ───────────
 
@@ -1111,9 +1109,9 @@ $mock_rating_counts = [
 //   exchange_listings → title
 // Stage B: … JOIN exchange_listings ON exchange_listings.id = listing_interests.listing_id
 //          WHERE exchange_listings.user_id = ? AND listing_interests.status <> 'withdrawn' ORDER BY created_at DESC
-// Each listing's rows add up to its interest_count in $mock_listings. Listing 7's four rows are the Dashboard's new
-// interest (p10), with the notes of p20. All four stay 'new', as on the Dashboard: stage B marks rows seen when the
-// owner opens them (p20, UX notes), so p20's mix of New and Seen comes after a first visit. The other rows are invented.
+// Each listing's rows add up to its interest_count in $mock_listings. Listing 7's four rows have the notes of p20 and
+// all stay 'new' (the header bell's four): stage B marks rows seen when the owner opens them (p20, UX notes), so p20's
+// mix of New and Seen comes after a first visit. The other rows are invented.
 // The ratings are those of $mock_users (p20 prints 5.0 (4) and 4.8 (31), which disagree with p16 and p21).
 $mock_received_interests = [
     ['id' => 21, 'listing_id' => 7, 'user_id' => 4, 'message' => 'Would love to swap for a snake plant pup!',
@@ -1161,8 +1159,6 @@ $mock_received_interests = [
      'title' => "Pothos 'Marble Queen' cuttings (3)"],
 ];
 
-// The Dashboard's "new interest" (p10, element 7): the same rows, only those the owner has not opened yet
-$mock_new_interests = array_values(array_filter($mock_received_interests, fn ($interest) => $interest['status'] === 'new'));
 
 // Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
 // Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
@@ -1192,7 +1188,6 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_plant_photos  = [];
     $mock_reminders     = [];
     $mock_received_interests = [];
-    $mock_new_interests = [];
     $mock_garden_stats  = [
         'health_counts' => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
     ];
