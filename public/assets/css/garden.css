@@ -16,9 +16,8 @@
   background: var(--color-sage);
 }
 
-/* Text and buttons stay above the drawing */
-.garden-head-text,
-.garden-actions {
+/* The text stays above the drawing */
+.garden-head-text {
   position: relative;
   z-index: 1;
 }
@@ -44,17 +43,11 @@
   color: var(--color-leaf);
 }
 
-.garden-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-
-/* Phone: small, in the bottom right corner beside the stacked buttons, clear of the title */
+/* Phone: small, in the bottom right corner, clear of the title */
 .garden-head-art {
   position: absolute;
   right: calc(var(--space-4) * -1);
-  bottom: var(--space-8);
+  bottom: 0;
   width: auto;
   max-width: none;   /* the base img rule would shrink it; the banner's overflow crops it instead */
   height: 72px;
@@ -75,7 +68,19 @@
   }
 }
 
-/* ── Collection tabs ────────────────────────────────── */
+/* ── Collection row: tabs, "+ New collection", Add plant ── */
+
+/* The chips take the room left over; Add plant keeps its size at the right end */
+.garden-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8) var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.garden-add {
+  flex-shrink: 0;
+}
 
 /* One line of chips. On a phone the line is wider than the screen, so it scrolls sideways on its own
    instead of making the whole page scroll. The padding leaves room for the focus outline.
@@ -85,8 +90,10 @@
   position: relative;
   display: flex;
   gap: var(--space-8);
-  margin: 0 calc(var(--space-16) * -1) var(--space-16);
-  padding: var(--space-4) var(--space-16);
+  flex: 1;
+  min-width: 0;   /* lets the row shrink, so it scrolls instead of pushing Add plant off the screen */
+  margin-left: calc(var(--space-16) * -1);   /* phone: the chips scroll out from the screen edge */
+  padding: var(--space-4) 0 var(--space-4) var(--space-16);
   overflow-x: auto;
   scrollbar-width: none;   /* the chips cut off at the edge already show there is more */
 }
@@ -104,9 +111,7 @@
 @media (min-width: 768px) {
   .collection-tabs {
     flex-wrap: wrap;
-    margin-right: 0;
     margin-left: 0;
-    padding-right: 0;
     padding-left: 0;
     overflow: visible;
   }

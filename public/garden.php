@@ -124,27 +124,13 @@ include __DIR__ . '/../includes/header.php';
       </p>
     </div>
     <img class="garden-head-art" src="<?= e(url('assets/img/garden-shelf.svg')) ?>" alt="">
-    <div class="garden-actions">
-      <?php // Stage F: does nothing yet. Creating a collection is saved in stage B (CORE-13). ?>
-      <button type="button" class="btn btn-secondary"><?= icon('folder-plus') ?> New collection</button>
-      <a class="btn btn-primary" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
-    </div>
   </div>
 
-  <?php if (!$has_plants): ?>
-    <section class="panel garden-empty">
-      <?php partial('empty-state', [
-          'title'   => 'Your garden is waiting',
-          'text'    => 'Add your first plant to start its story.',
-          'actions' => [
-              ['label' => 'Add a plant',           'href' => 'plant-form.php', 'icon' => 'plus'],
-              ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
-          ],
-      ]); ?>
-    </section>
-  <?php else: ?>
-    <?php // Collection tabs (p11, element 2): links, so each collection has its own address ?>
+  <?php // Collection row (p11, element 2): the collections as tabs (links, so each has its own address), then
+        // "+ New collection", and Add plant at the right end. A new member sees only the two buttons. ?>
+  <div class="garden-bar">
     <nav class="collection-tabs" aria-label="Collections">
+      <?php if ($has_plants): ?>
       <a class="chip<?= $collection_id === null ? ' is-selected' : '' ?>"
          href="<?= e(query_url('garden.php', array_merge($filters, ['collection' => null]))) ?>"<?= $collection_id === null ? ' aria-current="page"' : '' ?>>
         All plants <span class="chip-count"><?= e($plant_count) ?></span>
@@ -159,8 +145,25 @@ include __DIR__ . '/../includes/header.php';
           <?= e($collection['name']) ?> <span class="chip-count"><?= e($collection['plant_count']) ?></span>
         </a>
       <?php endforeach; ?>
+      <?php endif; ?>
+      <?php // Stage F: does nothing yet. Creating a collection is saved in stage B (CORE-13). ?>
       <button type="button" class="chip chip-add"><?= icon('plus') ?> New collection</button>
     </nav>
+    <a class="btn btn-primary garden-add" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
+  </div>
+
+  <?php if (!$has_plants): ?>
+    <section class="panel garden-empty">
+      <?php partial('empty-state', [
+          'title'   => 'Your garden is waiting',
+          'text'    => 'Add your first plant to start its story.',
+          'actions' => [
+              ['label' => 'Add a plant',           'href' => 'plant-form.php', 'icon' => 'plus'],
+              ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
+          ],
+      ]); ?>
+    </section>
+  <?php else: ?>
 
     <?php // Search, filter, sort (p11, element 3): a GET form, so the choices land in the address like the tabs ?>
     <form class="garden-toolbar" method="get" action="<?= e(url('garden.php')) ?>" role="search">
