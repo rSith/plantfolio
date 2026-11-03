@@ -17,18 +17,15 @@ $hour       = (int) date('G');   // 0–23
 $greeting   = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
 $first_name = explode(' ', $current_user['full_name'])[0];
 
-// The summary chips count the same rows the sections below print, so the numbers always agree.
-$care_count      = count($mock_reminders);   // due today or overdue
-$attention_count = count($mock_attention);
-$has_plants      = $current_user['plant_count'] > 0;
+$care_count = count($mock_reminders);   // due today or overdue
+$has_plants = $current_user['plant_count'] > 0;
 
-// The four most frequent jobs, both AI tools included (p10, element 5)
-$quick_actions = [
-    ['label' => 'Add a plant',       'href' => 'plant-form.php',   'icon' => 'plus'],
-    ['label' => 'Identify a plant',  'href' => 'identify.php',     'icon' => 'sparkles'],
-    ['label' => 'Health check',      'href' => 'health-check.php', 'icon' => 'activity'],
-    ['label' => 'List for exchange', 'href' => 'listing-form.php', 'icon' => 'repeat'],
-];
+// Each plant appears once on the page: a plant already in Today's care is left out of Needs attention.
+// Overdue care is therefore always in Today's care, so Needs attention only explains a Health Check or a note.
+// Stage B: … AND plants.id NOT IN (the plant_id of every reminder due today or overdue).
+$care_plant_ids  = array_column($mock_reminders, 'plant_id');
+$attention       = array_values(array_filter($mock_attention, fn ($plant) => !in_array($plant['id'], $care_plant_ids, true)));
+$attention_count = count($attention);
 
 // Garden at a glance: each status's share of the garden becomes the width of its part of the bar
 $health_counts = $mock_garden_stats['health_counts'];
@@ -47,23 +44,10 @@ $page_css   = 'dashboard.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
+  <?php // Just the greeting and the date: the counts are in the sections below, so they are not repeated here ?>
   <div class="dash-head">
-    <div>
-      <h1 class="dash-title"><?= e($greeting) ?>, <?= e($first_name) ?></h1>
-      <p class="dash-summary">
-        <span class="dash-date"><?= e(date('l, j F')) ?></span>
-        <?php if ($care_count > 0): ?>
-          <span class="badge badge-due"><?= icon('droplet') ?> <?= e($care_count) ?> care <?= $care_count === 1 ? 'task' : 'tasks' ?> due</span>
-        <?php endif; ?>
-        <?php if ($attention_count > 0): ?>
-          <span class="badge badge-warning"><?= icon('triangle-alert') ?> <?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant needs' : 'plants need' ?> attention</span>
-        <?php endif; ?>
-      </p>
-    </div>
-    <?php if ($has_plants): ?>
-      <?php // No reminders page exists yet; My Garden shows each plant's next care until one is decided ?>
-      <a class="btn btn-secondary btn-sm dash-week" href="<?= e(url('garden.php')) ?>"><?= icon('calendar') ?> This week</a>
-    <?php endif; ?>
+    <h1 class="dash-title"><?= e($greeting) ?>, <?= e($first_name) ?></h1>
+    <p class="dash-date"><?= e(date('l, j F')) ?></p>
   </div>
 
   <div class="dash-grid">
@@ -113,14 +97,10 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="panel-list">
-              <?php foreach ($mock_attention as $plant): ?>
+              <?php foreach ($attention as $plant): ?>
                 <?php
-                // The reason, in order of importance: a Health Check result, else overdue care, else the newest note
+                // The reason: a Health Check result, else the newest note
                 $from_check = $plant['log_source'] === 'ml' && $plant['predicted_label'] !== null;
-                $due        = $plant['next_due'] ? care_due($plant['next_due']) : null;
-                $overdue    = $due && $due['state'] === 'overdue';
-                $late_days  = $overdue ? -days_until($plant['next_due']) : 0;
-                $late_text  = $late_days . ($late_days === 1 ? ' day' : ' days');   // "Watering is 2 days overdue"
                 $plant_url  = url('plant.php?id=' . $plant['id']);
                 // A Health Check result is always a disease prediction
                 $condition  = $from_check ? prediction_name(['type' => 'disease', 'predicted_label' => $plant['predicted_label']]) : '';
@@ -139,9 +119,6 @@ include __DIR__ . '/../includes/header.php';
                         <?= icon('sparkles') ?>
                         <span>Health check found <strong><?= e(mb_strtolower($condition)) ?></strong>
                           (<?= e(round($plant['confidence'] * 100)) ?>% confidence) on <?= e(format_day($plant['logged_at'])) ?>.</span>
-                      <?php elseif ($overdue): ?>
-                        <?= icon(task_icon($plant['task'])) ?>
-                        <span><?= e($plant['task'] === 'water' ? 'Watering' : 'Fertilising') ?> is <?= e($late_text) ?> overdue. <?= e($plant['log_note']) ?></span>
                       <?php else: ?>
                         <?= icon('info') ?>
                         <span><?= e($plant['log_note']) ?></span>
@@ -153,9 +130,6 @@ include __DIR__ . '/../includes/header.php';
                         <?php // The care plan lives on the plant's profile; "Log update" opens a modal there from week 5 ?>
                         <a class="btn btn-primary btn-sm" href="<?= e($plant_url) ?>">View care plan</a>
                         <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                      <?php elseif ($overdue): ?>
-                        <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
-                        <button type="button" class="btn btn-secondary btn-sm"><?= icon(task_icon($plant['task'])) ?> <?= e($plant['task'] === 'water' ? 'Mark watered' : 'Mark fertilised') ?></button>
                       <?php else: ?>
                         <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
                       <?php endif; ?>
@@ -169,19 +143,8 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
     </div>
 
+    <?php // No Quick actions panel: the header's Add plant and Plant Tools (the + menu on a phone) already do those jobs ?>
     <div class="dash-side">
-      <section class="panel" aria-labelledby="actions-title">
-        <h2 class="panel-title" id="actions-title">Quick actions</h2>
-        <div class="quick-actions">
-          <?php foreach ($quick_actions as $action): ?>
-            <a class="quick-action" href="<?= e(url($action['href'])) ?>">
-              <span class="quick-action-icon"><?= icon($action['icon']) ?></span>
-              <?= e($action['label']) ?>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      </section>
-
       <?php if ($has_plants): ?>
         <section class="panel" aria-labelledby="glance-title">
           <div class="panel-head">
