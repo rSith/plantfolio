@@ -281,42 +281,7 @@ include __DIR__ . '/../includes/header.php';
     <a class="btn btn-primary garden-add" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
   </div>
 
-  <?php // The open collection: its name and size, and Delete. Not on All plants, which is not a collection. ?>
-  <?php if ($open_collection): ?>
-    <div class="collection-line">
-      <p class="collection-line-text">
-        <strong><?= e($open_collection['name']) ?></strong>
-        · <?= e(count_words($open_collection['plant_count'], 'plant', 'plants')) ?>
-        <?php if (!$open_collection['is_public']): ?>
-          · <?= icon('lock') ?> Private
-        <?php endif; ?>
-      </p>
-      <div class="collection-line-actions">
-        <?php // Not "Add plants": next to the big "Add plant" (make a new plant) that read as the same button. This one
-              // puts plants the member already has into this collection, so it has its own verb, icon and quiet style. ?>
-        <button type="button" class="btn btn-ghost btn-sm collection-action collection-choose" data-dialog="add-plants" aria-haspopup="dialog">
-          <?= icon('folder-input') ?> Choose plants
-        </button>
-        <button type="button" class="btn btn-ghost btn-sm collection-action collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
-          <?= icon('trash-2') ?> Delete collection
-        </button>
-      </div>
-    </div>
-  <?php endif; ?>
-
-  <?php if (!$has_plants): ?>
-    <section class="panel garden-empty">
-      <?php partial('empty-state', [
-          'title'   => 'Your garden is waiting',
-          'text'    => 'Add your first plant to start its story.',
-          'actions' => [
-              ['label' => 'Add a plant',           'href' => 'plant-form.php', 'icon' => 'plus'],
-              ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
-          ],
-      ]); ?>
-    </section>
-  <?php else: ?>
-
+  <?php if ($has_plants): ?>
     <?php // Search, filter, sort (p11, element 3): a GET form, so the choices land in the address like the tabs ?>
     <form class="garden-toolbar" method="get" action="<?= e(url('garden.php')) ?>" role="search">
       <?php // preview_field(): the new-member preview's ?empty=1, which a GET form would otherwise drop ?>
@@ -366,15 +331,56 @@ include __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </div>
     </form>
+  <?php endif; ?>
 
-    <?php if ($is_filtered): ?>
-      <p class="garden-results" role="status">
-        <?= e(count($plants)) ?> <?= count($plants) === 1 ? 'plant matches' : 'plants match' ?>
-        <a href="<?= e(query_url('garden.php', ['collection' => $collection_id, 'view' => $filters['view']])) ?>"><?= icon('x') ?> Clear filters</a>
-      </p>
-    <?php endif; ?>
+  <?php // The plant box: one fixed-size box for whichever tab is open. Its header names the tab and holds the
+        // collection's own actions; its body scrolls on its own (scrollbar hidden), so the page stays the same height. ?>
+  <section class="garden-box" aria-labelledby="garden-box-title">
+    <div class="garden-box-head">
+      <div class="garden-box-heading">
+        <h2 class="garden-box-title" id="garden-box-title"><?= e($open_collection['name'] ?? 'All plants') ?></h2>
+        <p class="garden-box-meta">
+          <?= e(count_words($open_collection['plant_count'] ?? $plant_count, 'plant', 'plants')) ?>
+          <?php if ($open_collection && !$open_collection['is_public']): ?>
+            · <?= icon('lock') ?> Private
+          <?php endif; ?>
+          <?php if ($is_filtered): ?>
+            <?php // role="status": a screen reader announces the new count after a search ?>
+            <span class="garden-results" role="status">
+              · <?= e(count($plants)) ?> <?= count($plants) === 1 ? 'matches' : 'match' ?>
+              <a href="<?= e(query_url('garden.php', ['collection' => $collection_id, 'view' => $filters['view']])) ?>"><?= icon('x') ?> Clear filters</a>
+            </span>
+          <?php endif; ?>
+        </p>
+      </div>
 
-    <?php if ($plants && $view === 'grid'): ?>
+      <?php // Only a real collection can be filled or deleted; All plants is every plant, not a collection ?>
+      <?php if ($open_collection): ?>
+        <div class="garden-box-actions">
+          <?php // Not "Add plants": next to the big "Add plant" (make a new plant) that read as the same button. This one
+                // puts plants the member already has into this collection, so it has its own verb, icon and quiet style. ?>
+          <button type="button" class="btn btn-ghost btn-sm collection-action collection-choose" data-dialog="add-plants" aria-haspopup="dialog">
+            <?= icon('folder-input') ?> Choose plants
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm collection-action collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
+            <?= icon('trash-2') ?> Delete collection
+          </button>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <?php // tabindex="0" lets a keyboard user focus the box and scroll it with the arrow keys; role and label name it ?>
+    <div class="garden-box-body scroll-quiet" tabindex="0" role="region" aria-label="Plants in <?= e($open_collection['name'] ?? 'your garden') ?>">
+    <?php if (!$has_plants): ?>
+      <?php partial('empty-state', [
+          'title'   => 'Your garden is waiting',
+          'text'    => 'Add your first plant to start its story.',
+          'actions' => [
+              ['label' => 'Add a plant',           'href' => 'plant-form.php', 'icon' => 'plus'],
+              ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
+          ],
+      ]); ?>
+    <?php elseif ($plants && $view === 'grid'): ?>
       <div class="plant-grid">
         <?php foreach ($plants as $plant): ?>
           <?php partial('plant-card', ['plant' => $plant, 'menu' => true]); ?>
@@ -419,28 +425,26 @@ include __DIR__ . '/../includes/header.php';
         </tbody>
       </table>
     <?php elseif ($collection_id !== null && !$is_filtered): ?>
-      <?php // An empty collection, such as one just made with "+ New collection": nothing to clear, so say what to do ?>
-      <section class="panel">
-        <?php partial('empty-state', [
-            'title'   => 'Nothing in this collection yet',
-            'text'    => 'Add a plant and choose this collection for it.',
-            'actions' => [
-                ['label' => 'Add a plant', 'href' => 'plant-form.php', 'icon' => 'plus'],
-            ],
-        ]); ?>
-      </section>
+      <?php // An empty collection, such as one just made with "+ New collection": nothing to clear, so say what to do.
+            // Choose plants is in the header above, so the text points to it. ?>
+      <?php partial('empty-state', [
+          'title'   => 'Nothing in this collection yet',
+          'text'    => 'Use Choose plants above to add plants you have, or add a new plant.',
+          'actions' => [
+              ['label' => 'Add a plant', 'href' => 'plant-form.php', 'icon' => 'plus'],
+          ],
+      ]); ?>
     <?php else: ?>
-      <section class="panel">
-        <?php partial('empty-state', [
-            'title'   => 'No plants match',
-            'text'    => 'Try another name or status, or look in all collections.',
-            'actions' => [
-                ['label' => 'Clear filters', 'href' => 'garden.php', 'icon' => 'x'],
-            ],
-        ]); ?>
-      </section>
+      <?php partial('empty-state', [
+          'title'   => 'No plants match',
+          'text'    => 'Try another name or status, or look in all collections.',
+          'actions' => [
+              ['label' => 'Clear filters', 'href' => 'garden.php', 'icon' => 'x'],
+          ],
+      ]); ?>
     <?php endif; ?>
-  <?php endif; ?>
+    </div>
+  </section>
 
   <?php // New collection popup (CORE-13, MOD-01): one POST form. It opens at once when the server sent it back with an error. ?>
   <dialog class="modal modal-wide" id="new-collection" aria-labelledby="new-collection-title"<?= $collection_errors ? ' data-open-on-load' : '' ?>>
