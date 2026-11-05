@@ -420,3 +420,11 @@
     padding-right: 0;
   }
 }
+
+/* ── New collection popup ───────────────────────────── */
+/* Public and Private side by side, wrapping onto two lines on a narrow phone */
+.collection-visibility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-24);
+}

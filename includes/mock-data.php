@@ -59,8 +59,9 @@ if (isset($_GET['guest'])) {
 if (isset($_GET['member'])) {
     $_SESSION['preview_visitor'] = false;
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
-    // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders'] as $list) {
+    // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
+    // mock_add_collection())
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -486,6 +487,29 @@ function mock_undo_reminder($key, $previous)
     } else {
         unset($_SESSION[preview_key('reminders')][$key]);
     }
+}
+
+/**
+ * Mock-only: "+ New collection" on My Garden (CORE-13). Kept in the session and added to $mock_collections at the end
+ * of this file, so the new tab shows on My Garden, in Garden at a glance and in the Add plant form. A new collection
+ * starts empty. Returns the row with its made-up id, so the page can open the new tab.
+ * Stage B: INSERT INTO collections (user_id, name, is_public) VALUES (?, ?, ?), and the id from lastInsertId().
+ */
+function mock_add_collection($name, $is_public)
+{
+    global $current_user;
+
+    $collection = [
+        'id'           => 900 + count($_SESSION[preview_key('collections')] ?? []),   // made up: stage B's AUTO_INCREMENT
+        'user_id'      => $current_user['id'],
+        'name'         => $name,
+        'is_public'    => $is_public ? 1 : 0,
+        'plant_count'  => 0,
+        'cover_photos' => [],
+    ];
+    $_SESSION[preview_key('collections')][] = $collection;
+
+    return $collection;
 }
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -1209,6 +1233,19 @@ if ($preview_empty && $current_user && current_page() !== 'index.php') {
 
     // The interests she sent are hers too. Interests she sends after ?empty come from the session, below.
     $mock_listing_interests = [];
+}
+
+// Collections Nimali created in the preview (mock_add_collection()). Built after the ?empty switch, so a brand-new
+// Nimali keeps the ones she makes. The counts follow, as COUNT() on collections would: all of them on her own pages,
+// public ones only on her Public Profile. Like the interests below, a visitor sees her new public collections too.
+foreach ($_SESSION[preview_key('collections')] ?? [] as $preview_row) {
+    $mock_collections[] = $preview_row;
+    if ($current_user) {
+        $current_user['collection_count']++;
+    }
+    if ($preview_row['is_public']) {
+        $mock_users[$preview_row['user_id']]['collection_count']++;
+    }
 }
 
 // Nimali's interests as the preview changed them (mock_send_interest(), mock_withdraw_interest()): a row kept in the

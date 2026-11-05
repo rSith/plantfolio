@@ -12,6 +12,46 @@ if (!$current_user) {
     exit;
 }
 
+// ── New collection popup (CORE-13) ──────────────────────
+// Stage F: the form is checked here and the collection is kept in the session (mock_add_collection()), so its tab
+// appears at once. Stage B: INSERT INTO collections … with a CSRF check; UNIQUE (user_id, name) backs the name rule.
+
+$collection_values = ['name' => '', 'is_public' => '1'];
+$collection_errors = [];   // field name => message, printed under that field in the popup
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection') {
+    // trim() and collapsing spaces stop "  Balcony " from counting as a different name from "Balcony"
+    $collection_values['name']      = preg_replace('/\s+/u', ' ', trim(post_text('name')));
+    $collection_values['is_public'] = post_text('is_public') === '0' ? '0' : '1';
+
+    $name = $collection_values['name'];
+    // The same rules the browser checks, checked again here: the browser's checks can be switched off
+    if ($name === '') {
+        $collection_errors['name'] = 'Give the collection a name.';
+    } elseif (mb_strlen($name) > 60) {
+        $collection_errors['name'] = 'Use 60 characters or fewer.';
+    } else {
+        // mb_strtolower(): "balcony" and "Balcony" count as the same name
+        foreach ($mock_collections as $collection) {
+            if (mb_strtolower($collection['name']) === mb_strtolower($name)) {
+                $collection_errors['name'] = 'You already have a collection called ' . $collection['name'] . '.';
+            }
+        }
+    }
+
+    if (!$collection_errors) {
+        $new_collection = mock_add_collection($name, $collection_values['is_public'] === '1');
+        $_SESSION['collection_toast'] = 'Collection created: ' . $name;
+        // POST, then redirect: a reload cannot create it twice. The new tab opens, so the member sees it at once.
+        header('Location: ' . url('garden.php?collection=' . $new_collection['id']));
+        exit;
+    }
+}
+
+// The toast shows once: it is taken out of the session as soon as it is read
+$toast = $_SESSION['collection_toast'] ?? null;
+unset($_SESSION['collection_toast']);
+
 // ── What the member chose, read from the address ────────
 // garden.php?collection=1&q=pothos&status=sick&sort=name&view=list. Anyone can type anything into the address bar,
 // so every value is checked against what is allowed and falls back to the default.
@@ -127,10 +167,10 @@ include __DIR__ . '/../includes/header.php';
   </div>
 
   <?php // Collection row (p11, element 2): the collections as tabs (links, so each has its own address), then
-        // "+ New collection", and Add plant at the right end. A new member sees only the two buttons. ?>
+        // "+ New collection", and Add plant at the right end. A new member with no collections sees only the two buttons. ?>
   <div class="garden-bar">
     <nav class="collection-tabs" aria-label="Collections">
-      <?php if ($has_plants): ?>
+      <?php if ($mock_collections): ?>
       <a class="chip<?= $collection_id === null ? ' is-selected' : '' ?>"
          href="<?= e(query_url('garden.php', array_merge($filters, ['collection' => null]))) ?>"<?= $collection_id === null ? ' aria-current="page"' : '' ?>>
         All plants <span class="chip-count"><?= e($plant_count) ?></span>
@@ -146,8 +186,8 @@ include __DIR__ . '/../includes/header.php';
         </a>
       <?php endforeach; ?>
       <?php endif; ?>
-      <?php // Stage F: does nothing yet. Creating a collection is saved in stage B (CORE-13). ?>
-      <button type="button" class="chip chip-add"><?= icon('plus') ?> New collection</button>
+      <?php // Opens the New collection popup below (app.js: data-dialog) ?>
+      <button type="button" class="chip chip-add" data-dialog="new-collection" aria-haspopup="dialog"><?= icon('plus') ?> New collection</button>
     </nav>
     <a class="btn btn-primary garden-add" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
   </div>
@@ -266,6 +306,17 @@ include __DIR__ . '/../includes/header.php';
           <?php endforeach; ?>
         </tbody>
       </table>
+    <?php elseif ($collection_id !== null && !$is_filtered): ?>
+      <?php // An empty collection, such as one just made with "+ New collection": nothing to clear, so say what to do ?>
+      <section class="panel">
+        <?php partial('empty-state', [
+            'title'   => 'Nothing in this collection yet',
+            'text'    => 'Add a plant and choose this collection for it.',
+            'actions' => [
+                ['label' => 'Add a plant', 'href' => 'plant-form.php', 'icon' => 'plus'],
+            ],
+        ]); ?>
+      </section>
     <?php else: ?>
       <section class="panel">
         <?php partial('empty-state', [
@@ -277,6 +328,64 @@ include __DIR__ . '/../includes/header.php';
         ]); ?>
       </section>
     <?php endif; ?>
+  <?php endif; ?>
+
+  <?php // New collection popup (CORE-13, MOD-01): one POST form. It opens at once when the server sent it back with an error. ?>
+  <dialog class="modal" id="new-collection" aria-labelledby="new-collection-title"<?= $collection_errors ? ' data-open-on-load' : '' ?>>
+    <form class="modal-form" method="post" action="<?= e(url('garden.php')) ?>">
+      <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+      <input type="hidden" name="form" value="collection">
+
+      <div class="modal-head">
+        <h2 class="modal-title" id="new-collection-title">New collection</h2>
+        <?php // formmethod="dialog" closes the popup instead of sending the form; formnovalidate skips the checks ?>
+        <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label class="field-label" for="collection-name">Name</label>
+          <input class="input" type="text" id="collection-name" name="name" value="<?= e($collection_values['name']) ?>"
+                 placeholder="e.g. Bedroom" maxlength="60" required autofocus
+                 <?= isset($collection_errors['name']) ? 'aria-invalid="true" aria-describedby="collection-name-error"' : '' ?>>
+          <?php if (isset($collection_errors['name'])): ?>
+            <p class="field-error" id="collection-name-error"><?= e($collection_errors['name']) ?></p>
+          <?php endif; ?>
+        </div>
+
+        <?php // The same two choices as "Who can see this plant?" on Add plant; collections.is_public is 1 by default ?>
+        <fieldset class="form-fieldset">
+          <legend class="field-label">Who can see it?</legend>
+          <div class="collection-visibility">
+            <label class="check">
+              <input type="radio" name="is_public" value="1"<?= $collection_values['is_public'] === '1' ? ' checked' : '' ?>>
+              <span><strong>Public</strong> <span class="text-small">· on your profile</span></span>
+            </label>
+            <label class="check">
+              <input type="radio" name="is_public" value="0"<?= $collection_values['is_public'] === '0' ? ' checked' : '' ?>>
+              <span><strong>Private</strong> <span class="text-small">· only you</span></span>
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+        <button class="btn btn-primary" type="submit"><?= icon('plus') ?> Create collection</button>
+      </div>
+    </form>
+  </dialog>
+
+  <?php if ($toast): ?>
+    <?php // The message after Create collection: stays until the member closes it. Without JavaScript the × is a link
+          // that loads the page again, without the toast. ?>
+    <div class="toast-region">
+      <div class="toast" role="status">
+        <?= icon('check') ?>
+        <span class="toast-message"><?= e($toast) ?></span>
+        <a class="toast-close" href="<?= e(query_url('garden.php', $filters)) ?>" data-toast-close aria-label="Close message"><?= icon('x') ?></a>
+      </div>
+    </div>
   <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
