@@ -512,3 +512,40 @@
 .collection-pick.is-taken .collection-pick-text {
   opacity: 0.55;
 }
+
+/* ── The open collection: name, size and Delete ─────── */
+.collection-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-16);
+  margin: calc(var(--space-8) * -1) 0 var(--space-16);
+}
+
+.collection-line-text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.collection-line-text strong {
+  color: var(--color-ink);
+}
+
+.collection-line-text .icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+/* Quiet until pointed at: deleting is rare, so it should not compete with Add plant. Red only on hover. */
+.collection-delete {
+  min-height: 44px;
+  color: var(--color-muted);
+}
+
+.collection-delete:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}

@@ -62,7 +62,7 @@ if (isset($_GET['member'])) {
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
     // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
     // mock_add_collection())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants'] as $list) {
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -104,7 +104,7 @@ function mock_log_in_and_go($page, $new_account = false)
     $_SESSION['preview_visitor'] = false;
     if ($new_account) {
         // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
-        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants'] as $list) {
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections'] as $list) {
             $_SESSION['preview_' . $list . '_new'] = [];
         }
         header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
@@ -538,6 +538,17 @@ function mock_add_collection($name, $is_public, array $plant_ids = [])
     }
 
     return $collection;
+}
+
+/**
+ * Mock-only: "Delete collection" on My Garden (CORE-13). Remembers the id in the session; the end of this file then
+ * leaves the collection out and puts its plants in no collection. The plants themselves are kept.
+ * Stage B: DELETE FROM collections WHERE id = ? AND user_id = ?. The foreign key plants.collection_id is
+ * ON DELETE SET NULL, so MySQL itself moves the plants to "No collection".
+ */
+function mock_delete_collection($collection_id)
+{
+    $_SESSION[preview_key('deleted_collections')][$collection_id] = true;
 }
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -1273,6 +1284,30 @@ foreach ($_SESSION[preview_key('collections')] ?? [] as $preview_row) {
     }
     if ($preview_row['is_public']) {
         $mock_users[$preview_row['user_id']]['collection_count']++;
+    }
+}
+
+// Collections deleted in the preview (mock_delete_collection()), as ON DELETE SET NULL leaves them: the row is gone,
+// its plants stay with collection_id NULL, and the counts drop by one. This runs before the plant moves below, so a
+// plant freed here can be picked for a new collection, and a plant moved into a collection deleted later stays free.
+$deleted_collections = $_SESSION[preview_key('deleted_collections')] ?? [];
+foreach ($mock_collections as $index => $collection) {
+    if (!isset($deleted_collections[$collection['id']])) {
+        continue;
+    }
+    unset($mock_collections[$index]);
+    if ($current_user) {
+        $current_user['collection_count']--;
+    }
+    if ($collection['is_public']) {
+        $mock_users[$collection['user_id']]['collection_count']--;
+    }
+}
+$mock_collections = array_values($mock_collections);   // renumber 0, 1, 2 … after unset()
+foreach ($mock_plants as $index => $plant) {
+    if ($plant['collection_id'] !== null && isset($deleted_collections[$plant['collection_id']])) {
+        $mock_plants[$index]['collection_id']   = null;
+        $mock_plants[$index]['collection_name'] = null;
     }
 }
 

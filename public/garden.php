@@ -66,6 +66,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection')
     }
 }
 
+// ── Delete collection (CORE-13) ─────────────────────────
+// Only the collection is removed; its plants stay in the garden with no collection (ON DELETE SET NULL).
+// Stage B: CSRF check, then DELETE FROM collections WHERE id = ? AND user_id = ? (the user_id is the ownership check).
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'delete_collection') {
+    $delete_id = post_text('collection');
+    $deleted   = null;
+    // Only one of the member's own collections can go: an id typed by hand that is not hers changes nothing
+    foreach ($mock_collections as $collection) {
+        if (ctype_digit($delete_id) && $collection['id'] === (int) $delete_id && $collection['user_id'] === $current_user['id']) {
+            $deleted = $collection;
+        }
+    }
+    if ($deleted) {
+        mock_delete_collection($deleted['id']);
+        $_SESSION['collection_toast'] = 'Collection deleted: ' . $deleted['name'];
+    }
+    // Back to All plants: the collection's own tab no longer exists
+    header('Location: ' . url('garden.php'));
+    exit;
+}
+
 // The toast shows once: it is taken out of the session as soon as it is read
 $toast = $_SESSION['collection_toast'] ?? null;
 unset($_SESSION['collection_toast']);
@@ -79,6 +100,8 @@ $collection_id  = filter_input(INPUT_GET, 'collection', FILTER_VALIDATE_INT);
 if (!in_array($collection_id, $collection_ids, true)) {
     $collection_id = null;   // "All plants"
 }
+// The open collection's row, for the line under the tabs and the Delete popup (null on All plants)
+$open_collection = $collection_id === null ? null : $mock_collections[array_search($collection_id, $collection_ids, true)];
 
 // get_text() (helpers.php) accepts only one piece of valid text: q[]=x or q=%FF count as "not given".
 $q = mb_substr(trim(get_text('q')), 0, 100);
@@ -209,6 +232,22 @@ include __DIR__ . '/../includes/header.php';
     </nav>
     <a class="btn btn-primary garden-add" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
   </div>
+
+  <?php // The open collection: its name and size, and Delete. Not on All plants, which is not a collection. ?>
+  <?php if ($open_collection): ?>
+    <div class="collection-line">
+      <p class="collection-line-text">
+        <strong><?= e($open_collection['name']) ?></strong>
+        · <?= e(count_words($open_collection['plant_count'], 'plant', 'plants')) ?>
+        <?php if (!$open_collection['is_public']): ?>
+          · <?= icon('lock') ?> Private
+        <?php endif; ?>
+      </p>
+      <button type="button" class="btn btn-ghost btn-sm collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
+        <?= icon('trash-2') ?> Delete collection
+      </button>
+    </div>
+  <?php endif; ?>
 
   <?php if (!$has_plants): ?>
     <section class="panel garden-empty">
@@ -430,6 +469,39 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </form>
   </dialog>
+
+  <?php // Delete collection: a destructive action, so it is confirmed in a popup that names the collection (S6) ?>
+  <?php if ($open_collection): ?>
+    <?php $count = $open_collection['plant_count']; ?>
+    <dialog class="modal" id="delete-collection" aria-labelledby="delete-collection-title" aria-describedby="delete-collection-text">
+      <form class="modal-form" method="post" action="<?= e(url('garden.php')) ?>">
+        <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+        <input type="hidden" name="form" value="delete_collection">
+        <input type="hidden" name="collection" value="<?= e($open_collection['id']) ?>">
+
+        <div class="modal-head">
+          <h2 class="modal-title" id="delete-collection-title">Delete “<?= e($open_collection['name']) ?>”?</h2>
+          <button class="icon-btn" formmethod="dialog" aria-label="Close"><?= icon('x') ?></button>
+        </div>
+
+        <div class="modal-body">
+          <p id="delete-collection-text">
+            <?php if ($count > 0): ?>
+              Your <?= e(count_words($count, 'plant', 'plants')) ?> will stay in your garden. <?= $count === 1 ? 'It just won’t be' : 'They just won’t be' ?> in a collection.
+            <?php else: ?>
+              This collection is empty, so no plants are affected.
+            <?php endif; ?>
+          </p>
+        </div>
+
+        <div class="modal-foot">
+          <?php // Cancel comes first and gets the focus when the popup opens, so Enter never deletes by accident ?>
+          <button class="btn btn-secondary" formmethod="dialog" autofocus>Cancel</button>
+          <button class="btn btn-danger" type="submit"><?= icon('trash-2') ?> Delete</button>
+        </div>
+      </form>
+    </dialog>
+  <?php endif; ?>
 
   <?php if ($toast): ?>
     <?php // The message after Create collection: stays until the member closes it. Without JavaScript the × is a link
