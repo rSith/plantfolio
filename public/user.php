@@ -67,6 +67,11 @@ $collections = array_values(array_filter(
     array_merge($mock_collections, $mock_community_collections),
     fn ($collection) => $collection['user_id'] === $member['id'] && $collection['is_public']
 ));
+// Mock-only: a collection made in the preview carries its public-only numbers (mock_add_collection()); use those here
+$collections = array_map(fn ($collection) => array_merge($collection, [
+    'plant_count'  => $collection['public_plant_count'] ?? $collection['plant_count'],
+    'cover_photos' => $collection['public_cover_photos'] ?? $collection['cover_photos'],
+]), $collections);
 
 // Plants: $mock_public_plants holds public plants only. The most recently updated come first: a living portfolio.
 $plants = array_values(array_filter($mock_public_plants, fn ($plant) => $plant['user_id'] === $member['id']));

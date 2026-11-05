@@ -34,7 +34,8 @@ $current_user = [
     // Not columns of `users`: stage B calculates these with COUNT() and AVG() on other tables.
     // Her own pages count everything, private plants and collections included. Other people see smaller,
     // public-only numbers: those are in $mock_users below (13 plants, 2 collections).
-    'plant_count'      => 18,
+    // 20 = the 18 in her three collections (p11) + Penny and Heidi, who are in no collection yet.
+    'plant_count'      => 20,
     'collection_count' => 3,
     'swap_count'       => 12,
     'rating_avg'       => 4.9,
@@ -61,7 +62,7 @@ if (isset($_GET['member'])) {
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
     // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
     // mock_add_collection())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections'] as $list) {
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -103,7 +104,7 @@ function mock_log_in_and_go($page, $new_account = false)
     $_SESSION['preview_visitor'] = false;
     if ($new_account) {
         // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
-        foreach (['interests', 'exchanges', 'ratings', 'reminders'] as $list) {
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants'] as $list) {
             $_SESSION['preview_' . $list . '_new'] = [];
         }
         header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
@@ -176,6 +177,23 @@ $mock_plants = [
      'collection_name' => 'Succulents',
      'task' => 'water', 'interval_days' => 10, 'next_due' => mock_date(6),
      'last_logged_at' => mock_date(-26) . ' 10:15:00'],
+
+    // Two new plants not sorted into a collection yet (collection_id NULL, "No collection" on Add plant), so the
+    // New collection popup has plants to pick (CORE-13). Private, so the public counts (13 plants) stay the same.
+    // No reminder yet: task, interval_days and next_due are NULL, as the LEFT JOIN on care_reminders gives.
+    ['id' => 62, 'user_id' => 1, 'collection_id' => null, 'species_id' => 11, 'nickname' => 'Penny',
+     'photo' => 'mock/pip.svg', 'acquired_on' => mock_date(-6), 'health_status' => 'stable', 'is_public' => 0,
+     'scientific_name' => 'Pilea peperomioides', 'common_name' => 'Chinese money plant',
+     'collection_name' => null,
+     'task' => null, 'interval_days' => null, 'next_due' => null,
+     'last_logged_at' => mock_date(-6) . ' 11:00:00'],
+
+    ['id' => 63, 'user_id' => 1, 'collection_id' => null, 'species_id' => 12, 'nickname' => 'Heidi',
+     'photo' => 'mock/goldie.svg', 'acquired_on' => mock_date(-4), 'health_status' => 'thriving', 'is_public' => 0,
+     'scientific_name' => 'Philodendron hederaceum', 'common_name' => 'Heartleaf philodendron',
+     'collection_name' => null,
+     'task' => null, 'interval_days' => null, 'next_due' => null,
+     'last_logged_at' => mock_date(-4) . ' 15:30:00'],
 ];
 
 // Nimali's collections — rows of `collections` (wireframe p11, element 2), plus two calculated columns:
@@ -492,10 +510,12 @@ function mock_undo_reminder($key, $previous)
 /**
  * Mock-only: "+ New collection" on My Garden (CORE-13). Kept in the session and added to $mock_collections at the end
  * of this file, so the new tab shows on My Garden, in Garden at a glance and in the Add plant form. A new collection
- * starts empty. Returns the row with its made-up id, so the page can open the new tab.
- * Stage B: INSERT INTO collections (user_id, name, is_public) VALUES (?, ?, ?), and the id from lastInsertId().
+ * holds the plants in $plant_ids (already checked by the page: her own, and in no collection yet). Returns the row with
+ * its made-up id, so the page can open the new tab.
+ * Stage B, in one transaction: INSERT INTO collections (user_id, name, is_public) VALUES (?, ?, ?), then
+ * UPDATE plants SET collection_id = ? WHERE id IN (…) AND user_id = ? AND collection_id IS NULL.
  */
-function mock_add_collection($name, $is_public)
+function mock_add_collection($name, $is_public, array $plant_ids = [])
 {
     global $current_user;
 
@@ -506,8 +526,16 @@ function mock_add_collection($name, $is_public)
         'is_public'    => $is_public ? 1 : 0,
         'plant_count'  => 0,
         'cover_photos' => [],
+        // Mock-only: the Public Profile's numbers, public plants only (stage B: its query adds AND plants.is_public = 1).
+        // The three mock collections need no such keys: their private plants are all in private Succulents.
+        'public_plant_count'  => 0,
+        'public_cover_photos' => [],
     ];
     $_SESSION[preview_key('collections')][] = $collection;
+    // plant id => its new collection id: the one column the UPDATE above changes
+    foreach ($plant_ids as $plant_id) {
+        $_SESSION[preview_key('collection_plants')][$plant_id] = $collection['id'];
+    }
 
     return $collection;
 }
@@ -1245,6 +1273,33 @@ foreach ($_SESSION[preview_key('collections')] ?? [] as $preview_row) {
     }
     if ($preview_row['is_public']) {
         $mock_users[$preview_row['user_id']]['collection_count']++;
+    }
+}
+
+// Plants put into a new collection: collection_id and the joined collection_name change, and the collection's
+// plant_count and cover_photos follow, as COUNT() and GROUP_CONCAT() would. Only a plant still in no collection
+// can move, so an old row in the session can never pull Monty out of Living room.
+$collection_index = array_flip(array_column($mock_collections, 'id'));
+foreach ($_SESSION[preview_key('collection_plants')] ?? [] as $plant_id => $new_collection_id) {
+    foreach ($mock_plants as $index => $plant) {
+        if ($plant['id'] !== $plant_id || $plant['collection_id'] !== null || !isset($collection_index[$new_collection_id])) {
+            continue;
+        }
+        $row = &$mock_collections[$collection_index[$new_collection_id]];
+        $mock_plants[$index]['collection_id']   = $new_collection_id;
+        $mock_plants[$index]['collection_name'] = $row['name'];
+        $row['plant_count']++;
+        if (count($row['cover_photos']) < 3) {
+            $row['cover_photos'][] = $plant['photo'];
+        }
+        // A private plant never reaches the Public Profile, even inside a public collection
+        if ($plant['is_public']) {
+            $row['public_plant_count']++;
+            if (count($row['public_cover_photos']) < 3) {
+                $row['public_cover_photos'][] = $plant['photo'];
+            }
+        }
+        unset($row);   // a reference stays linked after the loop; unset() breaks the link so later code cannot change the row by accident
     }
 }
 

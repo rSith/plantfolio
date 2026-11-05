@@ -43,7 +43,10 @@ $due        = $community ? null : care_hint($plant);   // null when the plant ha
         <?php if ($due): ?>
           <span class="care-hint care-hint-<?= e($due['state']) ?>"><?= icon(task_icon($plant['task'])) ?> <?= e($due['text']) ?></span>
         <?php endif; ?>
-        <span class="plant-card-collection"><?= e($plant['collection_name']) ?></span>
+        <?php // collection_name is null for a plant in no collection: nothing to show then ?>
+        <?php if ($plant['collection_name'] !== null): ?>
+          <span class="plant-card-collection"><?= e($plant['collection_name']) ?></span>
+        <?php endif; ?>
       </div>
     <?php endif; ?>
   </div>

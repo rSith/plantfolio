@@ -428,3 +428,87 @@
   flex-wrap: wrap;
   gap: 0 var(--space-24);
 }
+
+/* "Add plants": one row per plant (checkbox, photo, name, where it is). The popup body scrolls when the list is long. */
+.collection-plants {
+  margin-top: var(--space-16);
+}
+
+.collection-plants .field-hint {
+  margin: var(--space-4) 0 var(--space-8);
+}
+
+.collection-pick-list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  list-style: none;
+}
+
+.collection-pick-list li + li {
+  border-top: 1px solid var(--color-line);
+}
+
+.collection-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+}
+
+.collection-pick:hover {
+  background: var(--color-cream);
+}
+
+.collection-pick:has(input:checked) {
+  background: var(--color-sage);
+}
+
+.collection-pick input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-leaf);
+}
+
+.collection-pick .thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+/* min-width: 0 lets a long name wrap instead of pushing the row wider than the popup */
+.collection-pick-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.collection-pick-meta,
+.collection-pick-where {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.collection-pick-where {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Already in a collection: still readable (the reason must be read), but clearly not a choice */
+.collection-pick.is-taken {
+  cursor: not-allowed;
+}
+
+.collection-pick.is-taken:hover {
+  background: none;
+}
+
+.collection-pick.is-taken img,
+.collection-pick.is-taken .collection-pick-text {
+  opacity: 0.55;
+}

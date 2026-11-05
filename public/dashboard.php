@@ -385,7 +385,7 @@ include __DIR__ . '/../includes/header.php';
                   <input class="visually-hidden" type="radio" name="plant" value="<?= e($plant['id']) ?>" required<?= (string) $plant['id'] === $reminder_values['plant'] ? ' checked' : '' ?><?= reminder_error_attrs('plant', $reminder_errors) ?>>
                   <img class="plant-pick-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
                   <span class="plant-pick-name"><?= e($plant['nickname']) ?></span>
-                  <span class="plant-pick-meta"><?= e($plant['collection_name']) ?></span>
+                  <span class="plant-pick-meta"><?= e($plant['collection_name'] ?? 'No collection') ?></span>
                 </label>
               <?php endforeach; ?>
               <?php // The plant is not in the garden yet: add it first (P06), then come back for its reminder ?>

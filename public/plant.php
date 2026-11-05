@@ -115,7 +115,10 @@ include __DIR__ . '/../includes/header.php';
     <ol class="breadcrumb plant-breadcrumb">
       <?php if ($is_owner): ?>
         <li><a href="<?= e(url('garden.php')) ?>">My Garden</a></li>
-        <li><a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a></li>
+        <?php // A plant in no collection sits straight under My Garden ?>
+        <?php if ($plant['collection_id'] !== null): ?>
+          <li><a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a></li>
+        <?php endif; ?>
       <?php else: ?>
         <li><a href="<?= e(url('explore.php')) ?>">Explore</a></li>
         <li><a href="<?= e($owner_url) ?>">@<?= e($owner['username']) ?></a></li>
@@ -148,7 +151,9 @@ include __DIR__ . '/../includes/header.php';
       <p class="plant-meta">
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
         <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
-        <span><?= e($plant['collection_name']) ?></span>
+        <?php if ($plant['collection_name'] !== null): ?>
+          <span><?= e($plant['collection_name']) ?></span>
+        <?php endif; ?>
         <span><?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
       </p>
 

@@ -16,13 +16,23 @@ if (!$current_user) {
 // Stage F: the form is checked here and the collection is kept in the session (mock_add_collection()), so its tab
 // appears at once. Stage B: INSERT INTO collections … with a CSRF check; UNIQUE (user_id, name) backs the name rule.
 
-$collection_values = ['name' => '', 'is_public' => '1'];
+$collection_values = ['name' => '', 'is_public' => '1', 'plants' => []];
 $collection_errors = [];   // field name => message, printed under that field in the popup
+
+// The plant picker: the member's own plants, those still in no collection first, then A to Z. A plant can be in only
+// one collection (plants.collection_id), so the others are shown greyed out with the collection they are in.
+$pick_plants = $mock_plants;
+usort($pick_plants, fn ($a, $b) => [$a['collection_id'] !== null, $a['nickname']] <=> [$b['collection_id'] !== null, $b['nickname']]);
+$free_plant_ids = array_column(array_filter($mock_plants, fn ($plant) => $plant['collection_id'] === null), 'id');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection') {
     // trim() and collapsing spaces stop "  Balcony " from counting as a different name from "Balcony"
     $collection_values['name']      = preg_replace('/\s+/u', ' ', trim(post_text('name')));
     $collection_values['is_public'] = post_text('is_public') === '0' ? '0' : '1';
+    // The ticked boxes arrive as a list (plants[]=62&plants[]=63): keep whole numbers only, each once
+    $posted_plants = $_POST['plants'] ?? [];
+    $posted_plants = is_array($posted_plants) ? array_filter($posted_plants, fn ($id) => is_string($id) && ctype_digit($id)) : [];
+    $collection_values['plants'] = array_values(array_unique(array_map('intval', $posted_plants)));
 
     $name = $collection_values['name'];
     // The same rules the browser checks, checked again here: the browser's checks can be switched off
@@ -39,9 +49,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection')
         }
     }
 
+    // Greyed-out boxes cannot be ticked, but a hand-made request can still send their ids. Only the member's own
+    // plants that are in no collection yet are accepted (ownership check), so a plant is never taken from another one.
+    if (array_diff($collection_values['plants'], $free_plant_ids)) {
+        $collection_errors['plants'] = 'Choose only plants that are not in a collection yet.';
+    }
+
     if (!$collection_errors) {
-        $new_collection = mock_add_collection($name, $collection_values['is_public'] === '1');
-        $_SESSION['collection_toast'] = 'Collection created: ' . $name;
+        $added          = count($collection_values['plants']);
+        $new_collection = mock_add_collection($name, $collection_values['is_public'] === '1', $collection_values['plants']);
+        $_SESSION['collection_toast'] = 'Collection created: ' . $name
+            . ($added ? ' · ' . $added . ($added === 1 ? ' plant' : ' plants') . ' added' : '');
         // POST, then redirect: a reload cannot create it twice. The new tab opens, so the member sees it at once.
         header('Location: ' . url('garden.php?collection=' . $new_collection['id']));
         exit;
@@ -292,7 +310,7 @@ include __DIR__ . '/../includes/header.php';
                 <a class="garden-table-name" href="<?= e(url('plant.php?id=' . $plant['id'])) ?>"><?= e($plant['nickname']) ?></a>
                 <span class="scientific-name"><?= e($plant['scientific_name']) ?></span>
               </td>
-              <td class="cell-collection"><?= e($plant['collection_name']) ?></td>
+              <td class="cell-collection"><?= e($plant['collection_name'] ?? 'No collection') ?></td>
               <td class="cell-status"><?php partial('status-badge', ['status' => $plant['health_status']]); ?></td>
               <td class="cell-care">
                 <?php if ($due): ?>
@@ -331,7 +349,7 @@ include __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 
   <?php // New collection popup (CORE-13, MOD-01): one POST form. It opens at once when the server sent it back with an error. ?>
-  <dialog class="modal" id="new-collection" aria-labelledby="new-collection-title"<?= $collection_errors ? ' data-open-on-load' : '' ?>>
+  <dialog class="modal modal-wide" id="new-collection" aria-labelledby="new-collection-title"<?= $collection_errors ? ' data-open-on-load' : '' ?>>
     <form class="modal-form" method="post" action="<?= e(url('garden.php')) ?>">
       <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
       <input type="hidden" name="form" value="collection">
@@ -366,6 +384,43 @@ include __DIR__ . '/../includes/header.php';
               <span><strong>Private</strong> <span class="text-small">· only you</span></span>
             </label>
           </div>
+        </fieldset>
+
+        <?php // Plants to put in it now. Optional: plants can also be moved in later from Add / Edit plant. ?>
+        <fieldset class="form-fieldset collection-plants">
+          <legend class="field-label">Add plants <span class="field-optional">(optional)</span></legend>
+          <?php if (!$pick_plants): ?>
+            <p class="field-hint">No plants in your garden yet. You can add them to this collection later.</p>
+          <?php else: ?>
+            <p class="field-hint" id="collection-plants-hint">A plant can be in one collection only. Plants that already have one can't be picked.</p>
+            <ul class="collection-pick-list">
+              <?php foreach ($pick_plants as $plant): ?>
+                <?php $taken = $plant['collection_id'] !== null; ?>
+                <li>
+                  <label class="collection-pick<?= $taken ? ' is-taken' : '' ?>">
+                    <input type="checkbox" name="plants[]" value="<?= e($plant['id']) ?>"
+                           <?= $taken ? 'disabled' : '' ?><?= in_array($plant['id'], $collection_values['plants'], true) ? ' checked' : '' ?>
+                           aria-describedby="collection-plants-hint">
+                    <img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
+                    <span class="collection-pick-text">
+                      <strong><?= e($plant['nickname']) ?></strong>
+                      <span class="collection-pick-meta"><?= e($plant['common_name']) ?></span>
+                    </span>
+                    <span class="collection-pick-where">
+                      <?php if ($taken): ?>
+                        In <?= e($plant['collection_name']) ?>
+                      <?php else: ?>
+                        No collection
+                      <?php endif; ?>
+                    </span>
+                  </label>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
+          <?php if (isset($collection_errors['plants'])): ?>
+            <p class="field-error" role="alert"><?= e($collection_errors['plants']) ?></p>
+          <?php endif; ?>
         </fieldset>
       </div>
 
