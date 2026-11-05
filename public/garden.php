@@ -25,14 +25,23 @@ $pick_plants = $mock_plants;
 usort($pick_plants, fn ($a, $b) => [$a['collection_id'] !== null, $a['nickname']] <=> [$b['collection_id'] !== null, $b['nickname']]);
 $free_plant_ids = array_column(array_filter($mock_plants, fn ($plant) => $plant['collection_id'] === null), 'id');
 
+/**
+ * The plant ids ticked in a picker. The boxes arrive as a list (plants[]=62&plants[]=63); a hand-made request can send
+ * anything, so only whole numbers are kept, each once. Both popups use it.
+ */
+function posted_plant_ids()
+{
+    $posted = $_POST['plants'] ?? [];
+    $posted = is_array($posted) ? array_filter($posted, fn ($id) => is_string($id) && ctype_digit($id)) : [];
+
+    return array_values(array_unique(array_map('intval', $posted)));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection') {
     // trim() and collapsing spaces stop "  Balcony " from counting as a different name from "Balcony"
     $collection_values['name']      = preg_replace('/\s+/u', ' ', trim(post_text('name')));
     $collection_values['is_public'] = post_text('is_public') === '0' ? '0' : '1';
-    // The ticked boxes arrive as a list (plants[]=62&plants[]=63): keep whole numbers only, each once
-    $posted_plants = $_POST['plants'] ?? [];
-    $posted_plants = is_array($posted_plants) ? array_filter($posted_plants, fn ($id) => is_string($id) && ctype_digit($id)) : [];
-    $collection_values['plants'] = array_values(array_unique(array_map('intval', $posted_plants)));
+    $collection_values['plants']    = posted_plant_ids();
 
     $name = $collection_values['name'];
     // The same rules the browser checks, checked again here: the browser's checks can be switched off
@@ -64,6 +73,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'collection')
         header('Location: ' . url('garden.php?collection=' . $new_collection['id']));
         exit;
     }
+}
+
+// ── Add plants to a collection (CORE-13) ────────────────
+// The same picker as in New collection, for a collection that already exists. Stage B: CSRF check, then
+// UPDATE plants SET collection_id = ? WHERE id IN (…) AND user_id = ? AND collection_id IS NULL, after checking
+// that the collection is the member's own.
+$add_plants_values = [];
+$add_plants_error  = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'add_plants') {
+    $target_id = post_text('collection');
+    $target    = null;
+    // Only one of the member's own collections can receive plants
+    foreach ($mock_collections as $collection) {
+        if (ctype_digit($target_id) && $collection['id'] === (int) $target_id && $collection['user_id'] === $current_user['id']) {
+            $target = $collection;
+        }
+    }
+    if (!$target) {
+        header('Location: ' . url('garden.php'));
+        exit;
+    }
+
+    $add_plants_values = posted_plant_ids();
+    if (!$add_plants_values) {
+        $add_plants_error = 'Tick at least one plant.';
+    } elseif (array_diff($add_plants_values, $free_plant_ids)) {
+        // Greyed-out boxes cannot be ticked, but a hand-made request can still send their ids
+        $add_plants_error = 'Choose only plants that are not in a collection yet.';
+    }
+
+    if ($add_plants_error === '') {
+        mock_add_to_collection($target['id'], $add_plants_values);
+        $added = count($add_plants_values);
+        $_SESSION['collection_toast'] = count_words($added, 'plant', 'plants') . ' added to ' . $target['name'];
+        header('Location: ' . url('garden.php?collection=' . $target['id']));   // stay on its tab
+        exit;
+    }
+    // An error: the form was sent to garden.php?collection=<id>, so the page shows the same tab again, popup open
 }
 
 // ── Delete collection (CORE-13) ─────────────────────────
@@ -243,9 +291,14 @@ include __DIR__ . '/../includes/header.php';
           · <?= icon('lock') ?> Private
         <?php endif; ?>
       </p>
-      <button type="button" class="btn btn-ghost btn-sm collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
-        <?= icon('trash-2') ?> Delete collection
-      </button>
+      <div class="collection-line-actions">
+        <button type="button" class="btn btn-secondary btn-sm collection-action" data-dialog="add-plants" aria-haspopup="dialog">
+          <?= icon('plus') ?> Add plants
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm collection-action collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
+          <?= icon('trash-2') ?> Delete collection
+        </button>
+      </div>
     </div>
   <?php endif; ?>
 
@@ -431,31 +484,7 @@ include __DIR__ . '/../includes/header.php';
           <?php if (!$pick_plants): ?>
             <p class="field-hint">No plants in your garden yet. You can add them to this collection later.</p>
           <?php else: ?>
-            <p class="field-hint" id="collection-plants-hint">A plant can be in one collection only. Plants that already have one can't be picked.</p>
-            <ul class="collection-pick-list">
-              <?php foreach ($pick_plants as $plant): ?>
-                <?php $taken = $plant['collection_id'] !== null; ?>
-                <li>
-                  <label class="collection-pick<?= $taken ? ' is-taken' : '' ?>">
-                    <input type="checkbox" name="plants[]" value="<?= e($plant['id']) ?>"
-                           <?= $taken ? 'disabled' : '' ?><?= in_array($plant['id'], $collection_values['plants'], true) ? ' checked' : '' ?>
-                           aria-describedby="collection-plants-hint">
-                    <img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
-                    <span class="collection-pick-text">
-                      <strong><?= e($plant['nickname']) ?></strong>
-                      <span class="collection-pick-meta"><?= e($plant['common_name']) ?></span>
-                    </span>
-                    <span class="collection-pick-where">
-                      <?php if ($taken): ?>
-                        In <?= e($plant['collection_name']) ?>
-                      <?php else: ?>
-                        No collection
-                      <?php endif; ?>
-                    </span>
-                  </label>
-                </li>
-              <?php endforeach; ?>
-            </ul>
+            <?php partial('plant-picker', ['plants' => $pick_plants, 'checked' => $collection_values['plants'], 'id' => 'new-collection-plants']); ?>
           <?php endif; ?>
           <?php if (isset($collection_errors['plants'])): ?>
             <p class="field-error" role="alert"><?= e($collection_errors['plants']) ?></p>
@@ -469,6 +498,47 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </form>
   </dialog>
+
+  <?php // Add plants popup: the picker again, for the open collection. Opens at once when the server sent back an error. ?>
+  <?php if ($open_collection): ?>
+    <?php $has_free = (bool) $free_plant_ids; ?>
+    <dialog class="modal modal-wide" id="add-plants" aria-labelledby="add-plants-title"<?= $add_plants_error !== '' ? ' data-open-on-load' : '' ?>>
+      <?php // Sent to this tab's own address, so an error shows the same tab with the popup open again ?>
+      <form class="modal-form" method="post" action="<?= e(url('garden.php?collection=' . $open_collection['id'])) ?>">
+        <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+        <input type="hidden" name="form" value="add_plants">
+        <input type="hidden" name="collection" value="<?= e($open_collection['id']) ?>">
+
+        <div class="modal-head">
+          <h2 class="modal-title" id="add-plants-title">Add plants to “<?= e($open_collection['name']) ?>”</h2>
+          <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+        </div>
+
+        <div class="modal-body">
+          <fieldset class="form-fieldset">
+            <legend class="visually-hidden">Plants to add</legend>
+            <?php if (!$pick_plants): ?>
+              <p class="field-hint">No plants in your garden yet. Add a plant first.</p>
+            <?php else: ?>
+              <?php if (!$has_free): ?>
+                <p class="collection-none-free"><?= icon('info') ?> All your plants are already in a collection. Delete a collection to free its plants, or add a new plant.</p>
+              <?php endif; ?>
+              <?php partial('plant-picker', ['plants' => $pick_plants, 'checked' => $add_plants_values, 'id' => 'add-plants-list']); ?>
+            <?php endif; ?>
+            <?php if ($add_plants_error !== ''): ?>
+              <p class="field-error" role="alert"><?= e($add_plants_error) ?></p>
+            <?php endif; ?>
+          </fieldset>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+          <?php // Nothing can be ticked, so there is nothing to add: the button is switched off and says why above ?>
+          <button class="btn btn-primary" type="submit"<?= $has_free ? '' : ' disabled' ?>><?= icon('plus') ?> Add plants</button>
+        </div>
+      </form>
+    </dialog>
+  <?php endif; ?>
 
   <?php // Delete collection: a destructive action, so it is confirmed in a popup that names the collection (S6) ?>
   <?php if ($open_collection): ?>

@@ -549,3 +549,30 @@
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }
+
+/* Add plants and Delete side by side at the right of the line */
+.collection-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.collection-action {
+  min-height: 44px;
+}
+
+/* Shown in the Add plants popup when every plant already has a collection */
+.collection-none-free {
+  display: flex;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+  font-size: var(--text-body-sm);
+}
+
+.collection-none-free .icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

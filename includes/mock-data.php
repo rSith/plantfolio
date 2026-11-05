@@ -541,6 +541,19 @@ function mock_add_collection($name, $is_public, array $plant_ids = [])
 }
 
 /**
+ * Mock-only: "Add plants" on an open collection in My Garden (CORE-13). The same session list as New collection uses:
+ * plant id => collection id, applied at the end of this file. The page has already checked the ids (her own plants,
+ * in no collection yet) and that the collection is hers.
+ * Stage B: UPDATE plants SET collection_id = ? WHERE id IN (…) AND user_id = ? AND collection_id IS NULL.
+ */
+function mock_add_to_collection($collection_id, array $plant_ids)
+{
+    foreach ($plant_ids as $plant_id) {
+        $_SESSION[preview_key('collection_plants')][$plant_id] = $collection_id;
+    }
+}
+
+/**
  * Mock-only: "Delete collection" on My Garden (CORE-13). Remembers the id in the session; the end of this file then
  * leaves the collection out and puts its plants in no collection. The plants themselves are kept.
  * Stage B: DELETE FROM collections WHERE id = ? AND user_id = ?. The foreign key plants.collection_id is
@@ -1321,6 +1334,9 @@ foreach ($_SESSION[preview_key('collection_plants')] ?? [] as $plant_id => $new_
             continue;
         }
         $row = &$mock_collections[$collection_index[$new_collection_id]];
+        // The three mock collections have no public-only numbers yet: until now theirs were the same as the totals
+        $row['public_plant_count']  ??= $row['is_public'] ? $row['plant_count'] : 0;
+        $row['public_cover_photos'] ??= $row['is_public'] ? $row['cover_photos'] : [];
         $mock_plants[$index]['collection_id']   = $new_collection_id;
         $mock_plants[$index]['collection_name'] = $row['name'];
         $row['plant_count']++;
