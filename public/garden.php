@@ -360,10 +360,10 @@ include __DIR__ . '/../includes/header.php';
           <?php // Not "Add plants": next to the big "Add plant" (make a new plant) that read as the same button. This one
                 // puts plants the member already has into this collection, so it has its own verb, icon and quiet style. ?>
           <button type="button" class="btn btn-ghost btn-sm collection-action collection-choose" data-dialog="add-plants" aria-haspopup="dialog">
-            <?= icon('folder-input') ?> Choose plants
+            <?= icon('folder-input') ?> <span class="hover-bold" data-label="Choose plants">Choose plants</span>
           </button>
           <button type="button" class="btn btn-ghost btn-sm collection-action collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
-            <?= icon('trash-2') ?> Delete collection
+            <?= icon('trash-2') ?> <span class="hover-bold" data-label="Delete collection">Delete collection</span>
           </button>
         </div>
       <?php endif; ?>

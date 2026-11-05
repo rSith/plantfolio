@@ -732,25 +732,41 @@
 
 /* ── Collection actions in the box header ───────────── */
 
-/* Quiet until pointed at: deleting is rare, so it should not compete with Add plant. Red only on hover. */
-.collection-delete {
+/* Choose plants and Delete collection: two plain text buttons in the same forest green, so only the big "Add plant"
+   looks like a main action. Pointing at one draws no coloured box: the words turn bold instead (Ranshitha's choice).
+   Delete is still safe without red here, because it always asks first in a popup that names the collection. */
+.collection-action {
   min-height: 44px;
-  color: var(--color-muted);
+  color: var(--color-forest);
+  font-weight: var(--weight-medium);
 }
 
-.collection-delete:hover {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
-}
-
-/* Choose plants: a plain text button like Delete, so only the big "Add plant" looks like a main action. Forest green
-   (not muted) because it is the everyday action of this line; Delete stays the quieter grey one. */
-.collection-choose {
+.collection-action:hover,
+.collection-action:active {
+  background: transparent;
   color: var(--color-forest);
 }
 
-.collection-action {
-  min-height: 44px;
+/* Bold on hover. 600 is the boldest Poppins weight the page loads (header.php), so it is the "bold" here. */
+.collection-action:hover .hover-bold {
+  font-weight: var(--weight-semibold);
+}
+
+/* Bold letters are wider, so the button would grow and push its neighbour on hover. A hidden bold copy of the label
+   (data-label, drawn by ::after with no height) keeps the button as wide as the bold text from the start. */
+.hover-bold {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.hover-bold::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: var(--weight-semibold);
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Shown in the Add plants popup when every plant already has a collection */
