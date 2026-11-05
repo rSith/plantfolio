@@ -550,7 +550,13 @@
   color: var(--color-danger);
 }
 
-/* Add plants and Delete side by side at the right of the line */
+/* Choose plants: a plain text button like Delete, so only the big "Add plant" looks like a main action. Forest green
+   (not muted) because it is the everyday action of this line; Delete stays the quieter grey one. */
+.collection-choose {
+  color: var(--color-forest);
+}
+
+/* Choose plants and Delete side by side at the right of the line */
 .collection-line-actions {
   display: flex;
   flex-wrap: wrap;

@@ -292,8 +292,10 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </p>
       <div class="collection-line-actions">
-        <button type="button" class="btn btn-secondary btn-sm collection-action" data-dialog="add-plants" aria-haspopup="dialog">
-          <?= icon('plus') ?> Add plants
+        <?php // Not "Add plants": next to the big "Add plant" (make a new plant) that read as the same button. This one
+              // puts plants the member already has into this collection, so it has its own verb, icon and quiet style. ?>
+        <button type="button" class="btn btn-ghost btn-sm collection-action collection-choose" data-dialog="add-plants" aria-haspopup="dialog">
+          <?= icon('folder-input') ?> Choose plants
         </button>
         <button type="button" class="btn btn-ghost btn-sm collection-action collection-delete" data-dialog="delete-collection" aria-haspopup="dialog">
           <?= icon('trash-2') ?> Delete collection
@@ -510,7 +512,7 @@ include __DIR__ . '/../includes/header.php';
         <input type="hidden" name="collection" value="<?= e($open_collection['id']) ?>">
 
         <div class="modal-head">
-          <h2 class="modal-title" id="add-plants-title">Add plants to “<?= e($open_collection['name']) ?>”</h2>
+          <h2 class="modal-title" id="add-plants-title">Choose plants for “<?= e($open_collection['name']) ?>”</h2>
           <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
         </div>
 
@@ -534,7 +536,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="modal-foot">
           <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
           <?php // Nothing can be ticked, so there is nothing to add: the button is switched off and says why above ?>
-          <button class="btn btn-primary" type="submit"<?= $has_free ? '' : ' disabled' ?>><?= icon('plus') ?> Add plants</button>
+          <button class="btn btn-primary" type="submit"<?= $has_free ? '' : ' disabled' ?>><?= icon('folder-input') ?> Add to collection</button>
         </div>
       </form>
     </dialog>
