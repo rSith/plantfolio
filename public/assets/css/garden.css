@@ -834,16 +834,78 @@
   list-style: none;
 }
 
-.stack-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  padding: var(--space-8) 0;
+.stack-rows li + li {
   border-top: 1px solid var(--color-line);
 }
 
-.stack-row:first-child {
-  border-top: 0;
+/* The row itself is the <summary> (the part of a <details> that is always shown and opens it when tapped) */
+.stack-row-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;
+  padding: var(--space-8) var(--space-4);
+  border-radius: var(--radius-input);
+  list-style: none;   /* hides the browser's ▸ triangle */
+  cursor: pointer;
+}
+
+.stack-row-summary::-webkit-details-marker {
+  display: none;   /* the same triangle in Safari */
+}
+
+.stack-row-summary:hover,
+.stack-row[open] > .stack-row-summary {
+  background: var(--color-cream);
+}
+
+.stack-row-summary:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+}
+
+/* The ⋯ at the end of the row: a hint that the row opens. It turns forest green while the row is open. */
+.stack-row-more {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+
+.stack-row[open] .stack-row-more {
+  color: var(--color-forest);
+}
+
+/* The actions under an open row, lined up with the plant's name. They wrap onto a second line on a phone. */
+.stack-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-12) calc(2ch + 48px + var(--space-12) * 2 + var(--space-4));
+}
+
+.stack-row-actions .btn {
+  min-height: 40px;
+}
+
+.stack-row-delete {
+  color: var(--color-danger);
+}
+
+.stack-row-delete:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Phone: no room to indent the actions under the name, so they start at the left edge. A long care text such as
+   "Fertilise today" wraps under itself instead of running under the health word. */
+@media (max-width: 767.98px) {
+  .stack-row-actions {
+    padding-left: var(--space-4);
+  }
+
+  .stack-row-care .care-hint {
+    white-space: normal;
+  }
 }
 
 .stack-row-number {
@@ -863,19 +925,6 @@
   flex: 1;
   min-width: 0;
   font-size: var(--text-body-sm);
-}
-
-/* min-height: the name is the row's link, so it gets a 44px touch target */
-.stack-row-text a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.stack-row-text a:hover {
-  text-decoration: underline;
 }
 
 .stack-row-care {

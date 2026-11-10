@@ -119,6 +119,28 @@ if ($is_edit) {
     $reminder_source = 'The current schedule for ' . $plant['nickname'] . '. Change it anytime.';
 }
 
+// ── "Add another" from a plant stack (prototype, feature/plant-stacks) ──
+// plant-form.php?like=64 adds a new plant like plant 64: same species, collection and visibility, and its species'
+// care intervals. The nickname, date, health and photo stay empty or default: they belong to the new plant.
+// Only the member's own plant can be copied; any other id is ignored and the form stays empty.
+$like_id = filter_input(INPUT_GET, 'like', FILTER_VALIDATE_INT);
+if (!$is_edit && $like_id !== null) {
+    foreach ($mock_plants as $row) {
+        if ($row['id'] === $like_id && $row['user_id'] === $current_user['id']) {
+            $values['species']       = $row['scientific_name'];
+            $values['collection_id'] = $row['collection_id'];
+            $values['is_public']     = $row['is_public'];
+            $species = $mock_species[$row['species_id']] ?? null;
+            if ($species) {
+                foreach (array_keys($reminder_values) as $task) {
+                    $reminder_values[$task]['interval_days'] = $species[$task . '_interval_days'];
+                }
+                $reminder_source = 'From the care guide for ' . $species['common_name'] . '. Change them anytime.';
+            }
+        }
+    }
+}
+
 // ── The AI suggestion (add mode only) ───────────────────
 // Stage F: ?ai pretends a photo was uploaded and analysed, using the mock Flask answer. Stage M: the upload is
 // sent to Flask (includes/ml-client.php), and if Flask is offline this whole block is skipped: the form simply

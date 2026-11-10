@@ -39,26 +39,49 @@ $count = count($plants);
     </form>
   </div>
   <div class="modal-body">
-    <p class="field-hint stack-hint">Each plant has its own health, story and reminders. Open one to update it.</p>
+    <p class="field-hint stack-hint">Each plant has its own health, story and reminders. Tap a plant for its actions.</p>
+    <?php // Each row is a <details>: a tap opens the plant's actions under the row, pushing the rows below down.
+          // A dropdown would be cut off at the bottom of the popup; a row that grows never is. The shared name
+          // makes it an accordion: opening one row closes the others. No JavaScript needed. ?>
     <ul class="stack-rows">
       <?php foreach ($plants as $number => $plant): ?>
-        <?php $plant_due = care_hint($plant); ?>
-        <li class="stack-row">
-          <span class="stack-row-number" aria-hidden="true"><?= e('#' . ($number + 1)) ?></span>
-          <img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
-          <span class="stack-row-text">
-            <a href="<?= e(url('plant.php?id=' . $plant['id'])) ?>"><strong><?= e($plant['nickname']) ?></strong></a>
-            <span class="stack-row-care">
-              <?php if ($plant_due): ?>
-                <span class="care-hint care-hint-<?= e($plant_due['state']) ?>"><?= icon(task_icon($plant['task'])) ?> <?= e($plant_due['text']) ?></span>
-              <?php else: ?>
-                No reminder
-              <?php endif; ?>
-            </span>
-          </span>
-          <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+        <?php $plant_due = care_hint($plant); $plant_id = (int) $plant['id']; ?>
+        <li>
+          <details class="stack-row" name="<?= e($id) ?>-rows">
+            <summary class="stack-row-summary">
+              <span class="stack-row-number" aria-hidden="true"><?= e('#' . ($number + 1)) ?></span>
+              <img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
+              <span class="stack-row-text">
+                <strong><?= e($plant['nickname']) ?></strong>
+                <span class="stack-row-care">
+                  <?php if ($plant_due): ?>
+                    <span class="care-hint care-hint-<?= e($plant_due['state']) ?>"><?= icon(task_icon($plant['task'])) ?> <?= e($plant_due['text']) ?></span>
+                  <?php else: ?>
+                    No reminder
+                  <?php endif; ?>
+                </span>
+              </span>
+              <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+              <span class="stack-row-more" aria-hidden="true"><?= icon('ellipsis') ?></span>
+            </summary>
+            <?php // The same actions as a single plant's ⋯ menu (partials/plant-menu.php), plus Open, all for this one plant ?>
+            <div class="stack-row-actions">
+              <a class="btn btn-primary btn-sm" href="<?= e(url('plant.php?id=' . $plant_id)) ?>"><?= icon('arrow-right') ?> Open</a>
+              <a class="btn btn-ghost btn-sm" href="<?= e(url('plant-form.php?id=' . $plant_id)) ?>"><?= icon('pencil') ?> Edit</a>
+              <a class="btn btn-ghost btn-sm" href="<?= e(url('plant-form.php?id=' . $plant_id . '#collection')) ?>"><?= icon('folder-input') ?> Move</a>
+              <a class="btn btn-ghost btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant_id)) ?>"><?= icon('repeat') ?> List for exchange</a>
+              <?php // Stage F: does nothing yet, like Delete on a single card. Week 5 confirms in a dialog that names the plant. ?>
+              <button type="button" class="btn btn-ghost btn-sm stack-row-delete"><?= icon('trash-2') ?> Delete</button>
+            </div>
+          </details>
         </li>
       <?php endforeach; ?>
     </ul>
+  </div>
+  <?php // The one action for the whole stack: one more of the same kind, with species and collection filled in ?>
+  <div class="modal-foot">
+    <a class="btn btn-secondary" href="<?= e(url('plant-form.php?like=' . $first['id'])) ?>">
+      <?= icon('plus') ?> Add another <?= e(mb_strtolower($first['common_name'])) ?>
+    </a>
   </div>
 </dialog>
