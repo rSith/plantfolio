@@ -823,14 +823,6 @@
   cursor: pointer;
 }
 
-/* "1 Sick  2 Thriving": the health of every plant in the stack, worst first */
-.plant-stack-health {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin: var(--space-4) 0 0;
-}
-
 /* The popup's list: number, photo, name and next care, then the health word on the right */
 .stack-hint {
   margin: var(--space-8) 0 var(--space-12);
@@ -898,11 +890,6 @@
       3px 3px 0 -1px var(--color-white), 3px 3px 0 0 var(--color-line),
       6px 6px 0 -1px var(--color-white), 6px 6px 0 0 var(--color-line);
     margin: 0 6px 6px 0;
-  }
-
-  .plant-grid .plant-stack-health .badge {
-    padding: 0 var(--space-8);
-    font-size: 0.75rem;
   }
 
   .plant-grid .card-media .plant-stack-count {
