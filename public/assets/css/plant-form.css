@@ -354,3 +354,8 @@
 .ai-clear:hover {
   color: var(--color-danger);
 }
+
+/* "How many?" (prototype): a small number box, a few digits wide, with the hint beside it on wider screens */
+.input-quantity {
+  width: 96px;
+}

@@ -229,6 +229,26 @@ usort($plants, function ($a, $b) use ($sort, $health_rank) {
     }
 });
 
+// ── Plant stacks (prototype, feature/plant-stacks) ──────
+// In the grid, plants of the same species in the same collection share one card, a "stack". Each plant keeps its
+// own row, health and reminders; the stack is only a way of showing them. A stack takes the place of its first plant
+// in the sorted order, so "Health, worst first" moves a stack with a sick plant to the top. A plant whose species
+// was typed by hand (species_id null) is never stacked. The list view still shows every plant on its own line.
+// Stage B: the same grouping in PHP over the query's rows; no database change.
+$grid_items = [];   // each item: ['plants' => [one plant]] or ['plants' => [two or more]] (a stack)
+$stack_at   = [];   // "species-collection" => its index in $grid_items
+foreach ($plants as $plant) {
+    $key = $plant['species_id'] === null ? null : $plant['species_id'] . '-' . ($plant['collection_id'] ?? 'none');
+    if ($key !== null && isset($stack_at[$key])) {
+        $grid_items[$stack_at[$key]]['plants'][] = $plant;
+        continue;
+    }
+    $grid_items[] = ['plants' => [$plant]];
+    if ($key !== null) {
+        $stack_at[$key] = count($grid_items) - 1;
+    }
+}
+
 $has_plants  = $current_user['plant_count'] > 0;
 $plant_count = $current_user['plant_count'];
 $coll_count  = $current_user['collection_count'];
@@ -382,8 +402,12 @@ include __DIR__ . '/../includes/header.php';
       ]); ?>
     <?php elseif ($plants && $view === 'grid'): ?>
       <div class="plant-grid">
-        <?php foreach ($plants as $plant): ?>
-          <?php partial('plant-card', ['plant' => $plant, 'menu' => true]); ?>
+        <?php foreach ($grid_items as $number => $item): ?>
+          <?php if (count($item['plants']) === 1): ?>
+            <?php partial('plant-card', ['plant' => $item['plants'][0], 'menu' => true]); ?>
+          <?php else: ?>
+            <?php partial('plant-stack', ['plants' => $item['plants'], 'id' => 'stack-' . $number]); ?>
+          <?php endif; ?>
         <?php endforeach; ?>
       </div>
     <?php elseif ($plants): ?>

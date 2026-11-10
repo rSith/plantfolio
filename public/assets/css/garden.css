@@ -416,7 +416,8 @@
     min-width: 200px;
   }
 
-  .plant-grid > :nth-child(odd) .menu-panel {
+  /* "of .card": count cards only, because a stack's popup (<dialog>) also sits in the grid */
+  .plant-grid > :nth-child(odd of .card) .menu-panel {
     right: auto;
     left: 0;
   }
@@ -783,4 +784,131 @@
 .collection-none-free .icon {
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+/* ── Plant stack (prototype) ────────────────────────── */
+/* Several plants of one species in one collection, shown as one card. Two thin card edges peek out behind it, like a
+   pile of cards, so it reads as "more than one" before the ×3 is even read. They are box-shadows: a white one the
+   size of the card, then a line-coloured one 1px bigger, which draws the edge. */
+.plant-stack {
+  box-shadow:
+    5px 5px 0 -1px var(--color-white), 5px 5px 0 0 var(--color-line),
+    10px 10px 0 -1px var(--color-white), 10px 10px 0 0 var(--color-line);
+  margin: 0 10px 10px 0;   /* room for the edges, so they do not touch the next card */
+}
+
+.plant-stack:hover {
+  box-shadow:
+    5px 5px 0 -1px var(--color-white), 5px 5px 0 0 var(--color-line-strong),
+    10px 10px 0 -1px var(--color-white), 10px 10px 0 0 var(--color-line-strong),
+    var(--shadow-card);
+}
+
+/* "×3" in the top right corner of the photo, where a single plant has its ⋯ menu */
+.card-media .plant-stack-count {
+  right: var(--space-12);
+  left: auto;
+  background: var(--color-forest);
+  color: var(--color-white);
+  font-weight: var(--weight-semibold);
+}
+
+/* The card's name is a <button> here (it opens the popup): make it look exactly like the link on other cards */
+.plant-stack-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* "1 Sick  2 Thriving": the health of every plant in the stack, worst first */
+.plant-stack-health {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+}
+
+/* The popup's list: number, photo, name and next care, then the health word on the right */
+.stack-hint {
+  margin: var(--space-8) 0 var(--space-12);
+}
+
+.stack-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.stack-row:first-child {
+  border-top: 0;
+}
+
+.stack-row-number {
+  flex-shrink: 0;
+  width: 2ch;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.stack-row .thumb {
+  flex-shrink: 0;
+}
+
+.stack-row-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* min-height: the name is the row's link, so it gets a 44px touch target */
+.stack-row-text a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.stack-row-text a:hover {
+  text-decoration: underline;
+}
+
+.stack-row-care {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Phone: smaller edges for the small cards; the ×3 tag is smaller like the health word */
+@media (max-width: 767.98px) {
+  .plant-stack {
+    box-shadow:
+      3px 3px 0 -1px var(--color-white), 3px 3px 0 0 var(--color-line),
+      6px 6px 0 -1px var(--color-white), 6px 6px 0 0 var(--color-line);
+    margin: 0 6px 6px 0;
+  }
+
+  .plant-grid .plant-stack-health .badge {
+    padding: 0 var(--space-8);
+    font-size: 0.75rem;
+  }
+
+  .plant-grid .card-media .plant-stack-count {
+    top: var(--space-8);
+    right: var(--space-8);
+    padding: 0 var(--space-8);
+    font-size: 0.75rem;
+  }
 }

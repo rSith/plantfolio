@@ -324,6 +324,18 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
+        <?php // Prototype (feature/plant-stacks): several plants of one kind in one go. Only when adding: editing is
+              // always one plant. Stage B would insert this many plants rows, the nickname numbered "Name 2", "Name 3"…;
+              // in My Garden they then show as one stack card. Stage F: nothing is saved yet. ?>
+        <?php if (!$is_edit): ?>
+          <div class="field field-quantity">
+            <label class="field-label" for="quantity">How many?</label>
+            <input class="input input-quantity" type="number" id="quantity" name="quantity" value="1" min="1" max="20"
+                   inputmode="numeric" aria-describedby="quantity-hint">
+            <p class="field-hint" id="quantity-hint">Got several of the same plant? They share one card in My Garden, and each keeps its own health and reminders.</p>
+          </div>
+        <?php endif; ?>
+
         <div class="field-row">
           <div class="field">
             <label class="field-label" for="collection">Collection</label>

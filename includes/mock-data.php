@@ -149,6 +149,24 @@ $mock_plants = [
      'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(3),
      'last_logged_at' => mock_date(-9) . ' 17:30:00'],
 
+    // Two more snake plants in Living room, so Sergeant and these two show as one stack in My Garden (prototype on
+    // feature/plant-stacks). They are two of Living room's 7 that had no sample row yet, so no count changes.
+    // Public like the rest of Living room (13 public plants = Living room 7 + Balcony 6). Stripes is sick on purpose:
+    // the stack card must show that one of three is in trouble.
+    ['id' => 64, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 3, 'nickname' => 'Stripes',
+     'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-05-11', 'health_status' => 'sick', 'is_public' => 1,
+     'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
+     'collection_name' => 'Living room',
+     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(-1),
+     'last_logged_at' => mock_date(-2) . ' 17:05:00'],
+
+    ['id' => 65, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 3, 'nickname' => 'Slim',
+     'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-05-11', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
+     'collection_name' => 'Living room',
+     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(5),
+     'last_logged_at' => mock_date(-12) . ' 09:00:00'],
+
     ['id' => 48, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 7, 'nickname' => 'Lily',
      'photo' => 'mock/lily.svg', 'acquired_on' => '2025-09-02', 'health_status' => 'stable', 'is_public' => 1,
      'scientific_name' => 'Spathiphyllum wallisii', 'common_name' => 'Peace lily',
