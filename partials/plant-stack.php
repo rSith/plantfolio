@@ -11,7 +11,8 @@ $count = count($plants);
 <article class="card plant-card plant-stack">
   <div class="card-media">
     <img src="<?= e(photo_url($first['photo'])) ?>" alt="" loading="lazy">
-    <span class="badge plant-stack-count"><?= e('×' . $count) ?><span class="visually-hidden"> plants</span></span>
+    <?php // The one place the count shows. aria-hidden: a screen reader hears it once, in the button's name below. ?>
+    <span class="badge plant-stack-count" aria-hidden="true"><?= e('×' . $count) ?></span>
   </div>
   <div class="card-body">
     <h3 class="plant-card-name">
@@ -22,7 +23,6 @@ $count = count($plants);
     </h3>
     <p class="scientific-name"><?= e($first['scientific_name']) ?></p>
     <div class="plant-card-meta">
-      <span><?= e($count) ?> plants</span>
       <?php if ($first['collection_name'] !== null): ?>
         <span class="plant-card-collection"><?= e($first['collection_name']) ?></span>
       <?php endif; ?>
