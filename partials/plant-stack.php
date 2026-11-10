@@ -67,8 +67,8 @@ $count = count($plants);
               <a class="btn btn-ghost btn-sm collection-action" href="<?= e(url('listing-form.php?plant=' . $plant_id)) ?>">
                 <?= icon('repeat') ?> <span class="hover-bold" data-label="List for exchange">List for exchange</span>
               </a>
-              <?php // Stage F: does nothing yet, like Delete on a single card. Week 5 confirms in a dialog that names the plant. ?>
-              <button type="button" class="btn btn-ghost btn-sm collection-action">
+              <?php // Opens the confirmation that names the plant (garden.php), on top of this popup. Red: it deletes. ?>
+              <button type="button" class="btn btn-ghost btn-sm collection-action collection-action-danger" data-dialog="delete-plant-<?= e($plant_id) ?>" aria-haspopup="dialog">
                 <?= icon('trash-2') ?> <span class="hover-bold" data-label="Delete">Delete</span>
               </button>
             </div>

@@ -14,7 +14,7 @@ $plant_id = (int) $plant['id'];
     <?php // The collection is a field of the edit form; #collection jumps straight to it ?>
     <a class="menu-item" href="<?= e(url('plant-form.php?id=' . $plant_id . '#collection')) ?>"><?= icon('folder-input') ?> Move to collection</a>
     <a class="menu-item" href="<?= e(url('listing-form.php?plant=' . $plant_id)) ?>"><?= icon('repeat') ?> List for exchange</a>
-    <?php // Stage F: does nothing yet. Week 5 opens the confirmation that names the plant (S6); stage B deletes (CORE-20). ?>
-    <button type="button" class="menu-item menu-item-danger"><?= icon('trash-2') ?> Delete</button>
+    <?php // Opens the confirmation that names the plant (garden.php, S6); confirming deletes it (CORE-20) ?>
+    <button type="button" class="menu-item menu-item-danger" data-dialog="delete-plant-<?= e($plant_id) ?>" aria-haspopup="dialog"><?= icon('trash-2') ?> Delete</button>
   </div>
 </details>

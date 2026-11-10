@@ -135,6 +135,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'delete_colle
     exit;
 }
 
+// ── Delete a plant (CORE-20) ────────────────────────────
+// From a card's ⋯ menu or a row in a stack popup, after the confirmation that names the plant.
+// Stage B: CSRF check, then DELETE FROM plants WHERE id = ? AND user_id = ? (the user_id is the ownership check).
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'delete_plant') {
+    $delete_id = post_text('plant');
+    foreach ($mock_plants as $plant) {
+        // Only one of the member's own plants: another member's id, or text, changes nothing
+        if (ctype_digit($delete_id) && $plant['id'] === (int) $delete_id && $plant['user_id'] === $current_user['id']) {
+            mock_delete_plant($plant['id']);
+            $_SESSION['collection_toast'] = 'Plant deleted: ' . $plant['nickname'];
+        }
+    }
+    // Back to the tab the member was on (the form was sent to that address); a collection id that no longer
+    // exists simply shows All plants
+    $back_to = filter_input(INPUT_GET, 'collection', FILTER_VALIDATE_INT);
+    header('Location: ' . url('garden.php' . ($back_to ? '?collection=' . $back_to : '')));
+    exit;
+}
+
 // The toast shows once: it is taken out of the session as soon as it is read
 $toast = $_SESSION['collection_toast'] ?? null;
 unset($_SESSION['collection_toast']);
@@ -576,6 +595,33 @@ include __DIR__ . '/../includes/header.php';
       </form>
     </dialog>
   <?php endif; ?>
+
+  <?php // Delete plant: one confirmation popup per plant, each naming its plant (S6). They live here, at page level,
+        // not inside the cards: a popup inside a closed ⋯ menu could not be shown. Delete buttons open them with
+        // data-dialog="delete-plant-<id>" (app.js). ?>
+  <?php foreach ($mock_plants as $plant): ?>
+    <dialog class="modal" id="delete-plant-<?= e($plant['id']) ?>" aria-labelledby="delete-plant-<?= e($plant['id']) ?>-title">
+      <?php // Sent to this tab's own address, so the member comes back to the same tab ?>
+      <form class="modal-form" method="post" action="<?= e(url('garden.php' . ($collection_id !== null ? '?collection=' . $collection_id : ''))) ?>">
+        <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+        <input type="hidden" name="form" value="delete_plant">
+        <input type="hidden" name="plant" value="<?= e($plant['id']) ?>">
+
+        <div class="modal-head">
+          <h2 class="modal-title" id="delete-plant-<?= e($plant['id']) ?>-title">Delete “<?= e($plant['nickname']) ?>”?</h2>
+          <button class="icon-btn" formmethod="dialog" aria-label="Close"><?= icon('x') ?></button>
+        </div>
+        <div class="modal-body">
+          <p>Its story, photos and reminders are deleted too. This can’t be undone.</p>
+        </div>
+        <div class="modal-foot">
+          <?php // Cancel has the focus, so pressing Enter by habit never deletes ?>
+          <button class="btn btn-secondary" formmethod="dialog" autofocus>Cancel</button>
+          <button class="btn btn-danger" type="submit"><?= icon('trash-2') ?> Delete plant</button>
+        </div>
+      </form>
+    </dialog>
+  <?php endforeach; ?>
 
   <?php // Delete collection: a destructive action, so it is confirmed in a popup that names the collection (S6) ?>
   <?php if ($open_collection): ?>

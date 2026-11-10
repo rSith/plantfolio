@@ -938,3 +938,10 @@
     font-size: 0.75rem;
   }
 }
+
+/* Delete among the quiet text buttons: the same style, but red, because it deletes */
+.collection-action-danger,
+.collection-action-danger:hover,
+.collection-action-danger:active {
+  color: var(--color-danger);
+}

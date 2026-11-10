@@ -62,7 +62,7 @@ if (isset($_GET['member'])) {
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
     // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
     // mock_add_collection())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants'] as $list) {
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -104,7 +104,7 @@ function mock_log_in_and_go($page, $new_account = false)
     $_SESSION['preview_visitor'] = false;
     if ($new_account) {
         // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
-        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants'] as $list) {
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
             $_SESSION['preview_' . $list . '_new'] = [];
         }
         header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
@@ -574,6 +574,17 @@ function mock_add_plants(array $rows)
     }
 
     return $ids;
+}
+
+/**
+ * Mock-only: Delete on a plant in My Garden (CORE-20), after the confirmation that names the plant. Remembers the id
+ * in the session; the end of this file then leaves the plant out everywhere.
+ * Stage B: DELETE FROM plants WHERE id = ? AND user_id = ?, which also removes its reminders, health logs, photos and
+ * likes (ON DELETE CASCADE), and deletes its photo files from public/uploads/.
+ */
+function mock_delete_plant($plant_id)
+{
+    $_SESSION[preview_key('deleted_plants')][$plant_id] = true;
 }
 
 /**
@@ -1423,6 +1434,40 @@ foreach ($_SESSION[preview_key('collection_plants')] ?? [] as $plant_id => $new_
         }
         unset($row);   // a reference stays linked after the loop; unset() breaks the link so later code cannot change the row by accident
     }
+}
+
+// Plants deleted in the preview (mock_delete_plant()): gone from every list, as DELETE FROM plants with its
+// ON DELETE CASCADE foreign keys leaves things: no card, no reminders in Today's care, not in Explore, and every count
+// one lower. Runs after the plants were added and moved above, so it also removes a plant added in the preview.
+$deleted_plants = $_SESSION[preview_key('deleted_plants')] ?? [];
+if ($deleted_plants) {
+    $collection_index = array_flip(array_column($mock_collections, 'id'));
+    foreach ($mock_plants as $index => $plant) {
+        if (!isset($deleted_plants[$plant['id']])) {
+            continue;
+        }
+        if ($plant['collection_id'] !== null && isset($collection_index[$plant['collection_id']])) {
+            $row = &$mock_collections[$collection_index[$plant['collection_id']]];
+            $row['public_plant_count'] ??= $row['is_public'] ? $row['plant_count'] : 0;
+            $row['plant_count'] = max(0, $row['plant_count'] - 1);
+            if ($plant['is_public']) {
+                $row['public_plant_count'] = max(0, $row['public_plant_count'] - 1);
+            }
+            unset($row);
+        }
+        if ($current_user) {
+            $current_user['plant_count'] = max(0, $current_user['plant_count'] - 1);
+        }
+        if ($plant['is_public']) {
+            $mock_users[$plant['user_id']]['plant_count'] = max(0, $mock_users[$plant['user_id']]['plant_count'] - 1);
+        }
+        unset($mock_plants[$index]);
+    }
+    $mock_plants = array_values($mock_plants);
+    // Its reminders go with it (care_reminders.plant_id is ON DELETE CASCADE)
+    $kept = fn ($row) => !isset($deleted_plants[$row['plant_id']]);
+    $mock_reminders       = array_values(array_filter($mock_reminders, $kept));
+    $mock_plant_reminders = array_values(array_filter($mock_plant_reminders, $kept));
 }
 
 // Nimali's interests as the preview changed them (mock_send_interest(), mock_withdraw_interest()): a row kept in the
