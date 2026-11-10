@@ -1,9 +1,11 @@
 <?php
 // Plant stack card: two or more plants of the same species in the same collection, shown as one card in My Garden
-// (prototype on feature/plant-stacks, CORE-14). The card is kept simple (Ranshitha's choice): photo, ×N, name and
-// collection. Each plant's own health and next care are in the popup it opens, with a link to each plant's profile.
+// (prototype on feature/plant-stacks, CORE-14). The card is kept simple: photo, ×N, name and collection.
+// It opens a popup that lists every plant; tapping a plant's row shows its actions (Open, Move, List for exchange,
+// Delete), the same four as a single card's ⋯ menu. "Choose plants" at the bottom adds more of this species.
 // Expects $plants — two or more plants rows (see $mock_plants), in the order My Garden sorted them.
-// Expects $id — a unique id for the popup, because a page can hold several stacks.
+// Expects $id — a unique id for the popups, because a page can hold several stacks.
+// Expects $free_plants — the member's plants of this species that are in no collection yet (for Choose plants).
 
 $first = $plants[0];
 $count = count($plants);
@@ -30,7 +32,7 @@ $count = count($plants);
   </div>
 </article>
 
-<?php // The popup: every plant of the stack on its own row, with its own health and next care ?>
+<?php // The popup: one simple row per plant. scroll-quiet: a long stack scrolls with no visible scrollbar. ?>
 <dialog class="modal" id="<?= e($id) ?>" aria-labelledby="<?= e($id) ?>-title">
   <div class="modal-head">
     <h2 class="modal-title" id="<?= e($id) ?>-title"><?= e($first['common_name']) ?> · <?= e($count) ?> plants</h2>
@@ -38,50 +40,83 @@ $count = count($plants);
       <button class="icon-btn" aria-label="Close"><?= icon('x') ?></button>
     </form>
   </div>
-  <div class="modal-body">
-    <p class="field-hint stack-hint">Each plant has its own health, story and reminders. Tap a plant for its actions.</p>
-    <?php // Each row is a <details>: a tap opens the plant's actions under the row, pushing the rows below down.
-          // A dropdown would be cut off at the bottom of the popup; a row that grows never is. The shared name
-          // makes it an accordion: opening one row closes the others. No JavaScript needed. ?>
+  <div class="modal-body scroll-quiet">
+    <?php // Each row is a <details>: a tap opens the plant's actions under the row, pushing the rows below down, so
+          // nothing is ever cut off at the popup's edge. The shared name makes it an accordion: one open at a time. ?>
     <ul class="stack-rows">
       <?php foreach ($plants as $number => $plant): ?>
-        <?php $plant_due = care_hint($plant); $plant_id = (int) $plant['id']; ?>
+        <?php $plant_id = (int) $plant['id']; ?>
         <li>
           <details class="stack-row" name="<?= e($id) ?>-rows">
             <summary class="stack-row-summary">
-              <span class="stack-row-number" aria-hidden="true"><?= e('#' . ($number + 1)) ?></span>
+              <?php // 01. 02. 03.: sprintf('%02d') pads the number to two digits ?>
+              <span class="stack-row-number" aria-hidden="true"><?= e(sprintf('%02d.', $number + 1)) ?></span>
               <img class="thumb" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
-              <span class="stack-row-text">
-                <strong><?= e($plant['nickname']) ?></strong>
-                <span class="stack-row-care">
-                  <?php if ($plant_due): ?>
-                    <span class="care-hint care-hint-<?= e($plant_due['state']) ?>"><?= icon(task_icon($plant['task'])) ?> <?= e($plant_due['text']) ?></span>
-                  <?php else: ?>
-                    No reminder
-                  <?php endif; ?>
-                </span>
-              </span>
-              <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-              <span class="stack-row-more" aria-hidden="true"><?= icon('ellipsis') ?></span>
+              <strong class="stack-row-name"><?= e($plant['nickname']) ?></strong>
+              <?php // The chevron points down while closed and turns up (^) when the row is open (garden.css) ?>
+              <span class="stack-row-chevron" aria-hidden="true"><?= icon('chevron-down') ?></span>
             </summary>
-            <?php // The same actions as a single plant's ⋯ menu (partials/plant-menu.php), plus Open, all for this one plant ?>
+            <?php // The same four actions as a single plant's ⋯ menu (partials/plant-menu.php), for this one plant ?>
             <div class="stack-row-actions">
-              <a class="btn btn-primary btn-sm" href="<?= e(url('plant.php?id=' . $plant_id)) ?>"><?= icon('arrow-right') ?> Open</a>
-              <a class="btn btn-ghost btn-sm" href="<?= e(url('plant-form.php?id=' . $plant_id)) ?>"><?= icon('pencil') ?> Edit</a>
-              <a class="btn btn-ghost btn-sm" href="<?= e(url('plant-form.php?id=' . $plant_id . '#collection')) ?>"><?= icon('folder-input') ?> Move</a>
-              <a class="btn btn-ghost btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant_id)) ?>"><?= icon('repeat') ?> List for exchange</a>
+              <a class="btn btn-ghost btn-sm collection-action" href="<?= e(url('plant.php?id=' . $plant_id)) ?>">
+                <?= icon('arrow-right') ?> <span class="hover-bold" data-label="Open">Open</span>
+              </a>
+              <a class="btn btn-ghost btn-sm collection-action" href="<?= e(url('plant-form.php?id=' . $plant_id . '#collection')) ?>">
+                <?= icon('folder-input') ?> <span class="hover-bold" data-label="Move">Move</span>
+              </a>
+              <a class="btn btn-ghost btn-sm collection-action" href="<?= e(url('listing-form.php?plant=' . $plant_id)) ?>">
+                <?= icon('repeat') ?> <span class="hover-bold" data-label="List for exchange">List for exchange</span>
+              </a>
               <?php // Stage F: does nothing yet, like Delete on a single card. Week 5 confirms in a dialog that names the plant. ?>
-              <button type="button" class="btn btn-ghost btn-sm stack-row-delete"><?= icon('trash-2') ?> Delete</button>
+              <button type="button" class="btn btn-ghost btn-sm collection-action">
+                <?= icon('trash-2') ?> <span class="hover-bold" data-label="Delete">Delete</span>
+              </button>
             </div>
           </details>
         </li>
       <?php endforeach; ?>
     </ul>
   </div>
-  <?php // The one action for the whole stack: one more of the same kind, with species and collection filled in ?>
-  <div class="modal-foot">
-    <a class="btn btn-secondary" href="<?= e(url('plant-form.php?like=' . $first['id'])) ?>">
-      <?= icon('plus') ?> Add another <?= e(mb_strtolower($first['common_name'])) ?>
-    </a>
-  </div>
+  <?php // The one action for the whole stack, styled like Choose plants in the collection box: it opens a second popup
+        // with this species' plants that are in no collection yet. Ticked ones join this collection, so the stack. ?>
+  <?php // Only a stack inside a collection: plants in no collection have no collection to join ?>
+  <?php if ($first['collection_id'] !== null): ?>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost btn-sm collection-action" data-dialog="<?= e($id) ?>-choose" aria-haspopup="dialog">
+        <?= icon('folder-input') ?> <span class="hover-bold" data-label="Choose plants">Choose plants</span>
+      </button>
+    </div>
+  <?php endif; ?>
 </dialog>
+
+<?php // Choose plants for this stack: the same picker as the collection's, limited to this species ?>
+<?php if ($first['collection_id'] !== null): ?>
+<dialog class="modal modal-wide" id="<?= e($id) ?>-choose" aria-labelledby="<?= e($id) ?>-choose-title">
+  <form class="modal-form" method="post" action="<?= e(url('garden.php' . ($first['collection_id'] !== null ? '?collection=' . $first['collection_id'] : ''))) ?>">
+    <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+    <input type="hidden" name="form" value="add_plants">
+    <input type="hidden" name="collection" value="<?= e($first['collection_id']) ?>">
+
+    <div class="modal-head">
+      <h2 class="modal-title" id="<?= e($id) ?>-choose-title">Choose plants · <?= e($first['common_name']) ?></h2>
+      <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+    </div>
+
+    <div class="modal-body scroll-quiet">
+      <fieldset class="form-fieldset">
+        <legend class="visually-hidden">Plants to add</legend>
+        <?php if (!$free_plants): ?>
+          <p class="collection-none-free"><?= icon('info') ?> Every <?= e(mb_strtolower($first['common_name'])) ?> you have is already in a collection. Add a new one with Add plant.</p>
+        <?php else: ?>
+          <?php partial('plant-picker', ['plants' => $free_plants, 'checked' => [], 'id' => $id . '-picker']); ?>
+        <?php endif; ?>
+      </fieldset>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+      <button class="btn btn-primary" type="submit"<?= $free_plants ? '' : ' disabled' ?>><?= icon('folder-input') ?> Add to stack</button>
+    </div>
+  </form>
+</dialog>
+<?php endif; ?>

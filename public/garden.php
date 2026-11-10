@@ -406,7 +406,14 @@ include __DIR__ . '/../includes/header.php';
           <?php if (count($item['plants']) === 1): ?>
             <?php partial('plant-card', ['plant' => $item['plants'][0], 'menu' => true]); ?>
           <?php else: ?>
-            <?php partial('plant-stack', ['plants' => $item['plants'], 'id' => 'stack-' . $number]); ?>
+            <?php // Choose plants in the stack popup offers this species' plants that are in no collection yet ?>
+            <?php $species_id = $item['plants'][0]['species_id']; ?>
+            <?php partial('plant-stack', [
+                'plants'      => $item['plants'],
+                'id'          => 'stack-' . $number,
+                'free_plants' => array_values(array_filter($mock_plants,
+                    fn ($plant) => $plant['collection_id'] === null && $plant['species_id'] === $species_id)),
+            ]); ?>
           <?php endif; ?>
         <?php endforeach; ?>
       </div>

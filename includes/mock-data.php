@@ -62,7 +62,7 @@ if (isset($_GET['member'])) {
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
     // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
     // mock_add_collection())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections'] as $list) {
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -104,7 +104,7 @@ function mock_log_in_and_go($page, $new_account = false)
     $_SESSION['preview_visitor'] = false;
     if ($new_account) {
         // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
-        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections'] as $list) {
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants'] as $list) {
             $_SESSION['preview_' . $list . '_new'] = [];
         }
         header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
@@ -556,6 +556,24 @@ function mock_add_collection($name, $is_public, array $plant_ids = [])
     }
 
     return $collection;
+}
+
+/**
+ * Mock-only: Save plant on Add plant (CORE-16), with "How many?" (prototype, feature/plant-stacks). Keeps the new
+ * plants rows in the session; the end of this file adds them to $mock_plants. Several of one species in one
+ * collection then show as one stack in My Garden, with nothing else to do. Returns the new ids.
+ * Stage B: one INSERT INTO plants per plant inside a transaction, plus each plant's reminders and first health log.
+ */
+function mock_add_plants(array $rows)
+{
+    $ids = [];
+    foreach ($rows as $row) {
+        $row['id'] = 1000 + count($_SESSION[preview_key('plants')] ?? []);   // made up: stage B's AUTO_INCREMENT
+        $_SESSION[preview_key('plants')][] = $row;
+        $ids[] = $row['id'];
+    }
+
+    return $ids;
 }
 
 /**
@@ -1339,6 +1357,41 @@ foreach ($mock_plants as $index => $plant) {
     if ($plant['collection_id'] !== null && isset($deleted_collections[$plant['collection_id']])) {
         $mock_plants[$index]['collection_id']   = null;
         $mock_plants[$index]['collection_name'] = null;
+    }
+}
+
+// Plants added in the preview with Save plant (mock_add_plants()). Each joins its collection as COUNT() and
+// GROUP_CONCAT() would show it; a collection deleted since then leaves the plant in no collection (ON DELETE SET NULL).
+// Runs before the plant moves below, so a new plant in no collection can still be chosen for a collection.
+$collection_index = array_flip(array_column($mock_collections, 'id'));
+foreach ($_SESSION[preview_key('plants')] ?? [] as $new_plant) {
+    if ($new_plant['collection_id'] !== null && !isset($collection_index[$new_plant['collection_id']])) {
+        $new_plant['collection_id'] = null;
+    }
+    $new_plant['collection_name'] = null;
+    if ($new_plant['collection_id'] !== null) {
+        $row = &$mock_collections[$collection_index[$new_plant['collection_id']]];
+        $row['public_plant_count']  ??= $row['is_public'] ? $row['plant_count'] : 0;
+        $row['public_cover_photos'] ??= $row['is_public'] ? $row['cover_photos'] : [];
+        $new_plant['collection_name'] = $row['name'];
+        $row['plant_count']++;
+        if (count($row['cover_photos']) < 3) {
+            $row['cover_photos'][] = $new_plant['photo'];
+        }
+        if ($new_plant['is_public']) {
+            $row['public_plant_count']++;
+            if (count($row['public_cover_photos']) < 3) {
+                $row['public_cover_photos'][] = $new_plant['photo'];
+            }
+        }
+        unset($row);   // break the reference, so later code cannot change the collection by accident
+    }
+    $mock_plants[] = $new_plant;
+    if ($current_user) {
+        $current_user['plant_count']++;
+    }
+    if ($new_plant['is_public']) {
+        $mock_users[$new_plant['user_id']]['plant_count']++;
     }
 }
 

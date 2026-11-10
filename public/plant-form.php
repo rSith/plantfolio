@@ -59,9 +59,117 @@ $is_edit = $plant !== null;
 // a new plant goes back to My Garden (it has no profile yet), an edited plant to its profile. It runs after the
 // ownership check above, so sending the form for someone else's plant still answers "not found".
 // Stage B replaces this with the real save, then redirects to plant.php?id= of the saved plant.
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Location: ' . ($is_edit ? url('plant.php?id=' . $plant['id']) : url('garden.php')));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
+    header('Location: ' . url('plant.php?id=' . $plant['id']));
     exit;
+}
+
+// ── Save a new plant, or several (prototype, feature/plant-stacks) ──
+// Adding is kept in the session (mock_add_plants()), so the new plants really show in My Garden. With "How many?"
+// above 1, every plant gets its own row, health and reminders, and My Garden shows them as one stack because they
+// share species and collection. The photo upload waits for stage B (CORE-17): the species' drawing stands in.
+// Stage B: CSRF check, the same checks, then INSERTs in one transaction.
+$add_errors = [];   // field name => message, printed under that field
+$add_posted = null; // the sent values, to fill the form again after an error
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nickname   = preg_replace('/\s+/u', ' ', trim(post_text('nickname')));
+    $species_in = trim(post_text('species'));
+    $quantity   = post_text('quantity');
+    $coll_in    = post_text('collection_id');
+    $health     = post_text('health_status');
+    $is_public  = post_text('is_public') === '0' ? 0 : 1;
+    $acquired   = post_text('acquired_on');
+
+    if ($nickname === '') {
+        $add_errors['nickname'] = 'Give your plant a nickname.';
+    } elseif (mb_strlen($nickname) > 55) {   // 60 in the database, with room for " 20"
+        $add_errors['nickname'] = 'Use 55 characters or fewer.';
+    }
+    if (!ctype_digit($quantity) || (int) $quantity < 1 || (int) $quantity > 20) {
+        $add_errors['quantity'] = 'Use a number from 1 to 20.';
+    }
+    // The collection must be one of the member's own, or none (ownership check)
+    $collection = null;
+    foreach ($mock_collections as $row) {
+        if ($coll_in !== '' && ctype_digit($coll_in) && $row['id'] === (int) $coll_in) {
+            $collection = $row;
+        }
+    }
+    if ($coll_in !== '' && !$collection) {
+        $add_errors['collection_id'] = 'Choose one of your collections.';
+    }
+    if (!in_array($health, ['thriving', 'stable', 'needs_attention', 'sick'], true)) {
+        $health = 'thriving';
+    }
+    $acquired_date = DateTime::createFromFormat('!Y-m-d', $acquired);
+    if (!$acquired_date || $acquired_date->format('Y-m-d') !== $acquired || $acquired > date('Y-m-d')) {
+        $acquired = date('Y-m-d');
+    }
+
+    if (!$add_errors) {
+        // A species from our list gives species_id and both names; a typed name we do not know stays custom
+        // (species_id NULL, custom_species), and such plants are never stacked.
+        $species = null;
+        foreach ($mock_species as $row) {
+            if ($species_in !== '' && (strcasecmp($row['scientific_name'], $species_in) === 0 || strcasecmp($row['common_name'], $species_in) === 0)) {
+                $species = $row;
+            }
+        }
+
+        // The card shows the soonest reminder that is switched on
+        $task = null;
+        $next_due = null;
+        $interval = null;
+        foreach (['water', 'fertilise'] as $reminder_task) {
+            if (post_text($reminder_task . '_enabled') === '1') {
+                $start = post_text($reminder_task . '_start');
+                $start = DateTime::createFromFormat('!Y-m-d', $start) ? $start : date('Y-m-d');
+                if ($next_due === null || $start < $next_due) {
+                    $task     = $reminder_task;
+                    $next_due = $start;
+                    $days     = post_text($reminder_task . '_interval');
+                    $interval = ctype_digit($days) ? max(1, min(365, (int) $days)) : 7;
+                }
+            }
+        }
+
+        $rows = [];
+        for ($number = 1; $number <= (int) $quantity; $number++) {
+            $rows[] = [
+                'user_id'         => $current_user['id'],
+                'collection_id'   => $collection['id'] ?? null,
+                'species_id'      => $species['id'] ?? null,
+                // "Spike", "Spike 2", "Spike 3": every plant has its own nickname (plants.nickname is NOT NULL)
+                'nickname'        => $number === 1 ? $nickname : $nickname . ' ' . $number,
+                'photo'           => $species['photo'] ?? 'mock/sergeant.svg',
+                'acquired_on'     => $acquired,
+                'health_status'   => $health,
+                'is_public'       => $is_public,
+                'scientific_name' => $species['scientific_name'] ?? ($species_in !== '' ? $species_in : 'Unknown species'),
+                'common_name'     => $species['common_name'] ?? ($species_in !== '' ? $species_in : 'Plant'),
+                'collection_name' => $collection['name'] ?? null,
+                'task'            => $task,
+                'interval_days'   => $interval,
+                'next_due'        => $next_due,
+                'last_logged_at'  => date('Y-m-d H:i:s'),
+            ];
+        }
+        mock_add_plants($rows);
+
+        $count = count($rows);
+        $_SESSION['collection_toast'] = $count === 1
+            ? 'Plant added: ' . $nickname
+            : $count . ' ' . mb_strtolower($rows[0]['common_name']) . ' plants added';
+        // Open the collection they joined, so the member sees the new card or stack straight away
+        header('Location: ' . url('garden.php' . ($collection ? '?collection=' . $collection['id'] : '')));
+        exit;
+    }
+    $add_posted = [
+        'nickname' => $nickname, 'species' => $species_in, 'quantity' => $quantity,
+        'collection_id' => $collection['id'] ?? null, 'acquired_on' => $acquired,
+        'health_status' => $health, 'is_public' => $is_public,
+    ];
 }
 
 // ── The values the form starts with ─────────────────────
@@ -205,6 +313,14 @@ if (!$is_edit && ($from_identify || isset($_GET['ai']))) {
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
 $form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
 
+// After an error, the form shows what the member sent, not the defaults
+$quantity_value = '1';
+if ($add_posted) {
+    $quantity_value = $add_posted['quantity'];
+    unset($add_posted['quantity']);
+    $values = array_merge($values, $add_posted);
+}
+
 $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
 
 $page_title      = $is_edit ? 'Edit ' . $plant['nickname'] : 'Add a plant';
@@ -317,7 +433,10 @@ include __DIR__ . '/../includes/header.php';
           <div class="field">
             <label class="field-label" for="nickname">Nickname</label>
             <input class="input" type="text" id="nickname" name="nickname" value="<?= e($values['nickname']) ?>"
-                   placeholder="Monty" maxlength="60" required>
+                   placeholder="Monty" maxlength="55" required<?= isset($add_errors['nickname']) ? ' aria-invalid="true" aria-describedby="nickname-error"' : '' ?>>
+            <?php if (isset($add_errors['nickname'])): ?>
+              <p class="field-error" id="nickname-error"><?= e($add_errors['nickname']) ?></p>
+            <?php endif; ?>
           </div>
 
           <?php // A text box with a list of known species (<datalist>): typing suggests matches, but any name is allowed.
@@ -352,9 +471,12 @@ include __DIR__ . '/../includes/header.php';
         <?php if (!$is_edit): ?>
           <div class="field field-quantity">
             <label class="field-label" for="quantity">How many?</label>
-            <input class="input input-quantity" type="number" id="quantity" name="quantity" value="1" min="1" max="20"
-                   inputmode="numeric" aria-describedby="quantity-hint">
-            <p class="field-hint" id="quantity-hint">Got several of the same plant? They share one card in My Garden, and each keeps its own health and reminders.</p>
+            <input class="input input-quantity" type="number" id="quantity" name="quantity" value="<?= e($quantity_value) ?>" min="1" max="20"
+                   inputmode="numeric" aria-describedby="quantity-hint<?= isset($add_errors['quantity']) ? ' quantity-error' : '' ?>"<?= isset($add_errors['quantity']) ? ' aria-invalid="true"' : '' ?>>
+            <?php if (isset($add_errors['quantity'])): ?>
+              <p class="field-error" id="quantity-error"><?= e($add_errors['quantity']) ?></p>
+            <?php endif; ?>
+            <p class="field-hint" id="quantity-hint">Got several of the same plant? They share one card in My Garden, and each keeps its own health and reminders. More than one get numbers after the nickname: Spike, Spike 2, Spike 3.</p>
           </div>
         <?php endif; ?>
 
@@ -369,6 +491,9 @@ include __DIR__ . '/../includes/header.php';
               <?php endforeach; ?>
               <option value=""<?= $values['collection_id'] === null ? ' selected' : '' ?>>No collection</option>
             </select>
+            <?php if (isset($add_errors['collection_id'])): ?>
+              <p class="field-error"><?= e($add_errors['collection_id']) ?></p>
+            <?php endif; ?>
           </div>
 
           <div class="field">
