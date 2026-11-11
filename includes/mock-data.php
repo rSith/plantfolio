@@ -1112,6 +1112,86 @@ $mock_disease_guide = [
     ],
 ];
 
+// AI care guides — rows of the proposed `care_guides` table (AI care guide, new feature 2026-11-11), keyed by species,
+// the normalised name normalise_species() makes (includes/care-guide.php). guide_json is a JSON string, as the
+// database stores it, so the page decodes it like it will in stage B. Written by me in the style the prompt asks for;
+// stage B fills the table from the local LLM (Ollama) instead. Pilea and Philodendron have no row on purpose, so
+// Penny (62) and Heidi (63) show the Generating state.
+$mock_care_guides = [
+    'monstera deliciosa' => ['id' => 1, 'species' => 'monstera deliciosa', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-9) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright, indirect light near a window. Direct afternoon sun can scorch the leaves.',
+        'soil_fertilizer' => 'A chunky, well-draining aroid mix with bark and perlite. Feed with a balanced liquid fertiliser once a month while it is growing.',
+        'watering' => 'Water when the top 5 cm of soil are dry and let the extra drain away. Never leave the pot standing in water.',
+        'disease_control' => 'Soggy soil causes root rot, so watering less is the best defence. Check under the leaves for spider mites and wipe them off.',
+        'structure_pruning' => 'Give it a moss pole to climb so it grows upright. Cut yellow or damaged leaves off at the base with clean scissors.',
+     ])],
+    'epipremnum aureum' => ['id' => 2, 'species' => 'epipremnum aureum', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-8) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Copes with low light, but keeps its golden streaks best in bright, indirect light.',
+        'soil_fertilizer' => 'Ordinary potting mix with some perlite for drainage. Feed lightly once a month in the growing season.',
+        'watering' => 'Water when the top half of the soil is dry. Drooping leaves usually mean it is thirsty.',
+        'disease_control' => 'Yellow, soft stems point to overwatering and root rot. Mealybugs look like white fluff: wipe them off with a cotton bud.',
+        'structure_pruning' => 'Pinch back long vines to make it bushier. The cut pieces root easily in a glass of water.',
+     ])],
+    'dracaena trifasciata' => ['id' => 3, 'species' => 'dracaena trifasciata', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-12) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Happy in low light or bright, indirect light. A few hours of gentle sun is fine.',
+        'soil_fertilizer' => 'A free-draining cactus or succulent mix. Feed only two or three times a year, in the growing season.',
+        'watering' => 'Water only when the soil is completely dry, about every two weeks. Water even less in the rainy season.',
+        'disease_control' => 'Too much water makes the base of the leaves soft and mushy. Remove those leaves and let the soil dry out.',
+        'structure_pruning' => 'Cut damaged leaves off at soil level. When the pot gets crowded, divide the plant and pot the pups on their own.',
+     ])],
+    'ficus lyrata' => ['id' => 4, 'species' => 'ficus lyrata', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-15) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright light near a window with some gentle morning sun. Turn the pot now and then so it grows evenly.',
+        'soil_fertilizer' => 'Well-draining potting mix with bark or perlite. Feed with a liquid fertiliser once a month while it is growing.',
+        'watering' => 'Water well when the top 3 cm are dry, then let it drain. Brown patches on the leaves often mean too much water.',
+        'disease_control' => 'Cut off leaves with spreading brown patches and water less. Wipe the leaves so dust and pests do not settle.',
+        'structure_pruning' => 'Cut just above a leaf to make it branch. It dislikes being moved, so pick a spot and keep it there.',
+     ])],
+    'aloe vera' => ['id' => 5, 'species' => 'aloe vera', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-20) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Plenty of bright light, including some direct sun. Too little light makes it stretch and lean.',
+        'soil_fertilizer' => 'Sandy cactus mix in a pot with a drainage hole. Feed once or twice a year at most.',
+        'watering' => 'Water deeply, then wait until the soil is completely dry. Keep it out of constant rain in the rainy season.',
+        'disease_control' => 'Mushy brown leaves mean rot from too much water. Scale insects look like small bumps: scrape them off.',
+        'structure_pruning' => 'Cut dry outer leaves off at the base. Pot up the pups around it once they have a few leaves.',
+     ])],
+    'solanum lycopersicum' => ['id' => 6, 'species' => 'solanum lycopersicum', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-3) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Full sun, at least 6 to 8 hours a day. Less sun means fewer flowers and fruit.',
+        'soil_fertilizer' => 'Rich, well-draining soil with compost mixed in. Once flowers appear, feed every two weeks with a fertiliser high in potassium.',
+        'watering' => 'Water deeply at the base in the morning, keeping the soil evenly moist. Uneven watering can crack the fruit.',
+        'disease_control' => 'Keep the leaves dry and remove spotted lower leaves to slow early blight. Leave space between plants so air can move.',
+        'structure_pruning' => 'Tie the stem to a stake as it grows. Pinch out the side shoots so the plant puts its energy into fruit.',
+     ])],
+    'spathiphyllum wallisii' => ['id' => 7, 'species' => 'spathiphyllum wallisii', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-15) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Medium to bright, indirect light. Direct sun burns the leaves.',
+        'soil_fertilizer' => 'Potting mix that holds some moisture, with a little perlite. Feed with a diluted fertiliser every six to eight weeks.',
+        'watering' => 'Keep the soil lightly moist. It droops when thirsty and perks up soon after watering.',
+        'disease_control' => 'Yellow leaves in soggy soil point to root rot, so let the top dry a little. Wipe the leaves to keep spider mites away.',
+        'structure_pruning' => 'Cut faded flower stalks off at the base. Remove yellow leaves where they meet the soil.',
+     ])],
+    'echeveria elegans' => ['id' => 8, 'species' => 'echeveria elegans', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-26) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright light with a few hours of direct sun keeps the rosette tight and colourful.',
+        'soil_fertilizer' => 'Gritty cactus mix in a pot with a drainage hole. Feed with a diluted cactus fertiliser two or three times a year.',
+        'watering' => 'Soak the soil, then wait until it is completely dry. Water the soil, not into the rosette.',
+        'disease_control' => 'Rot starts where water sits in the rosette, so keep the centre dry. Look for mealybugs between the leaves.',
+        'structure_pruning' => 'Pull off dry lower leaves. A stretched, leaning plant can be cut and its top replanted.',
+     ])],
+];
+
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 // Thai Con 87, Big Momma 48, Swiss 31, Monty 12, Leafy 9, Holey 7 are from wireframe p16; Pip's 48 from the Landing page.

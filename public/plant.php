@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
+require_once __DIR__ . '/../includes/care-guide.php';
 
 // ── Which plant ─────────────────────────────────────────
 // Stage B: SELECT plants.*, plant_species.*, collections.name … WHERE plants.id = ? (one prepared query).
@@ -78,6 +79,22 @@ $tabs = [
 $tab = get_text('tab');   // tab[]=x or tab=%FF count as "not given" (helpers.php), so they fall back to Story
 if (!array_key_exists($tab, $tabs)) {
     $tab = 'story';
+}
+
+// AI care guide (Care tab): one saved guide per species. Stage B: care_guide_get() reads the care_guides row;
+// when there is none, the card shows Generating and care-guide.js asks api/care-guide.php for it.
+$guide_species = care_guide_species($plant);
+$guide_row     = $guide_species === null ? null : ($mock_care_guides[normalise_species($guide_species)] ?? null);
+$guide         = $guide_row ? json_decode($guide_row['guide_json'], true) : null;
+if ($guide_species === null) {
+    $guide_state = 'no-species';
+} else {
+    $guide_state = $guide ? 'ready' : 'generating';
+}
+// Stage F previews of the other states, like identify.php?offline: &guide=generating, offline, invalid or no-species
+$guide_preview = get_text('guide');
+if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'], true)) {
+    $guide_state = $guide_preview;
 }
 
 /** The words in front of a story entry: the oldest is the day the plant arrived, an AI diagnosis is a Health check. */
@@ -229,6 +246,15 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?>
             <p class="panel-empty"><?= icon('info') ?> No care guide for this species yet.</p>
           <?php endif; ?>
+
+          <?php partial('care-guide', [
+              'plant'     => $plant,
+              'is_owner'  => $is_owner,
+              'state'     => $guide_state,
+              'guide'     => $guide,
+              'guide_row' => $guide_row,
+              'species'   => $guide_species,
+          ]); ?>
 
         <?php endif; ?>
       </div>
