@@ -724,10 +724,17 @@ textarea.input {
   color: var(--color-sage);
 }
 
+/* Dashed, so it reads as "add one", not as a collection; leaf green and forest text, so it stands out on the cream page */
 .chip-add {
   border-style: dashed;
+  border-color: var(--color-leaf);
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-forest);
+}
+
+.chip-add:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
 }
 
 @media (min-width: 768px) {
