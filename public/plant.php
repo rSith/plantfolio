@@ -151,10 +151,9 @@ include __DIR__ . '/../includes/header.php';
                 // "With you since" / "Growing since" lives in Quick facts. ?>
           <p class="plant-meta">Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></p>
         </div>
-        <?php // All of the page's actions, beside the name: a small stack as tall as the name block, the ⋯ menu before it ?>
+        <?php // All of the page's actions, beside the name: a small stack as tall as the name block ?>
         <div class="plant-head-actions">
           <?php if ($is_owner): ?>
-            <?php partial('plant-menu', ['plant' => $plant]); ?>
             <div class="plant-head-stack">
               <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
               <button type="button" class="btn btn-primary btn-sm"><?= icon('pencil') ?> Log update</button>

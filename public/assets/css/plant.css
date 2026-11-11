@@ -157,8 +157,8 @@
   color: var(--color-ink);
 }
 
-/* The name block, with the page's actions beside it: the ⋯ menu and a stack of small buttons (Log update,
-   Health check, List for exchange; visitors: Like).
+/* The name block, with the page's actions beside it: a stack of small buttons (Log update, Health check,
+   List for exchange; visitors: Like).
    Phone: the actions wrap onto a row under the name. Tablet and up: on the right, and the stack is exactly as tall
    as the name block (stretch), its three buttons spread from the top of the name to the bottom of "Updated …". */
 .plant-head {
@@ -180,11 +180,6 @@
   gap: var(--space-8);
 }
 
-/* Phone: the ⋯ menu goes after the buttons, which wrap if they do not fit */
-.plant-head-actions .plant-menu {
-  order: 1;
-}
-
 .plant-head-stack {
   display: flex;
   flex-wrap: wrap;
@@ -197,15 +192,10 @@
     align-items: stretch;
   }
 
-  /* stretch: the stack grows to the full height of the name block; the ⋯ menu stays at the top */
+  /* stretch: the stack grows to the full height of the name block */
   .plant-head-actions {
     flex-shrink: 0;
     align-items: stretch;
-  }
-
-  .plant-head-actions .plant-menu {
-    order: 0;
-    align-self: flex-start;
   }
 
   .plant-head-stack {
