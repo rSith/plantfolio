@@ -433,7 +433,7 @@ include __DIR__ . '/../includes/header.php';
           </div>
           <div class="people-row-list">
             <?php foreach ($people_row as $member): ?>
-              <?php partial('member-card', ['member' => $member, 'compact' => true]); ?>
+              <?php partial('person-card', ['member' => $member, 'compact' => true]); ?>
             <?php endforeach; ?>
           </div>
         </section>
@@ -504,7 +504,7 @@ include __DIR__ . '/../includes/header.php';
     <?php if ($people): ?>
       <div class="people-grid">
         <?php foreach ($people as $member): ?>
-          <?php partial('member-card', ['member' => $member]); ?>
+          <?php partial('person-card', ['member' => $member]); ?>
         <?php endforeach; ?>
       </div>
     <?php else: ?>

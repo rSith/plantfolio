@@ -1190,7 +1190,7 @@ textarea.input {
 
 .plant-card:hover,
 .listing-card:hover,
-.member-card:hover {
+.person-card:hover {
   border-color: var(--color-line-strong);
   box-shadow: var(--shadow-card);
   transform: translateY(-2px);
@@ -1256,6 +1256,33 @@ textarea.input {
   margin-left: auto;   /* to the right, also when it has wrapped onto a line of its own */
   background: var(--color-white);
   color: var(--color-ink);
+}
+
+/* "Swap" or "Free" beside the likes (Community page): a link that opens the plant's open listing.
+   z-index lifts it above the card's stretched link; text-decoration and the hover keep it a badge, not a text link.
+   Two classes, to win over .card-media-badges .badge, which sets position: static (z-index needs a position). */
+.card-media-badges .plant-card-offer {
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
+  transition: box-shadow var(--transition-fast);
+}
+
+.plant-card-offer:hover {
+  color: inherit;
+  box-shadow: 0 0 0 2px var(--color-leaf);
+}
+
+.plant-card-offer .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The badge is about 26px tall; this invisible frame around it makes the tap area 44px tall, the project's minimum */
+.plant-card-offer::before {
+  content: "";
+  position: absolute;
+  inset: -9px -4px;
 }
 
 /* margin-top: auto keeps the owner rows level across cards whose names wrap differently */
@@ -1357,7 +1384,7 @@ textarea.input {
 
 /* Member card (p16): Explore's People tab. The whole card opens the member's Public Profile.
    Phone: avatar beside the text, so a list of members stays short. Tablet and up: upright, centred under the avatar. */
-.member-card {
+.person-card {
   flex-direction: row;
   align-items: center;
   gap: var(--space-16);
@@ -1365,7 +1392,7 @@ textarea.input {
 }
 
 /* min-width: 0 lets a long username shorten with "…" instead of widening the card */
-.member-card-body {
+.person-card-body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1374,18 +1401,18 @@ textarea.input {
   max-width: 100%;
 }
 
-.member-card-body > * {
+.person-card-body > * {
   margin: 0;
 }
 
 /* The profile's 96px avatar would crowd a card a third of the page wide */
-.member-card .avatar-lg {
+.person-card .avatar-lg {
   width: 72px;
   height: 72px;
   font-size: var(--text-h2);
 }
 
-.member-card-username {
+.person-card-username {
   max-width: 100%;
   overflow: hidden;
   color: var(--color-ink);
@@ -1395,12 +1422,12 @@ textarea.input {
   white-space: nowrap;
 }
 
-.member-card-name {
+.person-card-name {
   color: var(--color-muted);
   font-size: var(--text-body-sm);
 }
 
-.member-card-town {
+.person-card-town {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
@@ -1408,13 +1435,13 @@ textarea.input {
   font-size: var(--text-small);
 }
 
-.member-card-town .icon,
-.member-card-match .icon {
+.person-card-town .icon,
+.person-card-match .icon {
   width: 14px;
   height: 14px;
 }
 
-.member-card-stats {
+.person-card-stats {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1422,46 +1449,46 @@ textarea.input {
   font-size: var(--text-small);
 }
 
-.member-card .member-card-match {
+.person-card .person-card-match {
   margin-top: var(--space-4);
 }
 
 @media (min-width: 768px) {
-  .member-card {
+  .person-card {
     flex-direction: column;
     gap: var(--space-12);
     padding: var(--space-24) var(--space-16);
     text-align: center;
   }
 
-  .member-card-body {
+  .person-card-body {
     align-items: center;
   }
 
-  .member-card-stats {
+  .person-card-stats {
     justify-content: center;
   }
 }
 
 /* The compact card of the "Plant lovers matching" row (p16, element 6): avatar on the left, two short lines.
    It comes after the rules above, so at every screen width it wins over the upright layout. */
-.member-card-compact {
+.person-card-compact {
   flex-direction: row;
   gap: var(--space-12);
   padding: var(--space-12) var(--space-16);
   text-align: left;
 }
 
-.member-card-compact .member-card-body {
+.person-card-compact .person-card-body {
   align-items: flex-start;
   gap: 0;
 }
 
-.member-card-compact .member-card-username {
+.person-card-compact .person-card-username {
   font-size: var(--text-body-sm);
 }
 
-.member-card-compact .member-card-stats {
+.person-card-compact .person-card-stats {
   justify-content: flex-start;
   color: var(--color-muted);
 }

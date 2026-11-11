@@ -1705,9 +1705,18 @@ if (current_page() !== 'index.php') {
 // each joined with its owner (users: username, full_name, avatar, location), plus two calculated columns:
 //   like_count  — COUNT(*) on plant_likes
 //   on_exchange — 1 when an open exchange listing offers this plant (EXISTS on exchange_listings)
+//   listing_id, listing_type — that open listing's id and type (swap, free or either), null when there is none,
+//                  so the Community card's "Swap"/"Free" badge can link to it. Stage B: LEFT JOIN exchange_listings
+//                  ON exchange_listings.plant_id = plants.id AND exchange_listings.status = 'open'.
 // Built here, after the ?empty switch, so a brand-new Nimali has no plants in it. Stage B: one query with
 // WHERE plants.is_public = 1, so a private plant can never reach the page.
-$listed_plant_ids = array_column(array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open'), 'plant_id');
+$open_listing_by_plant = [];
+foreach ($mock_listings as $listing) {
+    if ($listing['status'] === 'open' && $listing['plant_id'] !== null) {
+        $open_listing_by_plant[$listing['plant_id']] = $listing;
+    }
+}
+$listed_plant_ids = array_keys($open_listing_by_plant);
 
 $mock_public_plants = [];
 foreach (array_merge($mock_plants, $mock_community_plants) as $plant) {
@@ -1716,11 +1725,13 @@ foreach (array_merge($mock_plants, $mock_community_plants) as $plant) {
     }
     $owner = $mock_users[$plant['user_id']];
     $mock_public_plants[] = array_merge($plant, [
-        'username'    => $owner['username'],
-        'full_name'   => $owner['full_name'],
-        'avatar'      => $owner['avatar'],
-        'location'    => $owner['location'],
-        'like_count'  => $mock_like_counts[$plant['id']] ?? 0,
-        'on_exchange' => in_array($plant['id'], $listed_plant_ids, true) ? 1 : 0,
+        'username'     => $owner['username'],
+        'full_name'    => $owner['full_name'],
+        'avatar'       => $owner['avatar'],
+        'location'     => $owner['location'],
+        'like_count'   => $mock_like_counts[$plant['id']] ?? 0,
+        'on_exchange'  => in_array($plant['id'], $listed_plant_ids, true) ? 1 : 0,
+        'listing_id'   => $open_listing_by_plant[$plant['id']]['id'] ?? null,
+        'listing_type' => $open_listing_by_plant[$plant['id']]['type'] ?? null,
     ]);
 }

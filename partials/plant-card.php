@@ -9,11 +9,14 @@
 // because every card there has the same owner, already named at the top of the page. Reminders still stay hidden.
 // Optional $simple = true: no health badge and no care hint, so a single plant looks like a stack card
 // (partials/plant-stack.php). My Garden's grid uses it; the list view there still shows health and care.
+// With $community, a plant offered in an open listing (listing_id, listing_type in the row) gets a "Swap" or "Free"
+// badge beside its likes that opens that listing (Community page, COM-07). "Swap or free" listings show "Swap".
 
 $community  = !empty($community);
 $simple     = !empty($simple);
 $show_owner = $community && ($show_owner ?? true);
 $due        = ($community || $simple) ? null : care_hint($plant);   // null when the plant has no reminder yet
+$offer      = ($community && !empty($plant['listing_id'])) ? ($plant['listing_type'] === 'free' ? 'free' : 'swap') : null;
 ?>
 <article class="card plant-card<?= $community ? ' plant-card-community' : '' ?>">
   <div class="card-media">
@@ -24,6 +27,12 @@ $due        = ($community || $simple) ? null : care_hint($plant);   // null when
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
         <?php if ($community): ?>
           <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
+          <?php if ($offer): ?>
+            <?php // A link of its own above the card's stretched link (z-index in components.css), so it opens the listing ?>
+            <a class="badge badge-type-<?= e($offer) ?> plant-card-offer" href="<?= e(url('listing.php?id=' . $plant['listing_id'])) ?>">
+              <?= icon(listing_type($offer)['icon']) ?> <?= e(listing_type($offer)['label']) ?><span class="visually-hidden">: open the exchange listing for <?= e($plant['nickname']) ?></span>
+            </a>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
     <?php endif; ?>
