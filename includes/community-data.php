@@ -10,14 +10,24 @@
 function community_default_filters($tab, $home_town = '')
 {
     $defaults = [
-        'plants'   => ['species' => [], 'location' => ''],
+        // Plants and People measure from the same town but start on any distance (100), so nothing is hidden at first
+        'plants'   => ['species' => [], 'near' => $home_town, 'distance' => '100'],
         // A member measures from their own town at first; a visitor from none ('')
         'exchange' => ['type' => '', 'near' => $home_town, 'distance' => '25',
                        'category' => [], 'light' => [], 'water' => [], 'species' => []],
-        'people'   => ['location' => '', 'rating' => ''],
+        'people'   => ['near' => $home_town, 'distance' => '100', 'rating' => ''],
     ];
 
     return $defaults[$tab];
+}
+
+/**
+ * Is this row farther from the chosen town than the slider allows? Never when the slider is at its far end ('100',
+ * any distance) or when no town is chosen (distance_km is null). Shared by the three tabs.
+ */
+function community_too_far(array $row, array $filters)
+{
+    return $filters['distance'] !== '100' && $row['distance_km'] !== null && $row['distance_km'] > (int) $filters['distance'];
 }
 
 /** Does $term appear in any of these pieces of text? mb_stripos ignores capitals and handles any language. */
@@ -29,7 +39,8 @@ function community_text_matches(array $texts, $term)
 // ── Plants tab ───────────────────────────────────────────
 
 /**
- * Public plants matching the search and the Plants filters (species ids, location).
+ * Public plants matching the search and the Plants filters (species ids; no farther than 'distance' km from the
+ * chosen town, using each row's distance_km, worked out from the owner's town).
  * $skip_species = true ignores the species filter: the sidebar counts each species from those rows.
  *
  * Stage B:
@@ -52,7 +63,7 @@ function community_plants(array $public_plants, $term, array $filters, $skip_spe
         if (!community_text_matches([$plant['nickname'], $plant['scientific_name'], $plant['common_name'], $plant['username']], $term)) {
             return false;
         }
-        if ($filters['location'] !== '' && $plant['location'] !== $filters['location']) {
+        if (community_too_far($plant, $filters)) {
             return false;
         }
         if (!$skip_species && $filters['species'] && !in_array($plant['species_id'], $filters['species'], true)) {
@@ -100,7 +111,7 @@ function community_listings(array $listings, $term, array $filters, $skip = null
         if ($filters['type'] !== '' && !in_array($listing['type'], [$filters['type'], 'either'], true)) {
             return false;
         }
-        if ($filters['distance'] !== '100' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $filters['distance']) {
+        if (community_too_far($listing, $filters)) {
             return false;
         }
         if ($skip !== 'species' && $filters['species'] && !in_array($listing['species_id'], $filters['species'], true)) {
@@ -140,7 +151,7 @@ function community_option_counts(array $rows, $field, array $options)
 // ── People tab ───────────────────────────────────────────
 
 /**
- * Members matching the search and the People filters (location, minimum rating), each with match_count: how many of
+ * Members matching the search and the People filters (distance from the chosen town, minimum rating), each with match_count: how many of
  * $found_plants (the public plants matching the search) they own. A member matches when the word is in their
  * username, name or town, or when they grow a matching plant (p16, element 6). An @ search looks at names only.
  *
@@ -149,7 +160,7 @@ function community_option_counts(array $rows, $field, array $options)
  *          … AS rating_avg, … AS rating_count, COUNT(matching.id) AS match_count
  *   FROM users
  *   LEFT JOIN plants AS matching ON matching.user_id = users.id AND matching.is_public = 1 AND (matching.nickname LIKE ? …)
- *   WHERE users.location = ? AND rating_avg >= ?
+ *   WHERE (distance from the chosen town) <= ? AND rating_avg >= ?
  *   GROUP BY users.id
  *   HAVING users.username LIKE ? OR users.full_name LIKE ? OR users.location LIKE ? OR match_count > 0
  */
@@ -157,7 +168,7 @@ function community_people(array $users, array $found_plants, $term, $is_member_s
 {
     $people = [];
     foreach ($users as $member) {
-        if ($filters['location'] !== '' && $member['location'] !== $filters['location']) {
+        if (community_too_far($member, $filters)) {
             continue;
         }
         if ($filters['rating'] !== '' && ($member['rating_avg'] ?? 0) < (float) $filters['rating']) {

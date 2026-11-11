@@ -114,3 +114,44 @@ document.querySelectorAll('[data-gallery]').forEach((gallery) => {
     gallery.querySelectorAll('[data-photo-src]').forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
   });
 });
+
+// A slider's words, <input type="range" data-range-words="…"> inside .filter-range: while it moves ("input" event),
+// its <output data-range-output> and the words a screen reader hears follow it. Two kinds (Community filters and the
+// town pickers of Sign up, Settings and Create Listing):
+//   distance:  "Within 40 km", and "Any distance" at the far end
+//   from-town: "In the town" at 0, otherwise "About 5 km away"
+// Delegated to the document, so a slider that community.js swaps in after a filter change works too.
+function rangeWords(range) {
+  const value = Number(range.value);
+  if (range.dataset.rangeWords === 'from-town') {
+    return value === 0 ? 'In the town' : 'About ' + value + ' km away';
+  }
+  return range.value === range.max ? 'Any distance' : 'Within ' + value + ' km';
+}
+
+document.addEventListener('input', (event) => {
+  const range = event.target;
+  if (range.type !== 'range' || !range.dataset.rangeWords) {
+    return;
+  }
+  const words = rangeWords(range);
+  range.setAttribute('aria-valuetext', words);
+  const output = range.closest('.filter-range').querySelector('[data-range-output]');
+  if (output) {
+    output.textContent = words;
+  }
+});
+
+// A town list switches its slider on once a town is chosen: <select data-enables="slider-id">. Without a town the
+// slider stays disabled, and a disabled field is not sent with the form.
+document.addEventListener('change', (event) => {
+  const select = event.target;
+  if (!select.dataset || !select.dataset.enables) {
+    return;
+  }
+  const range = document.getElementById(select.dataset.enables);
+  if (range) {
+    range.disabled = select.value === '';
+  }
+});
+

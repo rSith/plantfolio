@@ -358,6 +358,13 @@ include __DIR__ . '/../includes/header.php';
         <?php if ($listing['plant_condition'] !== null): ?>
           <div><dt>Condition</dt><dd><?= e($listing['plant_condition']) ?></dd></div>
         <?php endif; ?>
+        <?php // Where to collect it: the town, and how far from its centre the owner said (the pick-up slider) ?>
+        <?php if ($listing['km_from_town'] !== null): ?>
+          <div>
+            <dt>Pick-up</dt>
+            <dd><?= $listing['km_from_town'] === 0 ? 'In ' . e($listing['location']) : 'About ' . e($listing['km_from_town']) . ' km from ' . e($listing['location']) ?></dd>
+          </div>
+        <?php endif; ?>
         <?php // What the owner filed it under on Create Listing: the same words as the Exchange filters, so a visitor
               // sees why it matched. Light and watering only when the owner was sure. ?>
         <?php if ($listing['categories']): ?>

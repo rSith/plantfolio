@@ -108,6 +108,7 @@ $values = [
     'size'            => '',
     'plant_condition' => '',
     'location'        => $current_user['location'],   // the member's town, the usual pick-up place
+    'km_from_town'    => $current_user['km_from_town'] ?? 0,   // how far the pick-up place is from it (0–30)
     'share_email'     => 1,
     'share_phone'     => 0,   // my choice: the phone number is shared only when the member ticks it
     'categories'      => [],  // what the Exchange filters find it under (at least one)
@@ -126,6 +127,7 @@ if ($is_edit) {
         'size'            => $listing['size'] ?? '',
         'plant_condition' => $listing['plant_condition'] ?? '',
         'location'        => $listing['location'],
+        'km_from_town'    => $listing['km_from_town'] ?? 0,
         'share_email'     => $listing['share_email'],
         'share_phone'     => $listing['share_phone'],
         'categories'      => $listing['categories'],
@@ -141,6 +143,10 @@ if ($is_edit) {
         $values['categories'][] = 'pet_friendly';
     }
 }
+
+// The town list of the town picker (partials/town-picker.php): every town in the towns table, A–Z
+$town_names = array_keys($mock_towns);
+sort($town_names);
 
 // The options of "3. Help people find it": the same lists as the Exchange filters (helpers.php)
 $category_options = listing_categories();
@@ -167,6 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'size'            => trim(post_text('size')),
         'plant_condition' => trim(post_text('plant_condition')),
         'location'        => trim(post_text('location')),
+        // A whole number from 0 to 30 (the slider); anything else counts as 0, "in the town"
+        'km_from_town'    => ctype_digit(post_text('km_from_town')) && (int) post_text('km_from_town') <= 30
+                             ? (int) post_text('km_from_town') : 0,
         'share_email'     => post_text('share_email') === '1' ? 1 : 0,
         'share_phone'     => $has_phone && post_text('share_phone') === '1' ? 1 : 0,
         // Only known category keys are kept; a light or water value that is not on the list counts as "Not sure"
@@ -200,8 +209,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$values['categories']) {
         $errors['categories'] = 'Choose at least one category, so people can find your listing.';
     }
-    if ($values['location'] === '') {
-        $errors['location'] = 'Add the town where the plant can be picked up.';
+    if (!isset($mock_towns[$values['location']])) {
+        $errors['location'] = 'Choose the town nearest to where the plant can be picked up.';
     }
     if (!$values['share_email'] && !$values['share_phone']) {
         $errors['share'] = 'Choose at least one way for interested people to contact you.';
@@ -474,19 +483,18 @@ include __DIR__ . '/../includes/header.php';
           <h2 class="form-card-title listing-step" id="contact-title">4. Location and contact</h2>
 
           <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="location">Town</label>
-              <div class="input-icon">
-                <?= icon('map-pin') ?>
-                <input class="input" type="text" id="location" name="location" value="<?= e($values['location']) ?>"
-                       autocomplete="address-level2" maxlength="100" required<?= $describe('location', 'location-hint') ?>>
-              </div>
-              <?php if (isset($errors['location'])): ?>
-                <span class="field-error" id="location-error"><?= e($errors['location']) ?></span>
-              <?php endif; ?>
-              <?php // The site never stores an address (DES-07), so this is a promise, not a choice ?>
-              <span class="field-hint" id="location-hint">Only your town is shown, never an address.</span>
-            </div>
+            <?php // The pick-up place: the nearest town, then how far from it. The site never stores an address
+                  // (DES-07), so the hint is a promise, not a choice. Listing Detail shows "Pick-up: about 3 km from …". ?>
+            <?php partial('town-picker', [
+                'town_names' => $town_names,
+                'town'       => $values['location'],
+                'km'         => $values['km_from_town'],
+                'label'      => 'Pick-up: nearest town',
+                'km_label'   => 'How far from the town',
+                'required'   => true,
+                'hint'       => 'Shown on the listing as a town and a rough distance, never an address.',
+                'error'      => $errors['location'] ?? null,
+            ]); ?>
 
             <?php // Contact sharing (p19, element 5): exactly which details an interested member will see ?>
             <fieldset class="field form-fieldset" aria-describedby="share-hint<?= isset($errors['share']) ? ' share-error' : '' ?>">

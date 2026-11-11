@@ -14,7 +14,7 @@ const form = document.getElementById('community-form');
 const desktop = window.matchMedia('(min-width: 900px)');
 
 // ── The address of the form's current choices ───────────
-// Like a GET form sends it, but without empty fields (location=&q=) and without page= (a new choice starts at
+// Like a GET form sends it, but without empty fields (q=&species=) and without page= (a new choice starts at
 // the top). form.elements also holds the sidebar's fields, which sit outside the <form> (form="community-form").
 function formAddress() {
   const address = new URL(form.action);
@@ -151,32 +151,6 @@ if (form) {
     loadResults(window.location.href, { push: false });
   });
 }
-
-// ── The distance slider's words ─────────────────────────
-// While the slider moves ("input" event), its <output> and the words a screen reader hears follow it: "Within 40 km",
-// and at the far end "Any distance". The results change when it is let go ("change" event, handled above).
-document.addEventListener('input', (event) => {
-  const range = event.target;
-  if (range.type !== 'range') {
-    return;
-  }
-  const words = range.value === range.max ? 'Any distance' : 'Within ' + range.value + ' km';
-  range.setAttribute('aria-valuetext', words);
-  const output = range.closest('.filter-range').querySelector('[data-range-output]');
-  if (output) {
-    output.textContent = words;
-  }
-});
-
-// In the phone panel nothing is fetched until "Show", so choosing a town switches the slider on straight away
-document.addEventListener('change', (event) => {
-  if (event.target.name === 'near') {
-    const range = document.getElementById('filter-distance');
-    if (range) {
-      range.disabled = event.target.value === '';
-    }
-  }
-});
 
 // ── 2. "Show 7 plants" on the phone panel's button ──────
 // After each change in the panel the server counts the results for the new choices (the same page, fetched),

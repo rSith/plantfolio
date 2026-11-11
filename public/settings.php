@@ -6,6 +6,10 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
+// The town list of the town picker (partials/town-picker.php): every town in the towns table, A–Z
+$town_names = array_keys($mock_towns);
+sort($town_names);
+
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
     header('Location: ' . url('login.php'));
@@ -148,14 +152,16 @@ include __DIR__ . '/../includes/header.php';
             <span class="field-hint bio-count" id="bio-count"><?= e(mb_strlen($current_user['bio'] ?? '')) ?> / <?= e($bio_limit) ?></span>
           </div>
 
-          <div class="field">
-            <label class="field-label" for="location">Town</label>
-            <div class="input-icon">
-              <?= icon('map-pin') ?>
-              <input class="input" type="text" id="location" name="location" value="<?= e($current_user['location']) ?>"
-                     autocomplete="address-level2" maxlength="100">
-            </div>
-          </div>
+          <?php // The member's place: the nearest town (shown on the profile), then how far from it (kept private: it is
+                // only the starting value for the pick-up distance on Create Listing) ?>
+          <?php partial('town-picker', [
+              'town_names' => $town_names,
+              'town'       => $current_user['location'],
+              'km'         => $current_user['km_from_town'] ?? 0,
+              'label'      => 'Nearest town',
+              'required'   => true,
+              'hint'       => 'Your profile shows the town only. The distance is used as the starting pick-up distance when you list a plant.',
+          ]); ?>
 
           <button class="btn btn-primary settings-save" type="submit">Save profile</button>
         </form>

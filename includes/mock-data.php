@@ -23,6 +23,7 @@ $current_user = [
     'phone'      => '+94 77 000 1234',       // p18 and p19: shared only with people interested in a listing
     'bio'        => 'Balcony gardener growing aroids and far too many pothos. Always happy to swap cuttings.',
     'location'   => 'Kurunegala',
+    'km_from_town' => 3,   // proposed users.km_from_town: Nimali lives about 3 km from Kurunegala's centre (invented)
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
     'created_at' => '2025-03-14 09:00:00',   // "Member since Mar 2025"
 
@@ -404,9 +405,14 @@ $listing_traits = [
     14 => [['indoor', 'air_purifying'],               'low',    'low'],        // Snake plant pups (closed)
     5  => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Marble Queen (closed)
 ];
+// km_from_town: how far the pick-up place is from its town's centre, 0 = in the town (proposed
+// exchange_listings.km_from_town, set with the slider on Create Listing). Listing Detail shows it as "Pick-up: about 3 km
+// from Kurunegala"; cards show the town only. The Kurunegala values are p17's printed distances, the others invented.
+$listing_km = [7 => 3, 8 => 5, 12 => 5, 9 => 2, 13 => 4, 10 => 0, 6 => 1, 11 => 0, 14 => 1, 5 => 2];
 foreach ($mock_listings as $index => $listing) {
     [$categories, $light, $water] = $listing_traits[$listing['id']] ?? [[], null, null];
-    $mock_listings[$index] += ['categories' => $categories, 'light_level' => $light, 'water_need' => $water];
+    $mock_listings[$index] += ['categories' => $categories, 'light_level' => $light, 'water_need' => $water,
+                               'km_from_town' => $listing_km[$listing['id']] ?? null];
 }
 
 // Towns with coordinates: rows of the `towns` table accepted in DES-07 (id, name, latitude, longitude), keyed by name.

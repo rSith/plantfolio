@@ -78,6 +78,7 @@ Listing. Values are listed in `includes/helpers.php` (`listing_categories()`, `l
 |---|---|
 | `exchange_listings.light_level ENUM('low','medium','bright') NULL` | One light level per listing; NULL when the owner chose "Not sure" |
 | `exchange_listings.water_need ENUM('low','moderate','high') NULL` | The same for watering |
+| `users.km_from_town TINYINT UNSIGNED NULL` (0–30) and `exchange_listings.km_from_town TINYINT UNSIGNED NULL` (0–30) | Where someone is: the nearest town (`town_id`, accepted) plus how far from its centre, set with a slider on P02 Sign up, P15 Settings and P12 Create Listing. 0 = in the town. Shown only on Listing Detail ("Pick-up: about 3 km from Kurunegala"); profiles and cards show the town only. Distances between people stay town-centre to town-centre (Haversine on `towns`), because a distance has no direction |
 | New table `listing_categories (listing_id, category)`, PK (listing_id, category), FK listing_id ON DELETE CASCADE, `category ENUM('indoor','outdoor','succulents','air_purifying','flowering','edible','pet_friendly')` | A listing can be in several categories (many-to-many with a fixed list), so a separate table, not a column. At least one row per listing (checked by the form) |
 
 ## Rules

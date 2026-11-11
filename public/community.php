@@ -49,11 +49,6 @@ $type_options   = ['' => 'All', 'swap' => 'Swap', 'free' => 'Free'];
 $distance_steps = array_map('strval', range(5, 100, 5));
 $rating_options = ['' => 'Any', '4' => '4+', '4.5' => '4.5+'];
 
-// The towns worth choosing: where public plants are (Plants tab), where members live (People tab)
-$plant_towns = array_values(array_unique(array_column($mock_public_plants, 'location')));
-$people_towns = array_values(array_unique(array_column($mock_users, 'location')));
-sort($plant_towns);
-sort($people_towns);
 
 /** One choice from the address, or $default when it is not one of $allowed. */
 function allowed_text($name, array $allowed, $default = '')
@@ -76,7 +71,9 @@ $filters = community_default_filters($tab, $viewer_town);
 if ($tab === 'plants') {
     $filters = [
         'species'  => $species_ids,
-        'location' => allowed_text('location', $plant_towns),
+        // Plants and People start on any distance, so everyone and every plant shows until someone narrows it
+        'near'     => allowed_text('near', $town_names, $viewer_town),
+        'distance' => allowed_text('distance', $distance_steps, '100'),
     ];
 } elseif ($tab === 'exchange') {
     $filters = [
@@ -91,12 +88,13 @@ if ($tab === 'plants') {
     ];
 } else {
     $filters = [
-        'location' => allowed_text('location', $people_towns),
+        'near'     => allowed_text('near', $town_names, $viewer_town),
+        'distance' => allowed_text('distance', $distance_steps, '100'),
         'rating'   => allowed_text('rating', ['4', '4.5']),
     ];
 }
 $defaults = community_default_filters($tab, $viewer_town);
-$near     = $filters['near'] ?? '';   // the town the Exchange tab measures from ('' = none chosen)
+$near     = $filters['near'];   // the town this tab measures from ('' = none chosen yet: a visitor)
 
 // ── Sort ────────────────────────────────────────────────
 // The first option of each tab is its default, so it needs no sort= in the address.
@@ -145,14 +143,22 @@ $people_filters   = $tab === 'people' ? $filters : community_default_filters('pe
 
 // Each listing's distance from the "Near" town, for the slider, the Nearest sort and the cards ("Kandy · 32 km").
 // Stage B: the Haversine sum in the query, with the chosen town's coordinates as two parameters.
-$listing_rows = array_map(fn ($listing) => array_merge($listing, [
-    'distance_km' => $listing_filters['near'] !== '' ? town_distance_km($mock_towns, $listing_filters['near'], $listing['location']) : null,
-]), $mock_listings);
+// The same for a plant (its owner's town) and a member (their town), from each tab's own "Near".
+/** $rows with distance_km: how far each row's town is from $near (null when no town is chosen). */
+function with_distance(array $rows, $near, array $towns)
+{
+    return array_map(fn ($row) => array_merge($row, [
+        'distance_km' => $near !== '' ? town_distance_km($towns, $near, $row['location']) : null,
+    ]), $rows);
+}
+$listing_rows = with_distance($mock_listings, $listing_filters['near'], $mock_towns);
+$plant_rows   = with_distance($mock_public_plants, $plant_filters['near'], $mock_towns);
+$people_rows  = with_distance($mock_users, $people_filters['near'], $mock_towns);
 
-$plants        = community_plants($mock_public_plants, $term, $plant_filters);
+$plants        = community_plants($plant_rows, $term, $plant_filters);
 $listings      = community_listings($listing_rows, $term, $listing_filters);
 $search_plants = community_plants($mock_public_plants, $term, community_default_filters('plants'));   // the search alone
-$people        = community_people($mock_users, $search_plants, $term, $is_member_search, $people_filters);
+$people        = community_people($people_rows, $search_plants, $term, $is_member_search, $people_filters);
 
 $counts = ['plants' => count($plants), 'exchange' => count($listings), 'people' => count($people)];
 
@@ -186,7 +192,7 @@ usort($people, function ($a, $b) use ($sort, $tab) {
 // ── The sidebar's species lists, with a count beside each species ──
 $species_list = [];
 if ($tab === 'plants') {
-    $species_list = community_species_list(community_plants($mock_public_plants, $term, $filters, true), $species_ids, $mock_species);
+    $species_list = community_species_list(community_plants($plant_rows, $term, $filters, true), $species_ids, $mock_species);
 } elseif ($tab === 'exchange') {
     $species_list = community_species_list(community_listings($listing_rows, $term, $filters, 'species'), $species_ids, $mock_species);
 }
@@ -232,11 +238,11 @@ foreach ($tab === 'people' ? [] : $species_ids as $species_id) {
 if (($filters['type'] ?? '') !== '') {
     $active_filters[] = ['label' => $type_options[$filters['type']], 'href' => $page_url(['type' => ''])];
 }
-if ($tab === 'exchange' && $state['near'] !== '') {
+if ($state['near'] !== '') {
     // Another town than the member's own (or any town, for a visitor); removing it goes back to the default
     $active_filters[] = ['label' => 'Near ' . $near, 'href' => $page_url(['near' => ''])];
 }
-if ($tab === 'exchange' && $near !== '' && $state['distance'] !== '') {
+if ($near !== '' && $state['distance'] !== '') {
     $distance_label   = $filters['distance'] === '100' ? 'Any distance' : 'Within ' . $filters['distance'] . ' km';
     $active_filters[] = ['label' => $distance_label, 'href' => $page_url(['distance' => ''])];
 }
@@ -250,9 +256,6 @@ foreach ($check_groups as $name => $items) {
             ];
         }
     }
-}
-if (($filters['location'] ?? '') !== '') {
-    $active_filters[] = ['label' => $filters['location'], 'href' => $page_url(['location' => ''])];
 }
 if (($filters['rating'] ?? '') !== '') {
     $active_filters[] = ['label' => 'Rated ' . $rating_options[$filters['rating']], 'href' => $page_url(['rating' => ''])];
@@ -271,13 +274,15 @@ $clear_chips_url = $page_url(array_merge($cleared, ['q' => '']));
 
 $count = $counts[$tab];
 if ($tab === 'plants') {
-    $results_text = count_words($count, 'plant', 'plants');
+    $results_text = count_words($count, 'plant', 'plants')
+                  . ($near !== '' && $filters['distance'] !== '100' ? ' near ' . $near : '');
 } elseif ($tab === 'exchange') {
     // "7 open listings near Kurunegala" (p17): "near" only while a distance limit is on
     $results_text = count_words($count, 'open listing', 'open listings')
                   . ($near !== '' && $filters['distance'] !== '100' ? ' near ' . $near : '');
 } else {
-    $results_text = count_words($count, 'person', 'people');
+    $results_text = count_words($count, 'person', 'people')
+                  . ($near !== '' && $filters['distance'] !== '100' ? ' near ' . $near : '');
 }
 
 // Nothing found: a friendly line and a way out. "Clear filters" when filters are on, "Clear the search" when there
@@ -289,8 +294,14 @@ if ($count === 0) {
     $nouns   = ['plants' => 'plants', 'exchange' => 'listings', 'people' => 'members'];
     $actions = [];
 
-    if ($tab === 'exchange' && $near !== '' && $filters['distance'] !== '100'
-        && community_listings($listing_rows, $term, array_merge($filters, ['distance' => '100']))) {
+    // Would any distance find something? Then "Search any distance" is the way out.
+    $any_distance  = array_merge($filters, ['distance' => '100']);
+    $found_further = [
+        'plants'   => fn () => community_plants($plant_rows, $term, $any_distance),
+        'exchange' => fn () => community_listings($listing_rows, $term, $any_distance),
+        'people'   => fn () => community_people($people_rows, $search_plants, $term, $is_member_search, $any_distance),
+    ][$tab];
+    if ($near !== '' && $filters['distance'] !== '100' && $found_further()) {
         $actions[] = ['label' => 'Search any distance', 'url' => $page_url(['distance' => '100']), 'icon' => 'map-pin'];
     }
     if ($active_count > 0) {
@@ -304,8 +315,8 @@ if ($count === 0) {
         $title = 'No ' . $nouns[$tab] . ' match "' . $q . '"' . ($active_count > 0 ? ' with these filters' : '');
     } elseif ($active_count > 0) {
         $title = 'No ' . $nouns[$tab] . ' match these filters';
-    } elseif ($tab === 'exchange' && $near !== '') {
-        $title = 'No open listings near ' . $near;
+    } elseif ($near !== '' && $filters['distance'] !== '100') {
+        $title = 'No ' . $nouns[$tab] . ' near ' . $near;
     } else {
         $title = ['plants' => 'No public plants yet', 'exchange' => 'No open listings yet', 'people' => 'No members yet'][$tab];
     }
@@ -452,37 +463,8 @@ include __DIR__ . '/../includes/header.php';
           </fieldset>
         </details>
 
-        <?php // Distance: a town from the list, then a slider for how far from it. The slider's far end means any distance.
-              // Without a town (a visitor who has not chosen one) the slider is switched off: disabled fields are not sent. ?>
-        <details class="filter-section" data-section="distance" open>
-          <summary class="filter-section-head"><?= icon('map-pin') ?> <span>Distance</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
-          <div class="filter-group">
-            <label class="filter-field-label" for="filter-near">Near</label>
-            <select class="input" id="filter-near" name="near" form="community-form">
-              <?php if ($viewer_town === ''): ?>
-                <option value="">Choose a town</option>
-              <?php endif; ?>
-              <?php foreach ($town_names as $town): ?>
-                <option value="<?= e($town) ?>"<?= $town === $near ? ' selected' : '' ?>><?= e($town) ?></option>
-              <?php endforeach; ?>
-            </select>
-
-            <?php $distance_words = $filters['distance'] === '100' ? 'Any distance' : 'Within ' . $filters['distance'] . ' km'; ?>
-            <div class="filter-range">
-              <div class="filter-range-head">
-                <label class="filter-field-label" for="filter-distance">How far</label>
-                <?php // <output> shows the slider's value; community.js updates it while the slider moves ?>
-                <output class="filter-range-value" for="filter-distance" data-range-output><?= e($distance_words) ?></output>
-              </div>
-              <input class="filter-range-input" type="range" id="filter-distance" name="distance" min="5" max="100" step="5"
-                     value="<?= e($filters['distance']) ?>" aria-valuetext="<?= e($distance_words) ?>" form="community-form"<?= $near === '' ? ' disabled' : '' ?>>
-              <div class="filter-range-scale" aria-hidden="true"><span>5 km</span><span>50 km</span><span>Any</span></div>
-            </div>
-            <?php if ($near === ''): ?>
-              <p class="filter-note">Choose a town to see how far away each plant is.</p>
-            <?php endif; ?>
-          </div>
-        </details>
+        <?php partial('near-filter', ['near' => $near, 'distance' => $filters['distance'], 'town_names' => $town_names,
+                                      'can_be_empty' => $viewer_town === '']); ?>
 
         <?php // Category, Light and Watering: what owners file their listing under on Create Listing. Tick any number. ?>
         <?php foreach (['category' => ['Category', 'layout-grid'], 'light' => ['Light', 'sun'], 'water' => ['Watering', 'droplet']] as $name => [$title, $section_icon]): ?>
@@ -519,18 +501,9 @@ include __DIR__ . '/../includes/header.php';
       <?php // Plants has no Health filter and no "Available for exchange" switch (Ranshitha, 11 Nov): health is the owner's
             // business, and plants on offer have their own tab, Exchange. ?>
       <?php if ($tab === 'plants' || $tab === 'people'): ?>
-        <details class="filter-section" data-section="location" open>
-          <summary class="filter-section-head"><?= icon('map-pin') ?> <span>Location</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
-          <div class="filter-group">
-            <label class="visually-hidden" for="filter-location">Location</label>
-            <select class="input" id="filter-location" name="location" form="community-form">
-              <option value="">All locations</option>
-              <?php foreach ($tab === 'plants' ? $plant_towns : $people_towns as $town): ?>
-                <option value="<?= e($town) ?>"<?= $town === $filters['location'] ? ' selected' : '' ?>><?= e($town) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-        </details>
+        <?php // Distance from a town, as on the Exchange tab: to the plant owner's town, or to the member's town ?>
+        <?php partial('near-filter', ['near' => $near, 'distance' => $filters['distance'], 'town_names' => $town_names,
+                                      'can_be_empty' => $viewer_town === '']); ?>
       <?php endif; ?>
 
       <?php if ($tab === 'people'): ?>

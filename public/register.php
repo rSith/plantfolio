@@ -5,6 +5,10 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
+// The town list of the town picker (partials/town-picker.php): every town in the towns table, A–Z
+$town_names = array_keys($mock_towns);
+sort($town_names);
+
 // Stage B, on POST: check the CSRF token, validate every field, check that username and email are free,
 //   save the row with password_hash(), log the member in and open the empty Dashboard (wireframe p9, UX notes).
 
@@ -70,15 +74,14 @@ include __DIR__ . '/../includes/header.php';
           <span class="field-hint" id="password-hint">At least 8 characters, including a number.</span>
         </div>
 
-        <div class="field">
-          <label class="field-label" for="location">Location <span class="field-optional">(optional)</span></label>
-          <div class="input-icon">
-            <?= icon('map-pin') ?>
-            <input class="input" type="text" id="location" name="location" placeholder="Kurunegala"
-                   autocomplete="address-level2" maxlength="100" aria-describedby="location-hint">
-          </div>
-          <span class="field-hint" id="location-hint">Helps you find exchange listings near you.</span>
-        </div>
+        <?php // Optional: the nearest town, then how far from it. The exchange measures distances from the town. ?>
+        <?php partial('town-picker', [
+            'town_names' => $town_names,
+            'town'       => '',
+            'km'         => 0,
+            'label'      => 'Your nearest town',
+            'hint'       => 'Helps you find exchange listings near you. Only the town is shown to others.',
+        ]); ?>
 
         <?php // A new tab, so reading the guidelines never loses what the visitor has typed ?>
         <label class="check auth-agree">
