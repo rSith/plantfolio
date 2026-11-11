@@ -7,6 +7,7 @@ Shared PHP logic loaded with `require_once`. Not web-accessible (`.htaccess` den
 | `helpers.php` | `e()` output escaping, date and "due in N days" formatting, status-label helpers | MOD-01 | F (week 1) |
 | `mock-data.php` | Arrays shaped like future query results (wireframe sample content). Shrinks as pages are wired; deleted at Gate 2 | MOD-01 | F only |
 | `care-guide.php` | AI care guide: the five sections, `care_guide_species()` (which name a plant's guide is for) and `normalise_species()` (the cache key). Stage B adds reading and saving `care_guides` | new, no Task Sheet ID yet | F, then B |
+| `reminder-form.php` | Add a reminder: choices, server-side checks and saving (`reminder_form_save()`), Undo and the toast. Shared by the Dashboard and the plant pages | CORE-22, CORE-23 | F, then B |
 | `header.php` / `footer.php` | Public and logged-in top navigation, mobile bottom bar, footer; active page highlight. Session check added in stage B | CORE-06 · MOD-01 | F → B |
 | `flash.php` | Toast messages (with Undo) and inline form errors | CORE-05 · MOD-01 | F → B |
 | `db.php` | One shared PDO connection from `config/config.php` (exceptions on, emulated prepares off) | CORE-03 · MOD-01 | B (week 8) |

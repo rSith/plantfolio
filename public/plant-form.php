@@ -10,6 +10,7 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
+require_once __DIR__ . '/../includes/reminder-form.php';   // Add a reminder popup (edit only)
 
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
@@ -59,10 +60,25 @@ $is_edit = $plant !== null;
 // a new plant goes back to My Garden (it has no profile yet), an edited plant to its profile. It runs after the
 // ownership check above, so sending the form for someone else's plant still answers "not found".
 // Stage B replaces this with the real save, then redirects to plant.php?id= of the saved plant.
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
+// Add a reminder popup (edit only, the Dashboard's popup for this plant): checked and kept by reminder_form_save()
+// in includes/reminder-form.php; the main form's Save never sends these fields (the popup is outside it).
+$reminder_form   = $is_edit ? reminder_defaults($plant['id']) : null;
+$reminder_errors = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit && post_text('form') === 'reminder') {
+    [$reminder_form, $reminder_errors] = reminder_form_save([$plant['id'] => $plant]);
+    if (!$reminder_errors) {
+        header('Location: ' . url('plant-form.php?id=' . $plant['id']) . '#reminders');
+        exit;
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit && post_text('form') === 'undo_reminder') {
+    reminder_undo();
+    header('Location: ' . url('plant-form.php?id=' . $plant['id']) . '#reminders');
+    exit;
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
     header('Location: ' . url('plant.php?id=' . $plant['id']));
     exit;
 }
+$toast = $is_edit ? reminder_toast_take() : null;
 
 // ── Save a new plant, or several (prototype, feature/plant-stacks) ──
 // Adding is kept in the session (mock_add_plants()), so the new plants really show in My Garden. With "How many?"
@@ -312,36 +328,13 @@ if (!$is_edit && ($from_identify || isset($_GET['ai']))) {
 
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
 
-// "Add to <name>'s story" card (edit only): its 3 newest entries, and the intervals of the plant's own reminders,
-// so a Watered or Fertilised entry can say when the next one is due. Stage B: the same two small queries.
-$story_recent   = [];
-$story_intervals = [];
-if ($is_edit) {
-    $story_recent = array_values(array_filter($mock_health_logs, fn ($log) => $log['plant_id'] === $plant['id']));
-    usort($story_recent, fn ($a, $b) => $b['logged_at'] <=> $a['logged_at']);
-    $story_recent = array_slice($story_recent, 0, 3);
-    foreach ($mock_plant_reminders as $reminder) {
-        if ($reminder['plant_id'] === $plant['id']) {
-            $story_intervals[$reminder['task']] = $reminder['interval_days'];
-        }
-    }
-}
-// The quick type chips: four care tasks, then a plain note and a milestone
-$story_kinds = [
-    'water'     => ['label' => 'Watered',    'icon' => task_icon('water')],
-    'fertilise' => ['label' => 'Fertilised', 'icon' => task_icon('fertilise')],
-    'prune'     => ['label' => 'Pruned',     'icon' => task_icon('prune')],
-    'repot'     => ['label' => 'Repotted',   'icon' => task_icon('repot')],
-    'note'      => ['label' => 'Note',       'icon' => 'pencil'],
-    'milestone' => ['label' => 'Milestone',  'icon' => 'sprout'],
-];
+// The plant's other reminders (mist, rotate, prune, repot, re-check), added with the popup: listed under the two
+// switches, which only cover watering and feeding
+$other_reminders = $is_edit
+    ? array_values(array_filter($mock_plant_reminders, fn ($row) => $row['plant_id'] === $plant['id'] && !isset($reminder_values[$row['task']])))
+    : [];
 
-/** The words that name a story entry in the short list: "Watered", "Note", "Health check" … */
-function story_entry_label($log)
-{
-    $labels = ['note' => 'Note', 'photo' => 'Photo', 'health_check' => 'Health check', 'milestone' => 'Milestone'];
-    return $log['type'] === 'care' ? care_done_label($log['care_task']) : ($labels[$log['type']] ?? 'Update');
-}
+
 $form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
 
 // After an error, the form shows what the member sent, not the defaults
@@ -356,7 +349,6 @@ $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
 
 $page_title      = $is_edit ? 'Edit ' . $plant['nickname'] : 'Add a plant';
 $page_css        = 'plant-form.css';
-$page_js         = 'story.js';   // the "Add to story" card (UI only in stage F)
 $hide_bottom_bar = true;   // the sticky save bar takes the bottom of a phone screen instead (p23)
 
 include __DIR__ . '/../includes/header.php';
@@ -547,8 +539,9 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </fieldset>
         <?php else: ?>
-          <?php // After the first day, health changes belong in the story, with a date: the story card on this page ?>
-          <p class="alert form-alert"><?= icon('info') ?> <span>Use <a href="#story-update">Add to <?= e($plant['nickname']) ?>’s story</a> on this page to record updates. They will appear in the plant’s Story.</span></p>
+          <?php // After the first day, health changes belong in the story, with a date: the Add to story popup on the
+                // plant's page (&story=1 opens it at once) ?>
+          <p class="alert form-alert"><?= icon('info') ?> <span>Use <a href="<?= e(url('plant.php?id=' . $plant['id'] . '&story=1')) ?>">Add to <?= e($plant['nickname']) ?>’s story</a> on the plant’s page to record updates. They will appear in its Story.</span></p>
         <?php endif; ?>
 
         <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date ?>
@@ -575,6 +568,14 @@ include __DIR__ . '/../includes/header.php';
               </span>
             </div>
           <?php endforeach; ?>
+
+          <?php if ($is_edit): ?>
+            <?php foreach ($other_reminders as $reminder): ?>
+              <p class="reminder-other"><?= task_name($reminder['task']) ?> · <?= e(schedule_words($reminder)) ?></p>
+            <?php endforeach; ?>
+            <?php // Opens the Dashboard's Add a reminder popup, for this plant (app.js) ?>
+            <button type="button" class="btn btn-secondary btn-sm reminder-add" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
+          <?php endif; ?>
         </fieldset>
         </div>
 
@@ -595,90 +596,6 @@ include __DIR__ . '/../includes/header.php';
         </div>
       </section>
 
-      <?php if ($is_edit): ?>
-        <?php // Add to the story (CORE-19, UI half). Its fields belong to the separate form #story-form below, through
-              // form="story-form": a form may not sit inside another, and Save changes must not send them.
-              // story.js adds the entry without a reload. Stage F changes the page only; stage B saves with fetch(). ?>
-        <section class="form-card story-update" id="story-update" aria-labelledby="story-update-title"
-                 data-plant-name="<?= e($plant['nickname']) ?>" data-intervals="<?= e(json_encode($story_intervals)) ?>">
-          <h2 class="form-card-title" id="story-update-title">Add to <?= e($plant['nickname']) ?>’s story</h2>
-
-          <fieldset class="form-fieldset story-kind-field">
-            <legend class="field-label">What happened?</legend>
-            <div class="story-kinds">
-              <?php foreach ($story_kinds as $kind => $chip): ?>
-                <input class="story-kind-input" type="radio" id="story-kind-<?= e($kind) ?>" name="kind" value="<?= e($kind) ?>" form="story-form"<?= $kind === 'note' ? ' checked' : '' ?>>
-                <label class="chip story-kind" for="story-kind-<?= e($kind) ?>"><?= icon($chip['icon']) ?> <?= e($chip['label']) ?></label>
-              <?php endforeach; ?>
-            </div>
-          </fieldset>
-
-          <div class="field">
-            <label class="field-label" for="story-note">What’s new? <span class="field-optional" data-note-optional hidden>(optional)</span></label>
-            <textarea class="input" id="story-note" name="note" rows="3" maxlength="500" form="story-form"
-                      aria-describedby="story-note-error"></textarea>
-            <p class="field-error" id="story-note-error" data-note-error hidden>Write what’s new: a note or milestone needs a few words.</p>
-          </div>
-
-          <div class="field">
-            <span class="field-label" id="story-photo-label">Photo <span class="field-optional">(optional)</span></span>
-            <div class="story-photo-field">
-              <img class="story-photo-preview" alt="Chosen photo" data-photo-preview hidden>
-              <label class="btn btn-secondary btn-sm" for="story-photo"><?= icon('camera') ?> <span data-photo-button>Add a photo</span></label>
-              <input class="visually-hidden" type="file" id="story-photo" name="photo" accept="image/jpeg,image/png"
-                     form="story-form" aria-labelledby="story-photo-label" aria-describedby="story-photo-hint">
-            </div>
-            <p class="field-hint" id="story-photo-hint" data-photo-hint>JPG or PNG, up to 5 MB.</p>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="story-status">Status <span class="field-optional">(optional)</span></label>
-              <select class="input" id="story-status" name="status" form="story-form">
-                <option value="">No status</option>
-                <?php foreach ($health_options as $option): ?>
-                  <option value="<?= e($option) ?>"><?= e(health_label($option)) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="field">
-              <label class="field-label" for="story-date">Date</label>
-              <input class="input" type="date" id="story-date" name="date" value="<?= e(date('Y-m-d')) ?>" max="<?= e(date('Y-m-d')) ?>" form="story-form" required>
-            </div>
-          </div>
-
-          <div class="story-update-actions">
-            <button class="btn btn-primary" type="submit" form="story-form" data-story-submit>Add to story</button>
-            <button class="btn btn-ghost" type="button" data-story-cancel hidden>Cancel editing</button>
-          </div>
-          <p class="alert alert-success story-update-message" role="status" data-story-message hidden></p>
-
-          <h3 class="story-recent-title">Latest entries</h3>
-          <ul class="story-recent" data-story-recent>
-            <?php foreach ($story_recent as $log): ?>
-              <?php
-              // A care entry edits as its task chip; note and photo entries as Note
-              $edit_kind = $log['type'] === 'care' ? $log['care_task'] : ($log['type'] === 'photo' ? 'note' : $log['type']);
-              ?>
-              <li data-entry data-kind="<?= e($edit_kind) ?>" data-note="<?= e($log['note']) ?>" data-status="<?= e($log['status'] ?? '') ?>"
-                  data-date="<?= e(substr($log['logged_at'], 0, 10)) ?>" data-label="<?= e(story_entry_label($log)) ?>">
-                <span class="story-recent-text">
-                  <strong data-entry-label><?= e(story_entry_label($log)) ?></strong>
-                  <span class="story-recent-meta">· <span data-entry-date><?= e(date('j M', strtotime($log['logged_at']))) ?></span><span data-entry-note><?= $log['note'] !== '' ? ' · ' . e($log['note']) : '' ?></span></span>
-                </span>
-                <span class="story-recent-actions">
-                  <?php // An AI health check keeps its result as it was: it can be deleted, not rewritten ?>
-                  <?php if ($log['type'] !== 'health_check'): ?>
-                    <button class="btn btn-ghost btn-sm" type="button" data-entry-edit>Edit<span class="visually-hidden"> <?= e(story_entry_label($log)) ?></span></button>
-                  <?php endif; ?>
-                  <button class="btn btn-ghost btn-sm story-recent-delete" type="button" data-entry-delete>Delete<span class="visually-hidden"> <?= e(story_entry_label($log)) ?></span></button>
-                </span>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-          <p class="text-small story-recent-empty" data-story-recent-empty<?= $story_recent ? ' hidden' : '' ?>>No entries yet.</p>
-        </section>
-      <?php endif; ?>
     </div>
 
     <?php // Sticky save bar (p13, element 7): stays on screen on a long form; Cancel leads back without saving ?>
@@ -698,28 +615,17 @@ include __DIR__ . '/../includes/header.php';
   </form>
 
   <?php if ($is_edit): ?>
-    <?php // The story card's own form: empty here, its fields point to it with form="story-form".
-          // Stage F: story.js stops the sending and changes the page; stage B: the same fields go to the server. ?>
-    <form id="story-form" method="post" action="<?= e($form_action) ?>" enctype="multipart/form-data" novalidate></form>
-
-    <?php // Deleting an entry is confirmed in a popup that names it (S6). method="dialog": the buttons only close it,
-          // and story.js reads which one was pressed. ?>
-    <dialog class="modal" id="delete-entry" aria-labelledby="delete-entry-title">
-      <form class="modal-form" method="dialog">
-        <div class="modal-head">
-          <h2 class="modal-title" id="delete-entry-title">Delete “<span data-delete-name></span>”?</h2>
-          <button class="icon-btn" value="cancel" aria-label="Close"><?= icon('x') ?></button>
-        </div>
-        <div class="modal-body">
-          <p>It is removed from <?= e($plant['nickname']) ?>’s story. This can’t be undone.</p>
-        </div>
-        <div class="modal-foot">
-          <?php // Cancel has the focus, so pressing Enter by habit never deletes ?>
-          <button class="btn btn-secondary" value="cancel" autofocus>Cancel</button>
-          <button class="btn btn-danger" value="delete"><?= icon('trash-2') ?> Delete entry</button>
-        </div>
-      </form>
-    </dialog>
+    <?php // Outside the main form: a form may not sit inside another ?>
+    <?php partial('reminder-dialog', [
+        'action' => url('plant-form.php?id=' . $plant['id']),
+        'values' => $reminder_form,
+        'errors' => $reminder_errors,
+        'plants' => null,
+        'plant'  => $plant,
+    ]); ?>
+    <?php if ($toast): ?>
+      <?php partial('reminder-toast', ['toast' => $toast, 'action' => url('plant-form.php?id=' . $plant['id'])]); ?>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

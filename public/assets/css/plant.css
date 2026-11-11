@@ -18,7 +18,7 @@
 .plant-top {
   display: grid;
   gap: var(--space-24);
-  margin-bottom: var(--space-48);   /* space above the Story */
+  margin-bottom: var(--space-32);   /* space above the Story */
 }
 
 .plant-gallery,
@@ -43,7 +43,6 @@
       "aside   info";
     gap: var(--space-24) var(--space-48);
     align-items: stretch;
-    margin-bottom: var(--space-64);
   }
 
   .plant-gallery { grid-area: gallery; }
@@ -531,15 +530,13 @@
 }
 
 /* ── Story: full width under both columns ───────────── */
-/* Phone: the filters as a scrolling chip row, then the timeline. Desktop: the timeline (at most 760px) with a
-   sticky panel of filters and stats in the free space to its right. */
 
 .story-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-8) var(--space-16);
-  margin-bottom: var(--space-24);
+  margin-bottom: var(--space-16);
 }
 
 .plant-story-title {
@@ -547,96 +544,25 @@
   font-size: var(--text-h2);
 }
 
+/* A <button> that looks like a small link: it opens the Add to story popup */
 .story-add-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
   min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-leaf);
+  font-family: inherit;
   font-size: var(--text-small);
   font-weight: var(--weight-semibold);
-}
-
-.story-layout {
-  display: grid;
-  gap: var(--space-24);
-}
-
-.story-main {
-  min-width: 0;
-}
-
-/* Phone: one row of chips that scrolls sideways instead of wrapping */
-.story-filters {
-  display: flex;
-  gap: var(--space-8);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.story-filter {
-  flex-shrink: 0;
-  font-family: inherit;
   cursor: pointer;
 }
 
-.story-stats {
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .story-layout {
-    grid-template-columns: minmax(0, 760px) 240px;
-    grid-template-areas: "main panel";
-    justify-content: space-between;
-    gap: var(--space-48);
-    align-items: start;
-  }
-
-  .story-main {
-    grid-area: main;
-  }
-
-  /* Sticky: stays in view below the top bar while the timeline scrolls past */
-  .story-panel {
-    grid-area: panel;
-    position: sticky;
-    top: calc(var(--header-height) + var(--space-24));
-    padding: var(--space-24);
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-card);
-    background: var(--color-white);
-  }
-
-  .story-filters {
-    flex-wrap: wrap;
-    overflow: visible;
-  }
-
-  .story-stats {
-    display: grid;
-    gap: var(--space-12);
-    margin: var(--space-24) 0 0;
-    padding: var(--space-16) 0 0;
-    border-top: 1px solid var(--color-line);
-    list-style: none;
-    color: var(--color-muted);
-    font-size: var(--text-small);
-  }
-
-  .story-stats li {
-    display: flex;
-    gap: var(--space-8);
-  }
-
-  .story-stats .icon {
-    flex-shrink: 0;
-    margin-top: 0.15em;
-    color: var(--color-leaf);
-  }
-
-  .story-stats strong {
-    color: var(--color-ink);
-  }
+.story-add-link:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
 }
 
 /* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled */
@@ -779,6 +705,60 @@
   color: var(--color-leaf);
 }
 
-.story-filter-empty {
+/* ── Add to story popup ─────────────────────────────── */
+
+.story-form-body {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.story-form-body .field {
   margin: 0;
+}
+
+/* The six quick types as chips: a radio button each, its label drawn as a chip; the chosen one is filled */
+.story-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.story-kind-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.story-kind {
+  cursor: pointer;
+}
+
+.story-kind-input:checked + .story-kind {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+/* On the dark chosen chip the task's own colour would be hard to see, so its icon turns white too */
+.story-kind-input:checked + .story-kind .task {
+  color: inherit;
+}
+
+.story-kind-input:focus-visible + .story-kind {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.story-photo-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.story-photo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
 }

@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
+require_once __DIR__ . '/../includes/reminder-form.php';   // Add a reminder: checks, saving, toast
 
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
@@ -57,84 +58,20 @@ function reminder_day($date)
 
 // ── Add a reminder (popup) ──────────────────────────────
 // Set like an alarm on a phone: which plant, which care task, at what time from which day, and how it repeats.
-// Stage F: the form is checked here and the reminder is kept in the session (mock_add_reminder()), so it shows in
-// All reminders and on the plant's page. Stage B: INSERT INTO care_reminders … (CORE-22).
-
-$weekdays = ['mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday', 'thu' => 'Thursday',
-             'fri' => 'Friday', 'sat' => 'Saturday', 'sun' => 'Sunday'];
-$repeat_options = [
-    'once'     => 'Does not repeat',
-    'daily'    => 'Every day',
-    'days'     => 'On chosen days',
-    'interval' => 'Every few days',
-];
+// The checks and the saving are shared with the plant pages (includes/reminder-form.php). Stage F keeps the
+// reminder in the session, so it shows in All reminders and on the plant's page. Stage B: INSERT … (CORE-22).
 
 // The member's own plants, A to Z, for the plant picker. Only these ids are accepted (ownership check).
 $pick_plants = $mock_plants;
 usort($pick_plants, fn ($a, $b) => strcasecmp($a['nickname'], $b['nickname']));
 
 $today           = date('Y-m-d');
-$reminder_values = ['plant' => '', 'task' => 'water', 'time' => '08:00', 'start' => $today,
-                    'repeat' => 'interval', 'days' => [], 'interval' => '7'];
+$reminder_values = reminder_defaults();
 $reminder_errors = [];   // field name => message, printed under that field in the popup
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
-    foreach (['plant', 'task', 'time', 'start', 'repeat', 'interval'] as $name) {
-        $reminder_values[$name] = post_text($name);
-    }
-    // The day boxes arrive as a list (days[]=mon&days[]=wed): keep only text that is a known day
-    $posted_days = $_POST['days'] ?? [];
-    $posted_days = is_array($posted_days) ? array_filter($posted_days, 'is_string') : [];
-    $reminder_values['days'] = array_values(array_intersect(array_keys($weekdays), $posted_days));
-
-    // The same rules the browser checks, checked again here: the browser's checks can be switched off
-    $plant_id = $reminder_values['plant'];
-    if (!ctype_digit($plant_id) || !isset($plants_by_id[(int) $plant_id])) {
-        $reminder_errors['plant'] = 'Choose one of your plants.';
-    }
-    if (!in_array($reminder_values['task'], reminder_tasks(), true)) {
-        $reminder_errors['task'] = 'Choose a care task.';
-    }
-    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $reminder_values['time'])) {
-        $reminder_errors['time'] = 'Choose a time.';
-    }
-    // '!' starts the date at midnight; comparing it back as text rejects dates like 2026-02-31
-    $start = DateTime::createFromFormat('!Y-m-d', $reminder_values['start']);
-    if (!$start || $start->format('Y-m-d') !== $reminder_values['start'] || $reminder_values['start'] < $today) {
-        $reminder_errors['start'] = 'Choose today or a later day.';
-    }
-    if (!array_key_exists($reminder_values['repeat'], $repeat_options)) {
-        $reminder_errors['repeat'] = 'Choose how often it repeats.';
-    } elseif ($reminder_values['repeat'] === 'days' && !$reminder_values['days']) {
-        $reminder_errors['days'] = 'Choose at least one day.';
-    } elseif ($reminder_values['repeat'] === 'interval'
-        && (!ctype_digit($reminder_values['interval']) || $reminder_values['interval'] < 2 || $reminder_values['interval'] > 365)) {
-        $reminder_errors['interval'] = 'Use a number from 2 to 365.';
-    }
-
+    [$reminder_values, $reminder_errors] = reminder_form_save($plants_by_id);
     if (!$reminder_errors) {
-        $repeat   = $reminder_values['repeat'];
-        $reminder = [
-            'id'            => 900 + count($_SESSION[preview_key('reminders')] ?? []),   // made up: stage B's AUTO_INCREMENT
-            'plant_id'      => (int) $plant_id,
-            'task'          => $reminder_values['task'],
-            'interval_days' => $repeat === 'daily' ? 1 : ($repeat === 'interval' ? (int) $reminder_values['interval'] : null),
-            'last_done'     => null,
-            'next_due'      => first_due($reminder_values['start'], $repeat, $reminder_values['days']),
-            'remind_time'   => $reminder_values['time'],
-            'repeat_type'   => $repeat,
-            'repeat_days'   => $repeat === 'days' ? $reminder_values['days'] : [],
-        ];
-        $previous = mock_add_reminder($reminder);
-
-        // The toast on the next page; Undo needs the key and the row this one replaced, kept here, not in the form
-        $plant = $plants_by_id[$reminder['plant_id']];
-        $_SESSION['reminder_toast'] = [
-            'message'  => 'Reminder added: ' . task_label($reminder['task']) . ' ' . $plant['nickname'] . ' · ' . schedule_words($reminder),
-            'key'      => $reminder['plant_id'] . '-' . $reminder['task'],
-            'previous' => $previous,
-            'undone'   => 'Reminder cancelled.',
-        ];
         header('Location: ' . url('dashboard.php'));   // POST, then redirect: a reload cannot add it twice
         exit;
     }
@@ -178,26 +115,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'done') {
     exit;
 }
 
-// Undo in the toast: takes back the last Add reminder or Mark done. Only the session knows which reminder that was,
-// so nothing in the form can point it at another member's reminder.
+// Undo in the toast: takes back the last Add reminder or Mark done (reminder_undo(), includes/reminder-form.php)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'undo_reminder') {
-    $undo = $_SESSION['reminder_undo'] ?? null;
-    unset($_SESSION['reminder_undo']);
-    if ($undo) {
-        mock_undo_reminder($undo['key'], $undo['previous']);
-        $_SESSION['reminder_toast'] = ['message' => $undo['undone'], 'key' => null, 'previous' => null, 'undone' => null];
-    }
+    reminder_undo();
     header('Location: ' . url('dashboard.php'));
     exit;
 }
 
-// The toast shows once: it is taken out of the session as soon as it is read. Its Undo stays possible until the
-// next Add reminder or Mark done.
-$toast = $_SESSION['reminder_toast'] ?? null;
-unset($_SESSION['reminder_toast']);
-if ($toast && $toast['key']) {
-    $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous'], 'undone' => $toast['undone']];
-}
+// The toast shows once; its Undo stays possible until the next Add reminder or Mark done
+$toast = reminder_toast_take();
 
 /**
  * The next due day after a task was done on $done_day (Mark done): the next chosen weekday for "On chosen days",
@@ -209,30 +135,6 @@ function next_due_after($reminder, $done_day)
         return first_due(date('Y-m-d', strtotime($done_day . ' +1 day')), 'days', $reminder['repeat_days']);
     }
     return date('Y-m-d', strtotime($done_day . ' +' . (int) $reminder['interval_days'] . ' days'));
-}
-
-/**
- * The first day a new reminder is due: its start day, or for "On chosen days" the first chosen weekday from then.
- * date('D') gives "Mon", which lowercased matches the day values of the form.
- */
-function first_due($start, $repeat, $days)
-{
-    if ($repeat !== 'days') {
-        return $start;
-    }
-    for ($offset = 0; $offset < 7; $offset++) {
-        $day = date('Y-m-d', strtotime($start . ' +' . $offset . ' days'));
-        if (in_array(strtolower(date('D', strtotime($day))), $days, true)) {
-            return $day;
-        }
-    }
-    return $start;
-}
-
-/** aria-invalid and aria-describedby for a field with an error, so a screen reader reads the message with it. */
-function reminder_error_attrs($field, $errors)
-{
-    return isset($errors[$field]) ? ' aria-invalid="true" aria-describedby="reminder-' . $field . '-error"' : '';
 }
 
 $page_title = 'Dashboard';
@@ -360,163 +262,17 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </dialog>
 
-    <?php // Add a reminder popup (MOD-01): one POST form. It opens at once when the server sent it back with an error. ?>
-    <dialog class="modal modal-wide" id="add-reminder" aria-labelledby="add-reminder-title"<?= $reminder_errors ? ' data-open-on-load' : '' ?>>
-      <form class="modal-form" method="post" action="<?= e(url('dashboard.php')) ?>">
-        <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
-        <input type="hidden" name="form" value="reminder">
-
-        <div class="modal-head">
-          <h2 class="modal-title" id="add-reminder-title">Add a reminder</h2>
-          <?php // formmethod="dialog" closes the popup instead of sending the form; formnovalidate skips the checks ?>
-          <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
-        </div>
-
-        <div class="modal-body">
-          <?php // 1. Which plant: the member's garden as small photo cards; each card is a radio button ?>
-          <fieldset class="reminder-step">
-            <legend class="reminder-step-title">1. Which plant?</legend>
-            <?php if (!$pick_plants): ?>
-              <p class="field-hint">No plants in your garden yet. Add one first.</p>
-            <?php endif; ?>
-            <div class="plant-picks">
-              <?php foreach ($pick_plants as $plant): ?>
-                <label class="plant-pick">
-                  <input class="visually-hidden" type="radio" name="plant" value="<?= e($plant['id']) ?>" required<?= (string) $plant['id'] === $reminder_values['plant'] ? ' checked' : '' ?><?= reminder_error_attrs('plant', $reminder_errors) ?>>
-                  <img class="plant-pick-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="">
-                  <span class="plant-pick-name"><?= e($plant['nickname']) ?></span>
-                  <span class="plant-pick-meta"><?= e($plant['collection_name'] ?? 'No collection') ?></span>
-                </label>
-              <?php endforeach; ?>
-              <?php // The plant is not in the garden yet: add it first (P06), then come back for its reminder ?>
-              <a class="plant-pick plant-pick-add" href="<?= e(url('plant-form.php')) ?>">
-                <span class="plant-pick-add-icon"><?= icon('plus') ?></span>
-                <span class="plant-pick-name">Add plant</span>
-              </a>
-            </div>
-            <?php if (isset($reminder_errors['plant'])): ?>
-              <p class="field-error" id="reminder-plant-error"><?= e($reminder_errors['plant']) ?></p>
-            <?php endif; ?>
-          </fieldset>
-
-          <?php // 2. Which care: the most common jobs (reminder_tasks() in helpers.php) ?>
-          <fieldset class="reminder-step">
-            <legend class="reminder-step-title">2. Which care?</legend>
-            <?php // A dropdown that shows each task's icon and colour, which a <select> cannot: a <details> menu like
-                  // Plant Tools in the header, holding one radio button per task. app.js copies the choice into the
-                  // closed box and closes the menu. ?>
-            <details class="menu task-picker" data-picker>
-              <summary class="input task-picker-summary">
-                <span data-picker-value>
-                  <?php if (in_array($reminder_values['task'], reminder_tasks(), true)): ?>
-                    <?= task_name($reminder_values['task']) ?>
-                  <?php else: ?>
-                    <span class="task-picker-empty">Choose a care task</span>
-                  <?php endif; ?>
-                </span>
-                <span class="menu-chevron"><?= icon('chevron-down') ?></span>
-              </summary>
-              <div class="menu-panel task-picker-panel">
-                <?php foreach (reminder_tasks() as $task): ?>
-                  <label class="menu-item task-picker-option">
-                    <input class="visually-hidden" type="radio" name="task" value="<?= e($task) ?>" required<?= $task === $reminder_values['task'] ? ' checked' : '' ?><?= reminder_error_attrs('task', $reminder_errors) ?>>
-                    <span data-picker-label><?= task_name($task) ?></span>
-                  </label>
-                <?php endforeach; ?>
-              </div>
-            </details>
-            <?php if (isset($reminder_errors['task'])): ?>
-              <p class="field-error" id="reminder-task-error"><?= e($reminder_errors['task']) ?></p>
-            <?php endif; ?>
-          </fieldset>
-
-          <?php // 3. When: like a phone alarm, a big time, a first day and a repeat rule ?>
-          <fieldset class="reminder-step">
-            <legend class="reminder-step-title">3. When?</legend>
-            <div class="alarm-row">
-              <div class="field">
-                <label class="field-label" for="reminder-time">Time</label>
-                <input class="input alarm-time" type="time" id="reminder-time" name="time" value="<?= e($reminder_values['time']) ?>" required<?= reminder_error_attrs('time', $reminder_errors) ?>>
-                <?php if (isset($reminder_errors['time'])): ?>
-                  <p class="field-error" id="reminder-time-error"><?= e($reminder_errors['time']) ?></p>
-                <?php endif; ?>
-              </div>
-              <div class="field">
-                <label class="field-label" for="reminder-start">Starting</label>
-                <input class="input" type="date" id="reminder-start" name="start" value="<?= e($reminder_values['start']) ?>" min="<?= e($today) ?>" required<?= reminder_error_attrs('start', $reminder_errors) ?>>
-                <?php if (isset($reminder_errors['start'])): ?>
-                  <p class="field-error" id="reminder-start-error"><?= e($reminder_errors['start']) ?></p>
-                <?php endif; ?>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="reminder-repeat">Repeat</label>
-              <select class="input" id="reminder-repeat" name="repeat"<?= reminder_error_attrs('repeat', $reminder_errors) ?>>
-                <?php foreach ($repeat_options as $value => $label): ?>
-                  <option value="<?= e($value) ?>"<?= $value === $reminder_values['repeat'] ? ' selected' : '' ?>><?= e($label) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <?php if (isset($reminder_errors['repeat'])): ?>
-                <p class="field-error" id="reminder-repeat-error"><?= e($reminder_errors['repeat']) ?></p>
-              <?php endif; ?>
-            </div>
-
-            <?php // Shown only for "On chosen days" (data-show-when, app.js): the round day buttons of an alarm app ?>
-            <div class="field" data-show-when="repeat=days">
-              <span class="field-label" id="reminder-days-label">On these days</span>
-              <div class="weekdays" role="group" aria-labelledby="reminder-days-label">
-                <?php foreach ($weekdays as $value => $name): ?>
-                  <label class="weekday">
-                    <input class="visually-hidden" type="checkbox" name="days[]" value="<?= e($value) ?>"<?= in_array($value, $reminder_values['days'], true) ? ' checked' : '' ?><?= reminder_error_attrs('days', $reminder_errors) ?>>
-                    <span aria-hidden="true"><?= e($name[0]) ?></span>
-                    <span class="visually-hidden"><?= e($name) ?></span>
-                  </label>
-                <?php endforeach; ?>
-              </div>
-              <?php if (isset($reminder_errors['days'])): ?>
-                <p class="field-error" id="reminder-days-error"><?= e($reminder_errors['days']) ?></p>
-              <?php endif; ?>
-            </div>
-
-            <?php // Shown only for "Every few days" ?>
-            <div class="field" data-show-when="repeat=interval">
-              <label class="field-label" for="reminder-interval">Every how many days?</label>
-              <span class="interval-row">
-                <input class="input interval-input" type="number" id="reminder-interval" name="interval" value="<?= e($reminder_values['interval']) ?>" min="2" max="365" inputmode="numeric"<?= reminder_error_attrs('interval', $reminder_errors) ?>>
-                days
-              </span>
-              <?php if (isset($reminder_errors['interval'])): ?>
-                <p class="field-error" id="reminder-interval-error"><?= e($reminder_errors['interval']) ?></p>
-              <?php endif; ?>
-            </div>
-          </fieldset>
-        </div>
-
-        <div class="modal-foot">
-          <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
-          <button class="btn btn-primary" type="submit"><?= icon('bell') ?> Add reminder</button>
-        </div>
-      </form>
-    </dialog>
+    <?php // Add a reminder popup (partials/reminder-dialog.php), shared with the plant pages ?>
+    <?php partial('reminder-dialog', [
+        'action' => url('dashboard.php'),
+        'values' => $reminder_values,
+        'errors' => $reminder_errors,
+        'plants' => $pick_plants,
+        'plant'  => null,
+    ]); ?>
 
   <?php if ($toast): ?>
-    <?php // The popup message after Add reminder or Mark done (CORE-23 toast): stays until the member closes it. Undo is a POST,
-          // because it changes data. Without JavaScript the × is a link that loads the page again, without the toast. ?>
-    <div class="toast-region">
-      <div class="toast" role="status">
-        <?= icon($toast['icon'] ?? 'bell') ?>
-        <span class="toast-message"><?= e($toast['message']) ?></span>
-        <?php if ($toast['key']): ?>
-          <form method="post" action="<?= e(url('dashboard.php')) ?>">
-            <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
-            <input type="hidden" name="form" value="undo_reminder">
-            <button class="toast-action">Undo</button>
-          </form>
-        <?php endif; ?>
-        <a class="toast-close" href="<?= e(url('dashboard.php')) ?>" data-toast-close aria-label="Close message"><?= icon('x') ?></a>
-      </div>
-    </div>
+    <?php partial('reminder-toast', ['toast' => $toast, 'action' => url('dashboard.php')]); ?>
   <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

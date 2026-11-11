@@ -8,6 +8,7 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 require_once __DIR__ . '/../includes/care-guide.php';
+require_once __DIR__ . '/../includes/reminder-form.php';   // Add a reminder popup: checks, saving, toast
 
 // ── Which plant ─────────────────────────────────────────
 // Stage B: SELECT plants.*, plant_species.*, collections.name … WHERE plants.id = ? (one prepared query).
@@ -46,6 +47,27 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
     include __DIR__ . '/../includes/footer.php';
     exit;
 }
+
+// ── Add a reminder (owner only) ─────────────────────────
+// The Dashboard's popup, for this plant only: the plant is a hidden field, and reminder_form_save() accepts no other
+// plant id (ownership check). Stage F keeps it in the session; stage B saves it (CORE-22).
+$reminder_values = reminder_defaults($plant['id']);
+$reminder_errors = [];
+$page_url        = url('plant.php?id=' . $plant['id']);
+if ($is_owner && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (post_text('form') === 'reminder') {
+        [$reminder_values, $reminder_errors] = reminder_form_save([$plant['id'] => $plant]);
+        if (!$reminder_errors) {
+            header('Location: ' . $page_url);   // POST, then redirect: a reload cannot add it twice
+            exit;
+        }
+    } elseif (post_text('form') === 'undo_reminder') {
+        reminder_undo();
+        header('Location: ' . $page_url);
+        exit;
+    }
+}
+$toast = $is_owner ? reminder_toast_take() : null;
 
 // ── Everything shown about it ───────────────────────────
 // Each list is one table filtered by plant_id: WHERE plant_id = ? in stage B.
@@ -87,16 +109,10 @@ if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'],
     $guide_state = $guide_preview;
 }
 
-// Story stats for the side panel. Stage B: small COUNT() queries, or counted from the rows already loaded.
-$this_month    = date('Y-m');
-$watered_month = count(array_filter($story, fn ($log) => $log['type'] === 'care' && $log['care_task'] === 'water'
-    && substr($log['logged_at'], 0, 7) === $this_month));
-$last_update   = $story ? $story[0]['logged_at'] : null;
-
 $collection_url = url('garden.php?collection=' . $plant['collection_id']);
 $page_title     = $plant['nickname'];
 $page_css       = 'plant.css';
-$page_js        = 'story.js';   // story filters and the reminders' Done buttons (UI only in stage F)
+$page_js        = 'story.js';   // the Add to story popup and the reminders' Done buttons (UI only in stage F)
 
 // The navigation follows the breadcrumb: your own plant is part of My Garden, anyone else's is part of Explore
 $nav_area = $is_owner ? 'garden' : 'explore';
@@ -220,7 +236,8 @@ include __DIR__ . '/../includes/header.php';
         <section class="panel plant-panel" aria-labelledby="reminders-title">
           <div class="panel-head">
             <h2 class="panel-title" id="reminders-title">Reminders</h2>
-            <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>"><?= icon('plus') ?> Add</a>
+            <?php // Opens the Add a reminder popup (app.js); without JavaScript the link leads to the reminders on Edit plant ?>
+            <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
           </div>
           <?php // Done ✓ (CORE-23, UI half): story.js adds a "Watered" line to the Story and moves the date forward
                 // without a reload. Stage F changes the page only; stage B saves both (like the Dashboard's Mark done). ?>
@@ -234,7 +251,6 @@ include __DIR__ . '/../includes/header.php';
               </li>
             <?php endforeach; ?>
           </ul>
-          <p class="visually-hidden" role="status" data-story-status></p>
         </section>
       <?php else: ?>
         <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
@@ -258,53 +274,120 @@ include __DIR__ . '/../includes/header.php';
   </div>
 
   <?php // Plant story (p12, element 6): full width under both columns, newest first. Each entry type looks different
-        // (partials/story-entry.php). Desktop: a sticky panel beside the timeline with filters and stats; phone:
-        // the filters as a scrolling chip row above it, no stats. ?>
+        // (partials/story-entry.php). The timeline is at most 760px wide. ?>
   <section class="plant-story-section" aria-labelledby="story-title">
     <div class="story-head">
       <h2 class="plant-story-title" id="story-title">Story</h2>
       <?php if ($is_owner): ?>
-        <a class="story-add-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#story-update')) ?>"><?= icon('plus') ?> Add to story</a>
+        <?php // Opens the Add to story popup below (app.js) ?>
+        <button type="button" class="story-add-link" data-dialog="add-story" aria-haspopup="dialog"><?= icon('plus') ?> Add to story</button>
       <?php endif; ?>
     </div>
 
-    <?php if (!$story): ?>
-      <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
-    <?php else: ?>
-      <div class="story-layout">
-        <aside class="story-panel" aria-label="Story filters and stats">
-          <?php // Filters only hide and show entries on this page (story.js); without JavaScript every entry shows ?>
-          <div class="story-filters" role="group" aria-label="Show">
-            <?php foreach (['all' => 'All', 'photos' => 'Photos', 'health' => 'Health', 'care' => 'Care'] as $key => $label): ?>
-              <button type="button" class="chip story-filter<?= $key === 'all' ? ' is-selected' : '' ?>" data-story-filter="<?= e($key) ?>" aria-pressed="<?= $key === 'all' ? 'true' : 'false' ?>"><?= e($label) ?></button>
-            <?php endforeach; ?>
-          </div>
-          <ul class="story-stats">
-            <li><?= icon('cloud-rain') ?> <span>Watered <strong data-stat-watered><?= e($watered_month) ?></strong> <span data-stat-watered-word><?= $watered_month === 1 ? 'time' : 'times' ?></span> this month</span></li>
-            <li><?= icon('calendar') ?> <span>Last update: <strong data-stat-last><?= e(date('j M', strtotime($last_update))) ?></strong></span></li>
-            <li><?= icon('book-open') ?> <span><strong data-stat-count><?= e(count($story)) ?></strong> entries in the story</span></li>
-          </ul>
-        </aside>
-
-        <div class="story-main">
-          <ol class="story" data-story>
-            <?php foreach ($story as $log): ?>
-              <?php partial('story-entry', ['log' => $log]); ?>
-            <?php endforeach; ?>
-          </ol>
-          <p class="panel-empty story-filter-empty" data-story-empty hidden><?= icon('info') ?> No entries of this kind yet.</p>
-        </div>
-      </div>
-
-      <?php if ($is_owner): ?>
-        <?php // What story.js copies when Done is pressed: an empty care line, filled in by the script ?>
-        <template id="story-care-template">
-          <li class="story-entry story-entry-care" data-kind="care" data-photo="0" data-health="0">
-            <p class="story-care"><span class="story-care-task"></span> <span class="story-care-date"></span></p>
-          </li>
-        </template>
-      <?php endif; ?>
-    <?php endif; ?>
+    <p class="panel-empty" data-story-empty<?= $story ? ' hidden' : '' ?>><?= icon('info') ?> No story entries yet.</p>
+    <ol class="story" data-story>
+      <?php foreach ($story as $log): ?>
+        <?php partial('story-entry', ['log' => $log]); ?>
+      <?php endforeach; ?>
+    </ol>
   </section>
+
+  <?php if ($is_owner): ?>
+    <?php // Add to <name>'s story popup (CORE-19, UI half). Moved here from Edit plant on 2026-11-11.
+          // story.js puts the new entry into the timeline without a reload. Stage F changes the page only;
+          // stage B sends the form with fetch() and saves a health_logs row (and the photo, CORE-17).
+          // plant.php?id=…&story=1 opens it at once (the link on Edit plant). ?>
+    <dialog class="modal modal-wide" id="add-story" aria-labelledby="add-story-title"<?= get_text('story') === '1' ? ' data-open-on-load' : '' ?>
+            data-plant-name="<?= e($plant['nickname']) ?>">
+      <form class="modal-form" id="story-form" method="post" action="<?= e($page_url) ?>" enctype="multipart/form-data" novalidate>
+        <div class="modal-head">
+          <h2 class="modal-title" id="add-story-title">Add to <?= e($plant['nickname']) ?>’s story</h2>
+          <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+        </div>
+
+        <div class="modal-body story-form-body">
+          <fieldset class="form-fieldset">
+            <legend class="field-label">What happened?</legend>
+            <div class="story-kinds">
+              <?php foreach (['water' => 'Watered', 'fertilise' => 'Fertilised', 'prune' => 'Pruned', 'repot' => 'Repotted'] as $kind => $label): ?>
+                <input class="story-kind-input" type="radio" id="story-kind-<?= e($kind) ?>" name="kind" value="<?= e($kind) ?>">
+                <label class="chip story-kind" for="story-kind-<?= e($kind) ?>"><span class="task task-<?= e($kind) ?>"><?= icon(task_icon($kind)) ?></span> <?= e($label) ?></label>
+              <?php endforeach; ?>
+              <input class="story-kind-input" type="radio" id="story-kind-note" name="kind" value="note" checked>
+              <label class="chip story-kind" for="story-kind-note"><?= icon('pencil') ?> Note</label>
+              <input class="story-kind-input" type="radio" id="story-kind-milestone" name="kind" value="milestone">
+              <label class="chip story-kind" for="story-kind-milestone"><?= icon('sprout') ?> Milestone</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label class="field-label" for="story-note">What’s new? <span class="field-optional" data-note-optional hidden>(optional)</span></label>
+            <textarea class="input" id="story-note" name="note" rows="3" maxlength="500" aria-describedby="story-note-error"></textarea>
+            <p class="field-error" id="story-note-error" data-note-error hidden>Write what’s new: a note or milestone needs a few words.</p>
+          </div>
+
+          <div class="field">
+            <span class="field-label" id="story-photo-label">Photo <span class="field-optional">(optional)</span></span>
+            <div class="story-photo-field">
+              <img class="story-photo-preview" alt="Chosen photo" data-photo-preview hidden>
+              <label class="btn btn-secondary btn-sm" for="story-photo"><?= icon('camera') ?> <span data-photo-button>Add a photo</span></label>
+              <input class="visually-hidden" type="file" id="story-photo" name="photo" accept="image/jpeg,image/png"
+                     aria-labelledby="story-photo-label" aria-describedby="story-photo-hint">
+            </div>
+            <p class="field-hint" id="story-photo-hint" data-photo-hint>JPG or PNG, up to 5 MB.</p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="story-status">Status <span class="field-optional">(optional)</span></label>
+              <select class="input" id="story-status" name="status">
+                <option value="">No status</option>
+                <?php foreach (['thriving', 'stable', 'needs_attention', 'sick'] as $option): ?>
+                  <option value="<?= e($option) ?>"><?= e(health_label($option)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="story-date">Date</label>
+              <input class="input" type="date" id="story-date" name="date" value="<?= e(date('Y-m-d')) ?>" max="<?= e(date('Y-m-d')) ?>" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+          <button class="btn btn-primary" type="submit"><?= icon('plus') ?> Add to story</button>
+        </div>
+      </form>
+    </dialog>
+
+    <?php // What story.js copies for a new entry: a care line, or a card (note, milestone). Filled with textContent. ?>
+    <template id="story-care-template">
+      <li class="story-entry story-entry-care">
+        <p class="story-care"><span class="story-care-task"></span> <span class="story-care-date"></span> <span class="story-care-note"></span></p>
+      </li>
+    </template>
+    <template id="story-card-template">
+      <li class="story-entry">
+        <p class="story-date"></p>
+        <div class="story-card">
+          <span class="story-milestone-icon" hidden><?= icon('sprout') ?></span>
+          <div class="story-body"><p class="story-note"></p></div>
+        </div>
+      </li>
+    </template>
+    <p class="visually-hidden" role="status" data-story-status></p>
+
+    <?php partial('reminder-dialog', [
+        'action' => $page_url,
+        'values' => $reminder_values,
+        'errors' => $reminder_errors,
+        'plants' => null,
+        'plant'  => $plant,
+    ]); ?>
+    <?php if ($toast): ?>
+      <?php partial('reminder-toast', ['toast' => $toast, 'action' => $page_url]); ?>
+    <?php endif; ?>
+  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

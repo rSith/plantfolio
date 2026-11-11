@@ -7,14 +7,13 @@
 // A status badge shows only when the entry has a status (a care line has none).
 // Expects $log — a health_logs row (type, care_task, status, source, note, photo, logged_at), joined with its
 // ml_predictions row for an AI entry (prediction_type, predicted_label, confidence).
-// data-kind / data-photo / data-health let story.js filter the timeline (All, Photos, Health, Care).
+// data-date lets story.js put a new entry from the Add to story popup in its place by date.
 
 $type      = $log['type'];
 $has_photo = !empty($log['photo']);
-$is_health = $type === 'health_check' || $log['status'] !== null;
 $kinds     = ['note' => 'Update', 'photo' => 'Photo', 'health_check' => 'Health check', 'milestone' => 'Milestone'];
 ?>
-<li class="story-entry story-entry-<?= e(str_replace('_', '-', $type)) ?>" data-kind="<?= e($type) ?>" data-photo="<?= $has_photo ? '1' : '0' ?>" data-health="<?= $is_health ? '1' : '0' ?>">
+<li class="story-entry story-entry-<?= e(str_replace('_', '-', $type)) ?>" data-date="<?= e(substr($log['logged_at'], 0, 10)) ?>">
   <?php if ($type === 'care'): ?>
     <p class="story-care">
       <?php // .task-<name> gives the task its colour, the same as in the Reminders card ?>
