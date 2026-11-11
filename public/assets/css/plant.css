@@ -259,124 +259,133 @@
 }
 
 /* ── AI care guide (partials/care-guide.php) ────────── */
-/* Under the plant's name, above the buttons (Ranshitha's sketch, 2026-11-11). Kept in one block so its look is
-   easy to change: a white card holding a compact list, "Light: …", one point per line. */
+/* Under the plant's name, above the buttons. Kept in one block so its look is easy to change: a white card with
+   a title, one row per section and a footer; the sparkle marks AI content, as in the story. */
 
 .ai-guide {
   margin-bottom: var(--space-16);
-  padding: var(--space-16);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
 }
 
-/* A small capital label, not a big heading: the five points are the content */
+.ai-guide-head {
+  padding: var(--space-16) var(--space-16) var(--space-12);
+  border-bottom: 1px solid var(--color-line);
+}
+
 .ai-guide-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 0 var(--space-12);
-  color: var(--color-muted);
+  gap: var(--space-8);
+  margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-h3);
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .ai-guide-title .icon {
   color: var(--color-leaf);
 }
 
+.ai-guide-meta {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
 .ai-guide-list {
-  display: grid;
-  gap: var(--space-12);
   margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-/* The icon is the bullet; the label runs into its sentence */
 .ai-guide-item {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+.ai-guide-item:first-child {
+  border-top: 0;
+}
+
+.ai-guide-item dt {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-12);
-}
-
-.ai-guide-item p {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
+  align-items: center;
+  gap: var(--space-8);
   font-size: var(--text-body-sm);
-  line-height: 1.55;
-}
-
-.ai-guide-item strong {
-  color: var(--color-forest);
   font-weight: var(--weight-semibold);
 }
 
-/* A small sage circle behind each point's icon */
+.ai-guide-item dd {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+/* A small sage circle behind each section's icon */
 .ai-guide-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-sage);
   color: var(--color-leaf);
 }
 
-.ai-guide-icon .icon {
-  width: 14px;
-  height: 14px;
+/* Tablet and up: the label beside its text, like the species guide */
+@media (min-width: 768px) {
+  .ai-guide-item {
+    grid-template-columns: 220px 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+
+  .ai-guide-item dt {
+    min-height: 28px;
+  }
+
+  .ai-guide-item dd {
+    padding-top: 3px;
+  }
 }
 
-/* The honesty note and Regenerate share one quiet line at the bottom */
+/* Desktop: the card shares the row with the photo, so the label column gives the text more room */
+@media (min-width: 1024px) {
+  .ai-guide-item {
+    grid-template-columns: 205px 1fr;
+  }
+}
+
 .ai-guide-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0 var(--space-16);
-  margin-top: var(--space-12);
-  padding-top: var(--space-4);
+  gap: var(--space-8) var(--space-16);
+  padding: var(--space-12) var(--space-16);
   border-top: 1px solid var(--color-line);
 }
 
 .ai-guide-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   color: var(--color-muted);
   font-size: var(--text-small);
 }
 
-/* A text button, but still a 44px target for a finger */
-.ai-guide-regen {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  color: var(--color-leaf);
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
-  text-decoration: none;
-}
-
-.ai-guide-regen:hover {
-  color: var(--color-leaf-dark);
-  text-decoration: underline;
-}
-
-/* Generating: a status line, then grey bars where the five sentences will appear */
+/* Generating: a status line, then grey bars where the five texts will appear */
 .ai-guide-status {
   display: flex;
   align-items: flex-start;
   gap: var(--space-12);
-  margin: 0 0 var(--space-12);
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-input);
+  margin: 0;
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--color-line);
   background: var(--color-sage);
   color: var(--color-forest);
   font-size: var(--text-body-sm);
@@ -397,7 +406,7 @@
 
 .ai-guide-skeleton span {
   display: block;
-  height: 8px;
+  height: 10px;
   border-radius: var(--radius-pill);
   background: var(--color-neutral-bg);
   animation: ai-guide-pulse 1.4s ease-in-out infinite;
@@ -422,6 +431,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-12);
+  padding: var(--space-16);
 }
 
 .ai-guide-problem-title {
