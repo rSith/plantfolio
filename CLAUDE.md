@@ -99,14 +99,17 @@ Don't add top-level folders or move files without asking — teammates' READMEs 
 | P06 | Add / Edit Plant | `plant-form.php` | Login | p13 | Functional |
 | P07 | Plant Identifier ✦AI | `identify.php` | Login | p14 | Functional |
 | P08 | Health Check ✦AI | `health-check.php` | Login | p15 | Functional |
-| P09 | Explore & Search | `explore.php?q=` | Public | p16 | Both |
-| P10 | Exchange Marketplace | `exchange.php` | Public | p17 | Both |
+| P09 | Community: Plants and People tabs (was Explore) | `community.php?tab=plants\|people&q=` | Public | p16 | Both |
+| P10 | Community: Exchange tab (was Exchange Marketplace) | `community.php?tab=exchange` | Public | p17 | Both |
 | P11 | Listing Detail | `listing.php?id=` | Public · interest needs login | p18 | Both |
 | P12 | Create Listing | `listing-form.php` | Login | p19 | Functional |
 | P13 | My Exchanges | `my-exchanges.php` | Login | p20 | Functional |
 | P14 | Public Profile | `user.php?u=` | Public | p21 | Warm |
 | P15 | Settings | `settings.php` | Login | p22 | Functional |
 | — | About · Community guidelines · Contact | `about.php` | Public | not in the wireframes | Warm |
+
+Explore and Exchange were merged into one page, **Community**, on 11 Nov 2026; `explore.php` and `exchange.php` now only
+redirect (301) to it, keeping their query string.
 
 `about.php` is an extra page: the footer links (wireframe p4) and the sign-up checkbox (p9) need somewhere to
 lead. It has three sections, `#about`, `#guidelines` and `#contact`. Its contact details are samples until final delivery.

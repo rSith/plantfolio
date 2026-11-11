@@ -39,7 +39,7 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
             'text'    => 'This plant does not exist, or its owner keeps it private.',
             'actions' => $current_user
                 ? [['label' => 'Back to My Garden', 'href' => 'garden.php', 'icon' => 'leaf']]
-                : [['label' => 'Explore plants', 'href' => 'explore.php', 'icon' => 'search']],
+                : [['label' => 'Explore plants', 'href' => 'community.php?tab=plants', 'icon' => 'search']],
         ]); ?>
       </section>
     </div>
@@ -129,7 +129,7 @@ $page_css       = 'plant.css';
 $page_js        = 'plant.js';   // the Add photo and Add to story popups, Done on reminders (UI only in stage F)
 
 // The navigation follows the breadcrumb: your own plant is part of My Garden, anyone else's is part of Explore
-$nav_area = $is_owner ? 'garden' : 'explore';
+$nav_area = $is_owner ? 'garden' : 'community';
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -144,7 +144,7 @@ include __DIR__ . '/../includes/header.php';
           <li><a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a></li>
         <?php endif; ?>
       <?php else: ?>
-        <li><a href="<?= e(url('explore.php')) ?>">Explore</a></li>
+        <li><a href="<?= e(url('community.php?tab=plants')) ?>">Community</a></li>
         <li><a href="<?= e($owner_url) ?>">@<?= e($owner['username']) ?></a></li>
       <?php endif; ?>
       <li><span aria-current="page"><?= e($plant['nickname']) ?></span></li>

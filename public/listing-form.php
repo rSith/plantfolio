@@ -186,8 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         // Stage F: nothing is saved. An edited listing opens its detail page; a new one has no page yet, so the member
-        // goes to their listings in My exchanges.
-        header('Location: ' . ($is_edit ? url('listing.php?id=' . $listing['id']) : url('my-exchanges.php?tab=listings')));
+        // goes back to the Exchange tab of Community, where new listings appear (stage B: theirs, at the top).
+        header('Location: ' . ($is_edit ? url('listing.php?id=' . $listing['id']) : url('community.php?tab=exchange')));
         exit;
     }
 }
@@ -231,7 +231,7 @@ $preview = [
     'rating_count'   => $current_user['rating_count'],
 ];
 
-$back_url    = $is_edit ? url('listing.php?id=' . $listing['id']) : url('exchange.php');
+$back_url    = $is_edit ? url('listing.php?id=' . $listing['id']) : url('community.php?tab=exchange');
 $form_action = url('listing-form.php' . ($is_edit ? '?id=' . $listing['id'] : ''));
 
 $page_title = $is_edit ? 'Edit listing' : 'List a plant';
@@ -240,7 +240,7 @@ $page_css   = 'listing-form.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
-  <a class="back-link" href="<?= e($back_url) ?>"><?= icon('arrow-left') ?> <?= $is_edit ? 'Back to the listing' : 'Back to Exchange' ?></a>
+  <a class="back-link" href="<?= e($back_url) ?>"><?= icon('arrow-left') ?> <?= $is_edit ? 'Back to the listing' : 'Back to the exchange' ?></a>
   <h1 class="form-title"><?= $is_edit ? 'Edit listing' : 'List a plant for exchange' ?></h1>
   <p class="form-intro">Share a plant or cuttings with the community. Your contact is only shown to people who are interested.</p>
 

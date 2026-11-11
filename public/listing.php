@@ -36,7 +36,7 @@ if (!$listing) {
             'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Listing not found',
             'text'    => 'This listing does not exist, or its owner has removed it.',
-            'actions' => [['label' => 'Browse the exchange', 'href' => 'exchange.php', 'icon' => 'repeat']],
+            'actions' => [['label' => 'Browse the exchange', 'href' => 'community.php?tab=exchange', 'icon' => 'repeat']],
         ]); ?>
       </section>
     </div>
@@ -200,7 +200,7 @@ include __DIR__ . '/../includes/header.php';
 <div class="container page">
   <nav aria-label="Breadcrumb">
     <ol class="breadcrumb listing-breadcrumb">
-      <li><a href="<?= e(url('exchange.php')) ?>">Exchange</a></li>
+      <li><a href="<?= e(url('community.php?tab=exchange')) ?>">Exchange</a></li>
       <li><span aria-current="page"><?= e($listing['title']) ?></span></li>
     </ol>
   </nav>
@@ -260,7 +260,7 @@ include __DIR__ . '/../includes/header.php';
             <a class="btn btn-primary listing-interest-btn" href="<?= e(url('my-exchanges.php')) ?>"><?= icon('repeat') ?> Go to My exchanges</a>
           <?php else: ?>
             <p class="listing-interest-text">This plant has found a new home, so the listing no longer takes interest.</p>
-            <a class="btn btn-primary listing-interest-btn" href="<?= e(url('exchange.php')) ?>"><?= icon('repeat') ?> Browse the exchange</a>
+            <a class="btn btn-primary listing-interest-btn" href="<?= e(url('community.php?tab=exchange')) ?>"><?= icon('repeat') ?> Browse the exchange</a>
           <?php endif; ?>
 
         <?php elseif ($is_owner): ?>

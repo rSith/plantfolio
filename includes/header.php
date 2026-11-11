@@ -9,7 +9,7 @@
 // loads the new file instead of an old copy it kept (Ctrl + F5 is no longer needed).
 
 $is_member       = !empty($current_user);
-// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
+// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Community for others
 $area            = $nav_area ?? current_area();
 $show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
 // The top bar's .site-header-member follows $is_member, not $show_bottom_bar: a member's bar holds more buttons, so
@@ -20,15 +20,12 @@ $nav_links = $is_member
     ? [
         ['label' => 'Dashboard', 'href' => 'dashboard.php', 'area' => 'dashboard'],
         ['label' => 'My Garden', 'href' => 'garden.php',    'area' => 'garden'],
-        ['label' => 'Explore',   'href' => 'explore.php',   'area' => 'explore'],
-        ['label' => 'Exchange',  'href' => 'exchange.php',  'area' => 'exchange'],
+        // One link for the plants, the exchange and the people: they share the Community page (community.php)
+        ['label' => 'Community', 'href' => 'community.php', 'area' => 'community'],
     ]
     : [
-        // A visitor's Exchange link shows the newest listings on the Landing page ("Fresh on the exchange"),
-        // as the team asked; from the "See all" link there they reach the full marketplace (exchange.php).
-        ['label' => 'Explore',      'href' => 'explore.php',             'area' => 'explore'],
-        ['label' => 'Exchange',     'href' => 'index.php#fresh',         'area' => null],
-        ['label' => 'How it works', 'href' => 'index.php#how-it-works',  'area' => null],
+        ['label' => 'Community',    'href' => 'community.php',          'area' => 'community'],
+        ['label' => 'How it works', 'href' => 'index.php#how-it-works', 'area' => null],
     ];
 
 // The two AI tools share one menu, "Plant Tools" (members only).
@@ -100,7 +97,7 @@ if ($is_member) {
 
       <div class="header-actions">
         <?php if ($is_member): ?>
-          <?php // No Search or Add plant buttons here: search is on Explore, Add plant on My Garden (and the phone's + menu) ?>
+          <?php // No Search or Add plant buttons here: search is on Community, Add plant on My Garden (and the phone's + menu) ?>
           <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $bell_count > 0 ? ': ' . e($bell_count) . ' new' : '' ?>">
             <?= icon('bell') ?>
             <?php if ($bell_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>

@@ -16,7 +16,7 @@ if ($show_bottom_bar) {
         ['label' => 'Garden', 'href' => url('garden.php'),    'icon' => 'leaf',  'area' => 'garden'],
     ];
     $bar_links_right = [
-        ['label' => 'Exchange', 'href' => url('exchange.php'), 'icon' => 'repeat', 'area' => 'exchange'],
+        ['label' => 'Community', 'href' => url('community.php'), 'icon' => 'users', 'area' => 'community'],
         ['label' => 'Profile',  'href' => $profile_url,        'icon' => 'user',   'area' => 'profile'],
     ];
     $add_links = [

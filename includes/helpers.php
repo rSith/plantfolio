@@ -104,7 +104,7 @@ function query_url($page, array $params)
 }
 
 /**
- * One piece of text from the address, e.g. get_text('q') for explore.php?q=monstera, or '' when it is not given.
+ * One piece of text from the address, e.g. get_text('q') for community.php?q=monstera, or '' when it is not given.
  * Anyone can type anything there: a hand-made address can send a list where one word belongs (q[]=x makes $_GET['q']
  * an array, and string functions then fail) or bytes that are not real UTF-8 text (q=%FF, which e() prints as an empty
  * string). Both count as "not given", so the page falls back to its default as for any other wrong value.
@@ -149,7 +149,7 @@ function current_page()
 /**
  * The aria-current attribute of a navigation link, so a screen reader hears which link is lit, as the eye sees it.
  * $is_lit is the same test that gives the link its .is-active class. A lit link that opens this very page gets
- * aria-current="page" (Exchange on exchange.php); a lit link whose area the page only belongs to gets
+ * aria-current="page" (Community on community.php); a lit link whose area the page only belongs to gets
  * aria-current="true", "the current item of this set" (Exchange on listing.php, My Garden on a plant's profile).
  * A link that is not lit gets nothing. Print the result without e(): it is fixed text.
  */
@@ -165,7 +165,7 @@ function nav_current($is_lit, $href)
 }
 
 /**
- * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'exchange' …
+ * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'community' …
  * The navigation highlights a whole area, so "My Garden" stays lit on a plant's profile and on the plant form.
  * Returns '' for pages outside every area (landing, sign up, log in).
  */
@@ -175,8 +175,8 @@ function current_area()
         'dashboard' => ['dashboard.php'],
         'garden'    => ['garden.php', 'plant.php', 'plant-form.php'],
         'tools'     => ['identify.php', 'health-check.php'],
-        'explore'   => ['explore.php'],
-        'exchange'  => ['exchange.php', 'listing.php', 'listing-form.php', 'my-exchanges.php'],
+        // Explore and Exchange became one page, Community; the listing pages and My exchanges belong to it
+        'community' => ['community.php', 'listing.php', 'listing-form.php', 'my-exchanges.php'],
         'profile'   => ['user.php', 'settings.php'],
     ];
 

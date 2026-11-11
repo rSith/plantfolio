@@ -105,9 +105,9 @@ Also this week: DES-05 is complete — the Figma link is in the README; mark it 
 ### Week 4 · 26 Oct – 1 Nov — Pages C: community
 | Page | Task(s) | Notes | Module |
 |---|---|---|---|
-| P09 Explore | COM-01, COM-02, COM-03 (UI) | Unified search, Plants / People tabs, filter sidebar, active chips, matching people row | MOD-07 |
+| P09 Explore → Community | COM-01, COM-02, COM-03 (UI) | Merged into `community.php` (11 Nov): one search, Plants / Exchange / People tabs, a filter sidebar per tab, active chips, matching people row | MOD-07 |
 | P14 Public Profile | COM-05, COM-13 (UI) | Identity, stats row, tabs, collection collages, rating breakdown, latest review — no contact details | MOD-10 |
-| P10 Exchange | COM-07 (UI) | How-it-works strip, filters, listing cards with type badge, distance, looking for, rating, interest count | MOD-08 |
+| P10 Exchange → Community | COM-07 (UI) | Now the Exchange tab of `community.php`: how-it-works strip, filters, listing cards with type badge, distance, looking for, rating, interest count | MOD-08 |
 | P11 Listing Detail | COM-08 (UI) | Gallery, summary, plant-story link, owner trust card, safety tips; state A (before interest) and state B (contact revealed) | MOD-08 |
 
 **Learn:** reusing partials with different data; query strings (`$_GET`) to read `?id=` and `?q=` from the URL.

@@ -5,14 +5,17 @@ One PHP file per page (wireframes p25):
 
 | Code | File | Code | File |
 |---|---|---|---|
-| P01 | `index.php` | P09 | `explore.php` |
-| P02 | `register.php`, `login.php`, `logout.php` | P10 | `exchange.php` |
+| P01 | `index.php` | P09 | `community.php?tab=plants` (and `tab=people`) |
+| P02 | `register.php`, `login.php`, `logout.php` | P10 | `community.php?tab=exchange` |
 | P03 | `dashboard.php` | P11 | `listing.php` |
 | P04 | `garden.php` | P12 | `listing-form.php` |
 | P05 | `plant.php` | P13 | `my-exchanges.php` |
 | P06 | `plant-form.php` | P14 | `user.php` |
 | P07 | `identify.php` | P15 | `settings.php` |
 | P08 | `health-check.php` | dev | `styleguide.php` — component gallery, removed or protected before release |
+
+Explore (P09) and Exchange (P10) are one page, **Community** (`community.php`), with Plants, Exchange and People tabs.
+`explore.php` and `exchange.php` only redirect (301) there, keeping their query, so old links still work.
 
 `about.php` is an extra public page that is not in the wireframes: About, Community guidelines and Contact, linked from the footer.
 
