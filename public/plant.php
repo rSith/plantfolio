@@ -1,6 +1,7 @@
 <?php
 // Plant Profile (P05, wireframe p12): one page per plant that tells its story — photos, identity, care needs,
-// reminders and a dated health timeline (CORE-18, UI half). plant.php?id=42 shows Monty.
+// reminders and a dated health timeline (CORE-18, UI half). Simplified on 2026-11-11: each fact is shown once,
+// so the care tiles and the Reminders and Photos tabs were removed. plant.php?id=42 shows Monty.
 // Logged in · public read: anyone may open a public plant and sees it read-only, with an owner card and a like
 // button (CORE-21, UI half); a private plant is "not found" to everyone but its owner.
 
@@ -59,33 +60,21 @@ if (!$photos) {
     // No gallery rows yet: the profile photo is the only one
     $photos = [['id' => 0, 'plant_id' => $plant['id'], 'path' => $plant['photo'], 'created_at' => $plant['acquired_on']]];
 }
+// The thumbnail of the photo the large frame shows first, so it can be marked as chosen
+$shown_photo = array_search($plant['photo'], array_column($photos, 'path'), true);
 $like_count = $mock_like_counts[$plant['id']] ?? 0;
 
 // The owner, joined from users (public columns only). Visitors see an owner card instead of the edit controls.
 $owner     = $mock_users[$plant['user_id']];
 $owner_url = url('user.php?u=' . urlencode($owner['username']));
 
-// The watering reminder fills two tiles of Care at a glance (p12, element 5): "Every 7 days" and "Next watering"
-$water = null;
-foreach ($reminders as $reminder) {
-    if ($reminder['task'] === 'water') {
-        $water = $reminder;
-        break;
-    }
-}
-$water_due = $water ? care_due($water['next_due']) : null;
-
 // Tabs (p12, element 6): links with ?tab=, so each tab has an address and works without JavaScript.
 // #plant-tabs makes the browser scroll down to the tabs instead of the top of the page.
+// Only two: reminders are in the side card and photos in the gallery and the story, so their tabs only repeated them.
 $tabs = [
-    'story'     => 'Story',
-    'care'      => 'Care guide',
-    'reminders' => 'Reminders',
-    'photos'    => 'Photos',
+    'story' => 'Story',
+    'care'  => 'Care',
 ];
-if (!$is_owner) {
-    unset($tabs['reminders']);   // reminders are the owner's to-do list, not part of the public story
-}
 $tab = get_text('tab');   // tab[]=x or tab=%FF count as "not given" (helpers.php), so they fall back to Story
 if (!array_key_exists($tab, $tabs)) {
     $tab = 'story';
@@ -128,14 +117,15 @@ include __DIR__ . '/../includes/header.php';
   </nav>
 
   <div class="plant-top">
-    <?php // Photo gallery (p12, element 2): the profile photo large, then thumbnails and an Add tile ?>
-    <div class="plant-gallery">
-      <img class="plant-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>, a <?= e($plant['common_name']) ?>">
+    <?php // Photo gallery (p12, element 2): the profile photo large, then thumbnails and the one Add tile.
+          // A thumbnail is a button that shows its photo in the large frame (app.js, data-gallery). ?>
+    <div class="plant-gallery" data-gallery>
+      <img class="plant-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>, a <?= e($plant['common_name']) ?>" data-gallery-main>
       <div class="plant-thumbs">
         <?php foreach (array_slice($photos, 0, 4) as $number => $photo): ?>
-          <a class="plant-thumb" href="<?= e(url('plant.php?id=' . $plant['id'] . '&tab=photos#plant-tabs')) ?>">
-            <img src="<?= e(photo_url($photo['path'])) ?>" alt="Photo <?= e($number + 1) ?> of <?= e(count($photos)) ?>, <?= e(format_day($photo['created_at'])) ?>" loading="lazy">
-          </a>
+          <button type="button" class="plant-thumb" data-photo-src="<?= e(photo_url($photo['path'])) ?>" data-photo-alt="Photo of <?= e($plant['nickname']) ?>, <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" aria-pressed="<?= $number === $shown_photo ? 'true' : 'false' ?>">
+            <img src="<?= e(photo_url($photo['path'])) ?>" alt="Show photo <?= e($number + 1) ?> of <?= e(count($photos)) ?>, <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" width="80" height="80" loading="lazy">
+          </button>
         <?php endforeach; ?>
         <?php if ($is_owner): ?>
           <?php // Adding a photo is part of the edit form until uploads are wired in stage B (CORE-17) ?>
@@ -148,13 +138,10 @@ include __DIR__ . '/../includes/header.php';
       <?php // Identity and status (p12, element 3) ?>
       <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
       <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
+      <?php // No collection here: the breadcrumb above already names it ?>
       <p class="plant-meta">
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-        <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
-        <?php if ($plant['collection_name'] !== null): ?>
-          <span><?= e($plant['collection_name']) ?></span>
-        <?php endif; ?>
-        <span><?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
+        <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?> · <?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
       </p>
 
       <?php if ($is_owner): ?>
@@ -178,46 +165,6 @@ include __DIR__ . '/../includes/header.php';
         </div>
       <?php endif; ?>
 
-      <?php // Care at a glance (p12, element 5): three facts from the species guide, and the next watering highlighted ?>
-      <div class="care-glance">
-        <div class="care-tile">
-          <span class="care-tile-icon"><?= icon('sun') ?></span>
-          <span><span class="care-tile-label">Light</span><span class="care-tile-value"><?= e($species['light'] ?? 'Not known') ?></span></span>
-        </div>
-        <div class="care-tile">
-          <span class="care-tile-icon"><?= icon('droplet') ?></span>
-          <span><span class="care-tile-label">Water</span><span class="care-tile-value"><?= $water ? 'Every ' . e($water['interval_days']) . ' days' : e($species['water'] ?? 'Not known') ?></span></span>
-        </div>
-        <div class="care-tile">
-          <span class="care-tile-icon"><?= icon('droplets') ?></span>
-          <span><span class="care-tile-label">Humidity</span><span class="care-tile-value"><?= e($species['humidity'] ?? 'Not known') ?></span></span>
-        </div>
-        <?php if ($water && $is_owner): ?>
-          <div class="care-tile care-tile-<?= e($water_due['state']) ?>">
-            <span class="care-tile-icon"><?= icon('calendar') ?></span>
-            <span>
-              <span class="care-tile-label">Next watering</span>
-              <span class="care-tile-value"><?= e($water_due['state'] === 'due' ? 'Today' : $water_due['text']) ?></span>
-              <?php if ($water_due['state'] !== 'upcoming'): ?>
-                <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
-                <button type="button" class="care-tile-action">Mark watered</button>
-              <?php endif; ?>
-            </span>
-          </div>
-        <?php elseif ($species): ?>
-          <?php // A visitor has no use for the owner's next watering; pet safety helps someone thinking of a swap ?>
-          <div class="care-tile">
-            <span class="care-tile-icon"><?= icon('paw-print') ?></span>
-            <span><span class="care-tile-label">Pets</span><span class="care-tile-value"><?= $species['pet_safe'] ? 'Pet-safe' : 'Not pet-safe' ?></span></span>
-          </div>
-        <?php endif; ?>
-      </div>
-      <p class="care-source">
-        Care info from the PlantFolio species guide
-        <?php if ($is_owner): ?>
-          · <a href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>">Edit care schedule</a>
-        <?php endif; ?>
-      </p>
     </div>
   </div>
 
@@ -227,7 +174,6 @@ include __DIR__ . '/../includes/header.php';
         <?php foreach ($tabs as $key => $label): ?>
           <a class="tab<?= $key === $tab ? ' is-active' : '' ?>" href="<?= e(url('plant.php?id=' . $plant['id'] . ($key === 'story' ? '' : '&tab=' . $key) . '#plant-tabs')) ?>"<?= $key === $tab ? ' aria-current="page"' : '' ?>>
             <?= e($label) ?>
-            <?php if ($key === 'photos'): ?><span class="tab-count"><?= e(count($photos)) ?></span><?php endif; ?>
           </a>
         <?php endforeach; ?>
       </nav>
@@ -270,7 +216,7 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </ol>
 
-        <?php elseif ($tab === 'care'): ?>
+        <?php else: ?>
           <?php if ($species): ?>
             <dl class="care-guide">
               <div><dt><?= icon('sun') ?> Light</dt><dd><?= e($species['light']) ?></dd></div>
@@ -284,37 +230,6 @@ include __DIR__ . '/../includes/header.php';
             <p class="panel-empty"><?= icon('info') ?> No care guide for this species yet.</p>
           <?php endif; ?>
 
-        <?php elseif ($tab === 'reminders'): ?>
-          <?php if ($reminders): ?>
-            <ul class="reminder-list">
-              <?php foreach ($reminders as $reminder): ?>
-                <?php $due = care_due($reminder['next_due']); ?>
-                <li class="reminder-item">
-                  <span class="care-tile-icon"><?= icon(task_icon($reminder['task'])) ?></span>
-                  <span class="reminder-text">
-                    <strong><?= e(task_label($reminder['task'])) ?> · <?= e(schedule_words($reminder)) ?></strong>
-                    <span class="text-small"><?= $reminder['last_done'] ? 'Last done ' . e(format_day($reminder['last_done'])) : 'Not done yet' ?> · next <?= e(format_day($reminder['next_due'])) ?></span>
-                  </span>
-                  <span class="badge badge-<?= e($due['state']) ?>"><?= e($due['text']) ?></span>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          <?php else: ?>
-            <p class="panel-empty"><?= icon('info') ?> No reminders for this plant.</p>
-          <?php endif; ?>
-
-        <?php else: ?>
-          <div class="photo-grid">
-            <?php foreach ($photos as $number => $photo): ?>
-              <figure class="photo-grid-item">
-                <img src="<?= e(photo_url($photo['path'])) ?>" alt="Photo <?= e($number + 1) ?> of <?= e($plant['nickname']) ?>" loading="lazy">
-                <figcaption class="text-small"><?= e(date('j M Y', strtotime($photo['created_at']))) ?></figcaption>
-              </figure>
-            <?php endforeach; ?>
-            <?php if ($is_owner): ?>
-              <a class="plant-thumb-add photo-grid-add" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#photo')) ?>"><?= icon('camera') ?> Add photo</a>
-            <?php endif; ?>
-          </div>
         <?php endif; ?>
       </div>
     </div>

@@ -97,3 +97,18 @@ document.querySelectorAll('[data-show-when]').forEach((part) => {
   field.addEventListener('change', update);
   update();
 });
+
+// A photo gallery, <div data-gallery> (P05): a click on a thumbnail shows that photo in the large frame,
+// and aria-pressed marks which one is showing. Stage F and B alike: this only changes what is on screen.
+document.querySelectorAll('[data-gallery]').forEach((gallery) => {
+  const main = gallery.querySelector('[data-gallery-main]');
+  const thumbs = gallery.querySelectorAll('[data-photo-src]');
+
+  thumbs.forEach((thumb) => {
+    thumb.addEventListener('click', () => {
+      main.src = thumb.dataset.photoSrc;
+      main.alt = thumb.dataset.photoAlt;
+      thumbs.forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
+    });
+  });
+});
