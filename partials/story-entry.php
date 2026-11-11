@@ -7,7 +7,7 @@
 // A status badge shows only when the entry has a status (a care line has none).
 // Expects $log — a health_logs row (type, care_task, status, source, note, photo, logged_at), joined with its
 // ml_predictions row for an AI entry (prediction_type, predicted_label, confidence).
-// data-date lets story.js put a new entry from the Add to story popup in its place by date.
+// data-date lets plant.js put a new entry from the Add to story popup in its place by date.
 
 $type      = $log['type'];
 $has_photo = !empty($log['photo']);

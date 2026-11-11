@@ -61,7 +61,7 @@ if ($is_member) {
   <?php endif; ?>
   <?php // defer: the script waits until the whole page is read, so the elements it looks for exist ?>
   <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>
-  <?php // A page may add one script of its own, like $page_css: $page_js = 'story.js' ?>
+  <?php // A page may add one script of its own, like $page_css: $page_js = 'plant.js' ?>
   <?php if (!empty($page_js)): ?>
     <script src="<?= e(asset_url('assets/js/' . $page_js)) ?>" defer></script>
   <?php endif; ?>

@@ -1,5 +1,5 @@
-// A plant's Story on the Plant Profile (P05): the Add to story popup and the reminders' Done buttons.
-// CORE-19 and CORE-23, UI half. Loaded through $page_js by plant.php.
+// The Plant Profile's own script (P05): the Add a photo popup, the Add to story popup and the reminders' Done
+// buttons. CORE-17, CORE-19 and CORE-23, UI half. Loaded through $page_js by plant.php.
 // Stage F changes the page only: nothing is saved, so a reload shows the mock data again.
 // Stage B sends each change to the server with fetch() first and updates the page when the server says OK.
 // Everything a member typed is put on the page with textContent, never as HTML.
@@ -246,4 +246,109 @@ function showToast(text) {
   toast.append(message, close);
   region.append(toast);
   document.querySelector('main').append(region);
+}
+
+// ── Add a photo popup ───────────────────────────────────────────────────────
+// Choose or drag a photo, check it, show it in the drop area, then add it: it becomes the first thumbnail and
+// the large photo. The strip scrolls back to the start so the new photo is in view.
+
+const photoDialog = document.getElementById('add-photo');
+const photoForm = document.getElementById('photo-form');
+
+if (photoDialog && photoForm) {
+  const input = photoForm.elements.photo;
+  const drop = photoForm.querySelector('[data-photo-drop]');
+  const preview = photoForm.querySelector('[data-photo-preview]');
+  const empty = photoForm.querySelector('[data-photo-empty]');
+  const hint = photoForm.querySelector('[data-photo-hint]');
+  const strip = document.querySelector('[data-thumb-strip]');
+  const gallery = document.querySelector('[data-gallery]');
+  const plantName = photoDialog.dataset.plantName;
+  const hintText = hint.textContent;
+
+  function showHint(text, isError) {
+    hint.textContent = text;
+    hint.classList.toggle('field-error', isError);
+  }
+
+  function clearPhoto() {
+    photoForm.reset();
+    photoForm.elements.date.value = isoDay(new Date());
+    preview.hidden = true;
+    preview.removeAttribute('src');
+    empty.hidden = false;
+    showHint(hintText, false);
+  }
+
+  // The same checks the server makes in stage B (finfo, 5 MB): JPG or PNG only, and not too big
+  function usePhoto(file) {
+    if (!file) {
+      clearPhoto();
+      return;
+    }
+    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      clearPhoto();
+      showHint('Choose a JPG or PNG photo of 5 MB or less.', true);
+      return;
+    }
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+    empty.hidden = true;
+    showHint(`${file.name} · ${(file.size / 1048576).toFixed(1)} MB`, false);
+  }
+
+  input.addEventListener('change', () => usePhoto(input.files[0]));
+
+  // Drag and drop: the dropped file is put into the file input, as if it had been chosen
+  drop.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    drop.classList.add('is-dragging');
+  });
+  drop.addEventListener('dragleave', () => drop.classList.remove('is-dragging'));
+  drop.addEventListener('drop', (event) => {
+    event.preventDefault();
+    drop.classList.remove('is-dragging');
+    if (event.dataTransfer.files.length) {
+      input.files = event.dataTransfer.files;
+      usePhoto(input.files[0]);
+    }
+  });
+
+  photoForm.addEventListener('submit', (event) => {
+    // Cancel and × close the popup (formmethod="dialog"): let them
+    if (event.submitter && event.submitter.getAttribute('formmethod') === 'dialog') {
+      clearPhoto();
+      return;
+    }
+    // Stage F: no server yet. Stage B: fetch(photoForm.action, { method: 'POST', body: new FormData(photoForm) }) first.
+    event.preventDefault();
+    if (preview.hidden) {
+      showHint('Choose a photo first.', true);
+      input.focus();
+      return;
+    }
+
+    const date = fromInput(photoForm.elements.date.value || isoDay(new Date()));
+    const thumb = document.createElement('button');
+    thumb.type = 'button';
+    thumb.className = 'plant-thumb';
+    thumb.dataset.photoSrc = preview.src;
+    thumb.dataset.photoAlt = `Photo of ${plantName}, ${longDate(date)}`;
+    const image = document.createElement('img');
+    image.src = preview.src;
+    image.alt = `Show photo from ${longDate(date)}`;
+    image.width = 80;
+    image.height = 80;
+    thumb.append(image);
+    strip.prepend(thumb);
+
+    // Show it at once: the gallery's own click handler (app.js) puts it in the large frame and marks it
+    thumb.click();
+    strip.scrollTo({ left: 0, behavior: 'smooth' });
+
+    showToast(`Photo added to ${plantName}’s gallery.`);
+    clearPhoto();   // the photo's object URL stays valid for the new thumbnail; only the form is cleared
+    photoDialog.close();
+    gallery.querySelector('[data-gallery-main]').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
 }

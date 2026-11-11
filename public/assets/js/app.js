@@ -99,16 +99,18 @@ document.querySelectorAll('[data-show-when]').forEach((part) => {
 });
 
 // A photo gallery, <div data-gallery> (P05): a click on a thumbnail shows that photo in the large frame,
-// and aria-pressed marks which one is showing. Stage F and B alike: this only changes what is on screen.
+// and aria-pressed marks which one is showing. One listener on the gallery, so a thumbnail added later by
+// plant.js (Add a photo) works too. Stage F and B alike: this only changes what is on screen.
 document.querySelectorAll('[data-gallery]').forEach((gallery) => {
   const main = gallery.querySelector('[data-gallery-main]');
-  const thumbs = gallery.querySelectorAll('[data-photo-src]');
 
-  thumbs.forEach((thumb) => {
-    thumb.addEventListener('click', () => {
-      main.src = thumb.dataset.photoSrc;
-      main.alt = thumb.dataset.photoAlt;
-      thumbs.forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
-    });
+  gallery.addEventListener('click', (event) => {
+    const thumb = event.target.closest('[data-photo-src]');
+    if (!thumb) {
+      return;
+    }
+    main.src = thumb.dataset.photoSrc;
+    main.alt = thumb.dataset.photoAlt;
+    gallery.querySelectorAll('[data-photo-src]').forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
   });
 });

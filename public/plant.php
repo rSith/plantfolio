@@ -112,7 +112,7 @@ if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'],
 $collection_url = url('garden.php?collection=' . $plant['collection_id']);
 $page_title     = $plant['nickname'];
 $page_css       = 'plant.css';
-$page_js        = 'story.js';   // the Add to story popup and the reminders' Done buttons (UI only in stage F)
+$page_js        = 'plant.js';   // the Add photo and Add to story popups, Done on reminders (UI only in stage F)
 
 // The navigation follows the breadcrumb: your own plant is part of My Garden, anyone else's is part of Explore
 $nav_area = $is_owner ? 'garden' : 'explore';
@@ -138,19 +138,22 @@ include __DIR__ . '/../includes/header.php';
   </nav>
 
   <div class="plant-top">
-    <?php // Photo gallery (p12, element 2): the profile photo large, then thumbnails and the one Add tile.
-          // A thumbnail is a button that shows its photo in the large frame (app.js, data-gallery). ?>
+    <?php // Photo gallery (p12, element 2): the profile photo large, then every photo as a thumbnail, newest first.
+          // A thumbnail is a button that shows its photo in the large frame (app.js, data-gallery). The thumbnails
+          // scroll sideways when there are more than fit; the Add tile stays in view on the right. ?>
     <div class="plant-gallery" data-gallery>
       <img class="plant-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>, a <?= e($plant['common_name']) ?>" data-gallery-main>
       <div class="plant-thumbs">
-        <?php foreach (array_slice($photos, 0, 4) as $number => $photo): ?>
-          <button type="button" class="plant-thumb" data-photo-src="<?= e(photo_url($photo['path'])) ?>" data-photo-alt="Photo of <?= e($plant['nickname']) ?>, <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" aria-pressed="<?= $number === $shown_photo ? 'true' : 'false' ?>">
-            <img src="<?= e(photo_url($photo['path'])) ?>" alt="Show photo <?= e($number + 1) ?> of <?= e(count($photos)) ?>, <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" width="80" height="80" loading="lazy">
-          </button>
-        <?php endforeach; ?>
+        <div class="plant-thumb-strip" data-thumb-strip>
+          <?php foreach ($photos as $number => $photo): ?>
+            <button type="button" class="plant-thumb" data-photo-src="<?= e(photo_url($photo['path'])) ?>" data-photo-alt="Photo of <?= e($plant['nickname']) ?>, <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" aria-pressed="<?= $number === $shown_photo ? 'true' : 'false' ?>">
+              <img src="<?= e(photo_url($photo['path'])) ?>" alt="Show photo from <?= e(date('j M Y', strtotime($photo['created_at']))) ?>" width="80" height="80" loading="lazy">
+            </button>
+          <?php endforeach; ?>
+        </div>
         <?php if ($is_owner): ?>
-          <?php // Adding a photo is part of the edit form until uploads are wired in stage B (CORE-17) ?>
-          <a class="plant-thumb plant-thumb-add" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#photo')) ?>"><?= icon('camera') ?> Add</a>
+          <?php // Opens the Add a photo popup (app.js); without JavaScript, &photo=1 opens it when the page loads ?>
+          <a class="plant-thumb plant-thumb-add" href="<?= e(url('plant.php?id=' . $plant['id'] . '&photo=1')) ?>" data-dialog="add-photo" aria-haspopup="dialog"><?= icon('camera') ?> Add</a>
         <?php endif; ?>
       </div>
     </div>
@@ -239,7 +242,7 @@ include __DIR__ . '/../includes/header.php';
             <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
             <a class="panel-link" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
           </div>
-          <?php // Done ✓ (CORE-23, UI half): story.js adds a "Watered" line to the Story and moves the date forward
+          <?php // Done ✓ (CORE-23, UI half): plant.js adds a "Watered" line to the Story and moves the date forward
                 // without a reload. Stage F changes the page only; stage B saves both (like the Dashboard's Mark done). ?>
           <ul class="side-reminders">
             <?php foreach ($reminders as $reminder): ?>
@@ -294,7 +297,7 @@ include __DIR__ . '/../includes/header.php';
 
   <?php if ($is_owner): ?>
     <?php // Add to <name>'s story popup (CORE-19, UI half). Moved here from Edit plant on 2026-11-11.
-          // story.js puts the new entry into the timeline without a reload. Stage F changes the page only;
+          // plant.js puts the new entry into the timeline without a reload. Stage F changes the page only;
           // stage B sends the form with fetch() and saves a health_logs row (and the photo, CORE-17).
           // plant.php?id=…&story=1 opens it at once (the link on Edit plant). ?>
     <dialog class="modal modal-wide" id="add-story" aria-labelledby="add-story-title"<?= get_text('story') === '1' ? ' data-open-on-load' : '' ?>
@@ -361,7 +364,46 @@ include __DIR__ . '/../includes/header.php';
       </form>
     </dialog>
 
-    <?php // What story.js copies for a new entry: a care line, or a card (note, milestone). Filled with textContent. ?>
+    <?php // Add a photo popup (CORE-17, UI half): choose or drag a JPG/PNG of up to 5 MB, see it, add it.
+          // plant.js shows it first in the thumbnails and in the large frame. Stage F changes the page only;
+          // stage B uploads it (finfo check, random name, resized to 1600px) and saves a plant_photos row.
+          // plant.php?id=…&photo=1 opens it at once (the Add link without JavaScript). ?>
+    <dialog class="modal" id="add-photo" aria-labelledby="add-photo-title"<?= get_text('photo') === '1' ? ' data-open-on-load' : '' ?>
+            data-plant-name="<?= e($plant['nickname']) ?>">
+      <form class="modal-form" id="photo-form" method="post" action="<?= e($page_url) ?>" enctype="multipart/form-data" novalidate>
+        <div class="modal-head">
+          <h2 class="modal-title" id="add-photo-title">Add a photo of <?= e($plant['nickname']) ?></h2>
+          <button class="icon-btn" formmethod="dialog" formnovalidate aria-label="Close"><?= icon('x') ?></button>
+        </div>
+
+        <div class="modal-body photo-form-body">
+          <?php // The <label> is the drop area: a click anywhere on it opens the file picker ?>
+          <label class="dropzone photo-drop" for="new-photo" data-photo-drop>
+            <img class="photo-drop-preview" alt="The chosen photo" data-photo-preview hidden>
+            <span class="photo-drop-empty" data-photo-empty>
+              <span class="dropzone-icon"><?= icon('image-up') ?></span>
+              <span class="dropzone-title">Choose a photo</span>
+              <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
+            </span>
+          </label>
+          <input class="visually-hidden" type="file" id="new-photo" name="photo" accept="image/jpeg,image/png"
+                 capture="environment" aria-describedby="new-photo-hint">
+          <p class="field-hint" id="new-photo-hint" data-photo-hint>JPG or PNG, up to 5 MB.</p>
+
+          <div class="field">
+            <label class="field-label" for="new-photo-date">Taken on</label>
+            <input class="input" type="date" id="new-photo-date" name="date" value="<?= e(date('Y-m-d')) ?>" max="<?= e(date('Y-m-d')) ?>">
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-secondary" formmethod="dialog" formnovalidate>Cancel</button>
+          <button class="btn btn-primary" type="submit"><?= icon('camera') ?> Add photo</button>
+        </div>
+      </form>
+    </dialog>
+
+    <?php // What plant.js copies for a new entry: a care line, or a card (note, milestone). Filled with textContent. ?>
     <template id="story-care-template">
       <li class="story-entry story-entry-care">
         <p class="story-care"><span class="story-care-task"></span> <span class="story-care-date"></span> <span class="story-care-note"></span></p>
