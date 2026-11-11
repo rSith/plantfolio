@@ -141,32 +141,29 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Right column (phone: straight after the photo): who it is, then how to care for it ?>
     <div class="plant-info">
-      <?php // Identity (p12, element 3). Owner: Edit at the top right, Health check and List for exchange under the
-            // "Updated" line. Phone: the name first, then all buttons in one wrapping row. No status badge here:
-            // each Story entry shows the status it was given. ?>
+      <?php // Identity (p12, element 3), with Edit, Health check and List for exchange stacked beside it.
+            // Phone: the name first, then the buttons in one wrapping row. No status badge here: each Story entry
+            // shows the status it was given. ?>
       <div class="plant-head">
         <div class="plant-identity">
           <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
           <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
           <p class="plant-meta">Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></p>
         </div>
-        <?php if ($is_owner): ?>
-          <a class="btn btn-primary plant-edit-btn" href="<?= e(url('plant-form.php?id=' . $plant['id'])) ?>"><?= icon('pencil') ?> Edit</a>
-          <div class="plant-tools">
+        <?php // The page's actions, stacked on the right and as tall as the name block (Ranshitha's choice) ?>
+        <div class="plant-head-stack">
+          <?php if ($is_owner): ?>
+            <a class="btn btn-primary btn-sm" href="<?= e(url('plant-form.php?id=' . $plant['id'])) ?>"><?= icon('pencil') ?> Edit</a>
             <a class="btn btn-secondary btn-sm" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
             <a class="btn btn-secondary btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
-          </div>
-        <?php else: ?>
-          <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
-          <div class="plant-tools">
-            <?php if ($current_user): ?>
-              <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
-              <button type="button" class="btn btn-secondary btn-sm" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
-            <?php else: ?>
-              <a class="btn btn-secondary btn-sm" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
-            <?php endif; ?>
-          </div>
-        <?php endif; ?>
+          <?php elseif ($current_user): ?>
+            <?php // Read-only view (p12, UX notes): a like button instead of the edit controls.
+                  // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
+            <button type="button" class="btn btn-secondary btn-sm" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
+          <?php else: ?>
+            <a class="btn btn-secondary btn-sm" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
+          <?php endif; ?>
+        </div>
       </div>
 
       <?php // How to care for it ?>

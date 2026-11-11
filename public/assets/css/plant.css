@@ -157,51 +157,56 @@
   color: var(--color-ink);
 }
 
-/* The name block. Phone: the name first, then every button in one wrapping row (.plant-tools lets its buttons join
-   that row with display: contents). Tablet and up: Edit at the top right, the two small tools under "Updated …". */
+/* The name block, with a stack of small buttons beside it (Edit, Health check, List for exchange; visitors: Like).
+   Phone: the buttons wrap onto a row under the name. Tablet and up: on the right, and the stack is exactly as tall
+   as the name block (stretch), its buttons spread from the top of the name to the bottom of "Updated …". */
 .plant-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-8);
+  justify-content: space-between;
+  gap: var(--space-12) var(--space-24);
   margin-bottom: var(--space-24);
 }
 
 .plant-identity {
-  flex: 1 1 100%;
+  flex: 1 1 auto;
   min-width: 0;
-  margin-bottom: var(--space-8);
 }
 
-.plant-tools {
-  display: contents;
+.plant-head-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
 }
 
 @media (min-width: 768px) {
   .plant-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "identity edit"
-      "tools    tools";
-    align-items: start;
-    gap: var(--space-16) var(--space-24);
+    flex-wrap: nowrap;
+    align-items: stretch;
   }
 
-  .plant-identity {
-    grid-area: identity;
-    margin-bottom: 0;
+  .plant-head-stack {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-4);
   }
 
-  .plant-edit-btn {
-    grid-area: edit;
+  /* Same width, text starting at the left like a list of tools. 32px tall (a mouse needs no 44px target), so three
+     of them fit inside the name block's height and stretch spreads them to its top and bottom lines. */
+  .plant-head-stack .btn {
+    justify-content: flex-start;
+    min-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
-  .plant-tools {
-    grid-area: tools;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-8);
+  /* A visitor has one button: it stays at the top instead of stretching */
+  .plant-head-stack:has(> :only-child) {
+    justify-content: flex-start;
   }
 }
 
