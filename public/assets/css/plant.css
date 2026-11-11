@@ -1,8 +1,8 @@
 /* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
 /* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
-   Layout (2026-11-11): phone — one column: photo, name, care guide, quick facts, reminders, action bar, story.
-   Desktop (1024px+) — photo, quick facts and reminders on the left; name and care guide on the right, both columns
-   ending at the same line; then the action bar and the story, full width.
+   Layout (2026-11-11): phone — one column: photo, name and actions, care guide, quick facts, reminders, story.
+   Desktop (1024px+) — photo, quick facts and reminders on the left; name with its actions and the care guide on
+   the right, both columns ending at the same line; then the story, full width.
    Spacing uses only the scale in variables.css: 4, 8, 12, 16, 24, 32, 48, 64. Cards: 24 inside. Cards in a column:
    16 apart. Major sections: 48 apart (64 on a desktop). Pixel values left in this file are sizes, borders and the
    timeline's drawing, not spacing. */
@@ -18,7 +18,7 @@
 .plant-top {
   display: grid;
   gap: var(--space-24);
-  margin-bottom: var(--space-32);   /* space above the action bar */
+  margin-bottom: var(--space-48);   /* space above the Story */
 }
 
 .plant-gallery,
@@ -43,6 +43,7 @@
       "aside   info";
     gap: var(--space-24) var(--space-48);
     align-items: stretch;
+    margin-bottom: var(--space-64);
   }
 
   .plant-gallery { grid-area: gallery; }
@@ -156,15 +157,16 @@
   color: var(--color-ink);
 }
 
-/* The name block, with Health check and List for exchange beside it (owner only).
-   Phone: the two buttons sit side by side under the status line. Tablet and up: stacked on the right. */
+/* The name block, with the page's actions beside it: the ⋯ menu and a stack of small buttons (Log update,
+   Health check, List for exchange; visitors: Like).
+   Phone: the actions wrap onto a row under the name. Tablet and up: on the right, and the stack is exactly as tall
+   as the name block (stretch), its three buttons spread from the top of the name to the bottom of "Updated …". */
 .plant-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-8) var(--space-24);
-  margin-bottom: var(--space-16);
+  gap: var(--space-12) var(--space-24);
+  margin-bottom: var(--space-24);
 }
 
 .plant-identity {
@@ -172,11 +174,18 @@
   min-width: 0;
 }
 
-.plant-identity .plant-meta {
-  margin-bottom: 0;
+.plant-head-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
 }
 
-.plant-head-actions {
+/* Phone: the ⋯ menu goes after the buttons, which wrap if they do not fit */
+.plant-head-actions .plant-menu {
+  order: 1;
+}
+
+.plant-head-stack {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
@@ -185,55 +194,42 @@
 @media (min-width: 768px) {
   .plant-head {
     flex-wrap: nowrap;
+    align-items: stretch;
   }
 
-  /* Stacked, both buttons as wide as the wider one, text starting at the left like a list of tools */
+  /* stretch: the stack grows to the full height of the name block; the ⋯ menu stays at the top */
   .plant-head-actions {
-    flex-direction: column;
     flex-shrink: 0;
+    align-items: stretch;
   }
 
-  .plant-head-actions .btn {
+  .plant-head-actions .plant-menu {
+    order: 0;
+    align-self: flex-start;
+  }
+
+  .plant-head-stack {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  /* Same width, text starting at the left like a list of tools. 32px tall (a mouse needs no 44px target), so three
+     of them fit inside the name block's height and stretch spreads them to its top and bottom lines. */
+  .plant-head-stack .btn {
     justify-content: flex-start;
+    min-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
-/* Status badge and "Updated …" on one line, wrapping on a phone */
+/* "Updated …" under the species */
 .plant-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4) var(--space-12);
-  margin-bottom: var(--space-16);
+  margin: 0;
   color: var(--color-muted);
   font-size: var(--text-small);
-}
-
-/* ── Action bar ─────────────────────────────────────── */
-/* Full width under the two columns and above the Story: a thin line, then the buttons, left-aligned */
-
-.plant-action-bar {
-  margin-bottom: var(--space-48);   /* space before "Story" */
-  padding-top: var(--space-24);
-  border-top: 1px solid var(--color-line);
-}
-
-.plant-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-12);
-}
-
-/* Phones under 480px: the one primary button gets a row of its own, the others wrap beneath it */
-.plant-actions .btn-primary {
-  flex: 1 1 100%;
-}
-
-@media (min-width: 480px) {
-  .plant-actions .btn-primary {
-    flex: 0 0 auto;
-  }
 }
 
 /* ── AI care guide (partials/care-guide.php) ────────── */

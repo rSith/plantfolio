@@ -147,18 +147,32 @@ include __DIR__ . '/../includes/header.php';
         <div class="plant-identity">
           <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
           <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
-          <?php // "With you since" / "Growing since" lives in Quick facts, so it is not repeated here ?>
-          <p class="plant-meta">
-            <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-            <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
-          </p>
+          <?php // No status badge here (Ranshitha's choice, 11 Nov): each Story entry shows the status at that date.
+                // "With you since" / "Growing since" lives in Quick facts. ?>
+          <p class="plant-meta">Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></p>
         </div>
-        <?php if ($is_owner): ?>
-          <div class="plant-head-actions">
-            <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
-            <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
-          </div>
-        <?php endif; ?>
+        <?php // All of the page's actions, beside the name: a small stack as tall as the name block, the ⋯ menu before it ?>
+        <div class="plant-head-actions">
+          <?php if ($is_owner): ?>
+            <?php partial('plant-menu', ['plant' => $plant]); ?>
+            <div class="plant-head-stack">
+              <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
+              <button type="button" class="btn btn-primary btn-sm"><?= icon('pencil') ?> Log update</button>
+              <a class="btn btn-secondary btn-sm" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
+              <a class="btn btn-secondary btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
+            </div>
+          <?php else: ?>
+            <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
+            <div class="plant-head-stack">
+              <?php if ($current_user): ?>
+                <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
+                <button type="button" class="btn btn-secondary btn-sm" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
+              <?php else: ?>
+                <a class="btn btn-secondary btn-sm" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
 
       <?php // How to care for it ?>
@@ -246,28 +260,6 @@ include __DIR__ . '/../includes/header.php';
         </section>
       <?php endif; ?>
     </div>
-  </div>
-
-  <?php // Action bar: full width under both columns and above the Story, on every screen size ?>
-  <div class="plant-action-bar">
-    <?php if ($is_owner): ?>
-      <?php // Primary action (p12, element 4) and the ⋯ menu; Health check and List for exchange sit beside the name ?>
-      <div class="plant-actions">
-        <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
-        <button type="button" class="btn btn-primary"><?= icon('pencil') ?> Log update</button>
-        <?php partial('plant-menu', ['plant' => $plant]); ?>
-      </div>
-    <?php else: ?>
-      <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
-      <div class="plant-actions">
-        <?php if ($current_user): ?>
-          <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
-          <button type="button" class="btn btn-secondary" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
-        <?php else: ?>
-          <a class="btn btn-secondary" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
-        <?php endif; ?>
-      </div>
-    <?php endif; ?>
   </div>
 
   <?php // Plant story (p12, element 6): full width under both columns. One section, so a plain heading, not a tab. ?>
