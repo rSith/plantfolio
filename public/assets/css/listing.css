@@ -474,3 +474,15 @@ a.listing-contact-item:hover {
   font-size: var(--text-small);
   font-weight: var(--weight-medium);
 }
+
+/* Category badges in "About this plant": they wrap onto more lines on a narrow screen */
+.listing-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.listing-categories .icon {
+  width: 14px;
+  height: 14px;
+}

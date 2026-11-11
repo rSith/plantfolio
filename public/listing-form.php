@@ -110,6 +110,9 @@ $values = [
     'location'        => $current_user['location'],   // the member's town, the usual pick-up place
     'share_email'     => 1,
     'share_phone'     => 0,   // my choice: the phone number is shared only when the member ticks it
+    'categories'      => [],  // what the Exchange filters find it under (at least one)
+    'light_level'     => '',  // '' = Not sure
+    'water_need'      => '',
 ];
 $title_suggested = false;
 
@@ -125,12 +128,24 @@ if ($is_edit) {
         'location'        => $listing['location'],
         'share_email'     => $listing['share_email'],
         'share_phone'     => $listing['share_phone'],
+        'categories'      => $listing['categories'],
+        'light_level'     => $listing['light_level'] ?? '',
+        'water_need'      => $listing['water_need'] ?? '',
     ];
 } elseif ($plant) {
     // "Title is suggested from the plant name and species, and can be changed" (p19, UX notes)
     $values['title'] = $plant['common_name'] . ' from ' . $plant['nickname'];
     $title_suggested = true;
+    // The species table already knows whether the plant is safe for pets: tick Pet friendly for the owner
+    if (!empty($mock_species[$plant['species_id']]['pet_safe'])) {
+        $values['categories'][] = 'pet_friendly';
+    }
 }
+
+// The options of "3. Help people find it": the same lists as the Exchange filters (helpers.php)
+$category_options = listing_categories();
+$light_options    = light_levels();
+$water_options    = water_needs();
 
 // ── Publish (Post/Redirect/Get) ─────────────────────────
 // The browser checks the fields first (required, maxlength); these checks repeat them, because the browser's checks
@@ -154,6 +169,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'location'        => trim(post_text('location')),
         'share_email'     => post_text('share_email') === '1' ? 1 : 0,
         'share_phone'     => $has_phone && post_text('share_phone') === '1' ? 1 : 0,
+        // Only known category keys are kept; a light or water value that is not on the list counts as "Not sure"
+        'categories'      => array_values(array_unique(array_filter((array) ($_POST['categories'] ?? []),
+                                 fn ($value) => is_string($value) && isset($category_options[$value])))),
+        'light_level'     => isset($light_options[post_text('light_level')]) ? post_text('light_level') : '',
+        'water_need'      => isset($water_options[post_text('water_need')]) ? post_text('water_need') : '',
     ];
 
     // A photo arrived when PHP reports no upload error for it. A hand-made photo[] makes 'error' a list: not a photo.
@@ -176,6 +196,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (mb_strlen($values['description']) > $text_limit) {
         $errors['description'] = 'Keep the description to ' . $text_limit . ' characters.';
+    }
+    if (!$values['categories']) {
+        $errors['categories'] = 'Choose at least one category, so people can find your listing.';
     }
     if ($values['location'] === '') {
         $errors['location'] = 'Add the town where the plant can be picked up.';
@@ -408,9 +431,47 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </section>
 
-        <?php // 3. Location and contact (p19, elements 4 and 5) ?>
+        <?php // 3. Help people find it (not on p19: Ranshitha's addition, 11 Nov). The same choices as the Exchange filters,
+              // so the owner files the listing where swappers look. Category is required; light and water may be "Not sure". ?>
+        <section class="form-section" aria-labelledby="find-title">
+          <h2 class="form-card-title listing-step" id="find-title">3. Help people find it</h2>
+          <p class="form-section-intro">People filter the exchange by these, so choose what fits your plant.</p>
+
+          <fieldset class="field form-fieldset" aria-describedby="categories-hint<?= isset($errors['categories']) ? ' categories-error' : '' ?>">
+            <legend class="field-label">Category</legend>
+            <span class="field-hint" id="categories-hint">Choose all that fit, at least one.</span>
+            <div class="category-choices">
+              <?php foreach ($category_options as $key => $option): ?>
+                <label class="chip-choice">
+                  <input type="checkbox" name="categories[]" value="<?= e($key) ?>"<?= in_array($key, $values['categories'], true) ? ' checked' : '' ?>>
+                  <span class="chip"><?= icon($option['icon']) ?> <?= e($option['label']) ?></span>
+                </label>
+              <?php endforeach; ?>
+            </div>
+            <?php if (isset($errors['categories'])): ?>
+              <span class="field-error" id="categories-error"><?= e($errors['categories']) ?></span>
+            <?php endif; ?>
+          </fieldset>
+
+          <?php // One choice each, so radio buttons; "Not sure" first and chosen by default: a beginner may not know ?>
+          <?php foreach ([['light_level', 'Light', 'sun', $light_options], ['water_need', 'Watering', 'droplet', $water_options]] as [$field, $legend, $field_icon, $options]): ?>
+            <fieldset class="field form-fieldset">
+              <legend class="field-label"><?= icon($field_icon) ?> <?= e($legend) ?> <span class="field-optional">(optional)</span></legend>
+              <div class="category-choices">
+                <?php foreach (array_merge(['' => 'Not sure'], $options) as $key => $label): ?>
+                  <label class="chip-choice">
+                    <input type="radio" name="<?= e($field) ?>" value="<?= e($key) ?>"<?= $key === $values[$field] ? ' checked' : '' ?>>
+                    <span class="chip"><?= e($label) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </fieldset>
+          <?php endforeach; ?>
+        </section>
+
+        <?php // 4. Location and contact (p19, elements 4 and 5) ?>
         <section class="form-section" aria-labelledby="contact-title">
-          <h2 class="form-card-title listing-step" id="contact-title">3. Location and contact</h2>
+          <h2 class="form-card-title listing-step" id="contact-title">4. Location and contact</h2>
 
           <div class="field-row">
             <div class="field">

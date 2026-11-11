@@ -69,6 +69,17 @@ joins it, and it is seeded from a CSV like `plant_species`). Seven changes to th
 Still to do in the PDF: these seven changes, the nearly blank pages (21, 23, 24, 26, 27), and the 2NF wording
 ("every non-key column depends on the whole of every candidate key").
 
+## Proposed after DES-07 (stage F, 11 Nov 2026) — not accepted yet
+
+Exchange filters for Category, Light and Watering (Community, Exchange tab) and the matching fields on P12 Create
+Listing. Values are listed in `includes/helpers.php` (`listing_categories()`, `light_levels()`, `water_needs()`).
+
+| Change | Why |
+|---|---|
+| `exchange_listings.light_level ENUM('low','medium','bright') NULL` | One light level per listing; NULL when the owner chose "Not sure" |
+| `exchange_listings.water_need ENUM('low','moderate','high') NULL` | The same for watering |
+| New table `listing_categories (listing_id, category)`, PK (listing_id, category), FK listing_id ON DELETE CASCADE, `category ENUM('indoor','outdoor','succulents','air_purifying','flowering','edible','pet_friendly')` | A listing can be in several categories (many-to-many with a fixed list), so a separate table, not a column. At least one row per listing (checked by the form) |
+
 ## Rules
 - `plants.health_status`, `health_logs.status` and `disease_guides.status` use exactly: `thriving`, `stable`, `needs_attention`, `sick`.
 - Reminders are calculated from `next_due` (`next_due = last_done + interval_days`): no background scheduler is needed for the Dashboard.

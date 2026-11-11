@@ -1776,6 +1776,47 @@ textarea.input {
   color: var(--color-forest);   /* the link version would otherwise take the darker link colour */
 }
 
+/* ── Choice chips: radio buttons and tick boxes drawn as chips ── */
+/* Moved here from community.css: the Community filters and Create Listing (Category, Light, Watering) use them.
+   The input stays in the page for the keyboard and screen readers; only the chip after it is seen.
+   "+" picks the chip that comes straight after a checked or focused input. */
+.chip-choice {
+  position: relative;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-choice input:checked + .chip {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip-choice input:focus-visible + .chip {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.chip-choice .chip {
+  cursor: pointer;
+}
+
+.chip-choice .chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* A row of choice chips that wraps (Create Listing) */
+.category-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
 /* ── Results bar: count, active filters, sort ───────── */
 /* Above a list of search results. Moved here from explore.css: the Exchange page (P10) uses it too. */
 

@@ -222,29 +222,6 @@
   height: 14px;
 }
 
-/* Health, Type and Rating chips are radio buttons. The radio stays in the page for the keyboard and screen readers;
-   only the chip after it is seen. "+" picks the chip that comes straight after a checked or focused radio. */
-.chip-choice {
-  position: relative;
-}
-
-.chip-choice input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.chip-choice input:checked + .chip {
-  border-color: var(--color-forest);
-  background: var(--color-forest);
-  color: var(--color-white);
-}
-
-.chip-choice input:focus-visible + .chip {
-  outline: var(--focus-outline);
-  outline-offset: 2px;
-}
-
 .filter-apply {
   width: 100%;
 }

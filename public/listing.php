@@ -358,6 +358,24 @@ include __DIR__ . '/../includes/header.php';
         <?php if ($listing['plant_condition'] !== null): ?>
           <div><dt>Condition</dt><dd><?= e($listing['plant_condition']) ?></dd></div>
         <?php endif; ?>
+        <?php // What the owner filed it under on Create Listing: the same words as the Exchange filters, so a visitor
+              // sees why it matched. Light and watering only when the owner was sure. ?>
+        <?php if ($listing['categories']): ?>
+          <div>
+            <dt>Category</dt>
+            <dd class="listing-categories">
+              <?php foreach ($listing['categories'] as $key): ?>
+                <span class="badge badge-tag"><?= icon(listing_categories()[$key]['icon']) ?> <?= e(listing_categories()[$key]['label']) ?></span>
+              <?php endforeach; ?>
+            </dd>
+          </div>
+        <?php endif; ?>
+        <?php if ($listing['light_level'] !== null): ?>
+          <div><dt>Light</dt><dd><?= e(light_levels()[$listing['light_level']]) ?></dd></div>
+        <?php endif; ?>
+        <?php if ($listing['water_need'] !== null): ?>
+          <div><dt>Watering</dt><dd><?= e(water_needs()[$listing['water_need']]) ?></dd></div>
+        <?php endif; ?>
         <?php if ($source_plant): ?>
           <?php // Link to the plant's story (p18, element 3). "See her story" on p18: no he or she in page text. ?>
           <div>
