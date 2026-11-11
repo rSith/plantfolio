@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: peace lily. Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#E2EAEC"/>
-  <rect y="232" width="400" height="68" fill="#D3DEE0"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
   <path d="M186 194Q140 170 120 116Q160 138 196 192Z" fill="#2F6A3A"/>
   <path d="M214 194Q260 170 282 118Q240 138 204 192Z" fill="#2F6A3A"/>

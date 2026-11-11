@@ -1115,7 +1115,7 @@ textarea.input {
 .card-media {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--color-sage);
+  background: var(--color-neutral-bg);   /* one calm colour behind every photo, so the health badges stand out */
 }
 
 .card-media img {
@@ -1246,38 +1246,63 @@ textarea.input {
   white-space: nowrap;
 }
 
-/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left */
+/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left, at the bottom */
 .plant-card-community .plant-card-collection {
-  margin-left: 0;
+  margin: auto 0 0;
+  padding-top: var(--space-8);
+  font-size: var(--text-small);
 }
 
-/* Community plant card (p16): likes at the right end of the badge row, the owner along the bottom */
-/* Likes (and the Community card's Swap/Free badge) to the right, also when they wrap onto a line of their own */
-.plant-card-social {
+/* ── Community plant card (Community page, P14 profile) ── */
+
+/* Town under the species, with a pin */
+.plant-card-town {
   display: flex;
+  align-items: center;
   gap: var(--space-4);
-  margin-left: auto;
+  color: var(--color-muted);
+  font-size: var(--text-small);
 }
 
-.card-media .plant-card-likes {
-  background: var(--color-white);
-  color: var(--color-ink);
+.plant-card-town .icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
 }
 
-/* "Swap" or "Free" beside the likes (Community page): a link that opens the plant's open listing.
-   z-index lifts it above the card's stretched link; text-decoration and the hover keep it a badge, not a text link.
-   Two classes, to win over .card-media-badges .badge, which sets position: static (z-index needs a position). */
-.card-media-badges .plant-card-offer {
+/* "Open to swap" on the left, the likes pushed to the right */
+.plant-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  min-height: 28px;
+}
+
+/* A small tag that is a link: lifted above the card's stretched link (.card-link::after) so it can be clicked.
+   Sage like the other tags (forest text on sage: 8.4:1); a "Free" offer is terracotta-tinted like the Free badge. */
+.plant-card-offer {
   position: relative;
-  top: auto;    /* .card-media .badge places a badge with top and left; this one is placed by the row */
-  left: auto;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 2px var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
   text-decoration: none;
   transition: box-shadow var(--transition-fast);
 }
 
+.plant-card-offer-free {
+  background: var(--color-terracotta-tint);
+  color: var(--color-terracotta-dark);
+}
+
 .plant-card-offer:hover {
-  color: inherit;
   box-shadow: 0 0 0 2px var(--color-leaf);
 }
 
@@ -1286,35 +1311,64 @@ textarea.input {
   height: 14px;
 }
 
-/* The badge is about 26px tall; this invisible frame around it makes the tap area 44px tall, the project's minimum */
+/* The tag is about 22px tall; this invisible frame makes the tap area 44px tall, the project's minimum */
 .plant-card-offer::before {
   content: "";
   position: absolute;
-  inset: -9px -4px;
+  inset: -11px -4px;
 }
 
-/* margin-top: auto keeps the owner rows level across cards whose names wrap differently */
+/* The like count is information, not a button (there is no like feature yet): plain muted text, no pill */
+.plant-card-likes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+.plant-card-likes .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The owner row at the bottom of the card; margin-top: auto keeps it level across cards whose names wrap differently.
+   The town has its own line above, so the @username has the whole width. */
 .plant-card-owner {
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  min-width: 0;
   margin-top: auto;
   padding-top: var(--space-8);
   font-size: var(--text-small);
 }
 
+/* The @username opens the member's profile: lifted above the card's stretched link, like "Open to swap".
+   Padding makes it 44px tall without making the row taller (negative margins take the height back). */
 .plant-card-username {
+  position: relative;
+  z-index: 1;
   min-width: 0;
-  margin-right: auto;
-  overflow: hidden;
+  margin: -12px 0;
+  padding: 12px 0;
+  overflow-wrap: anywhere;   /* a very long username wraps instead of being cut */
+  color: var(--color-ink);
   font-weight: var(--weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-decoration: none;
 }
 
-.plant-card-town {
-  color: var(--color-muted);
-  white-space: nowrap;
+.plant-card-username:hover {
+  color: var(--color-leaf);
+  text-decoration: underline;
+}
+
+/* Keyboard users see which card they are in, whichever of its links has focus */
+.plant-card-community:has(:focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 /* Next-care hint: terracotta when due today, red when overdue (design system rule) */

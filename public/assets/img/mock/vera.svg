@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: aloe vera. Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#F1E3D8"/>
-  <rect y="232" width="400" height="68" fill="#E8D5C6"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
   <path d="M170 194Q130 182 96 170Q140 168 188 192Z" fill="#5C927B"/>
   <path d="M230 194Q270 182 306 172Q260 168 212 192Z" fill="#5C927B"/>

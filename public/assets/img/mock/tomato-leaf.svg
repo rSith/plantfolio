@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: a tomato leaf with early blight spots (Health Check, P08). Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#EEE8DB"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
   <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="262" rx="120" ry="8" fill="#2B2B28" opacity=".08"/>
   <g transform="rotate(-32 200 150)">
