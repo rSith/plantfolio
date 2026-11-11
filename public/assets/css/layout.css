@@ -357,7 +357,9 @@ body {
 /* Room at the end of the page, so the fixed bar and its raised button never cover the footer text.
    The room is inside the footer, so its white background runs down to the bar. */
 .has-bottom-bar .site-footer {
-  padding-bottom: calc(var(--bottom-bar-height) + var(--space-16));
+  /* The round + rises 28px above the bar (24px plus its 4px white ring): leave room for it too, so it never covers
+     the last line of the page */
+  padding-bottom: calc(var(--bottom-bar-height) + 28px + var(--space-16));
 }
 
 .has-bottom-bar .toast-region {

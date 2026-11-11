@@ -8,7 +8,8 @@
 
 /* White, so the search reads as the start of the page; the results sit on the cream background below it */
 .community-top {
-  padding-top: var(--space-24);
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-16);
   border-bottom: 1px solid var(--color-line);
   background: var(--color-white);
 }
@@ -18,7 +19,7 @@
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-16) var(--space-24);
+  gap: var(--space-12) var(--space-24);
   margin-bottom: var(--space-16);
 }
 
@@ -55,7 +56,7 @@
   width: max-content;
   max-width: 100%;
   gap: var(--space-4);
-  margin: var(--space-16) 0;
+  margin: 0 0 var(--space-12);
   padding: var(--space-4);
   overflow-x: auto;
   border-radius: var(--radius-input);
@@ -91,7 +92,26 @@
 
 @media (min-width: 768px) {
   .community-top {
-    padding-top: var(--space-32);
+    padding-top: var(--space-24);
+    padding-bottom: var(--space-24);
+  }
+}
+
+/* On a member's phone the bottom bar's round + button already lists a plant, so the header keeps only My exchanges */
+@media (max-width: 767.98px) {
+  .has-bottom-bar .community-list-btn {
+    display: none;
+  }
+}
+
+/* Less space between the top band and the results */
+.community-body.page {
+  padding-top: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .community-body.page {
+    padding-top: var(--space-24);
   }
 }
 
@@ -323,6 +343,18 @@
   .filters-foot {
     margin-top: var(--space-8);
   }
+
+  /* The sidebar stays in view while the results scroll: it sticks just under the sticky top bar, and scrolls on
+     its own when it is taller than the window ("+ 7 more" open). */
+  .community-filters {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-16));
+    max-height: calc(100vh - var(--header-height) - var(--space-32));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--space-4) var(--space-4) 0;   /* room for focus rings, which overflow: auto would cut off */
+    scrollbar-width: thin;
+  }
 }
 
 /* ── Results ────────────────────────────────────────── */
@@ -351,7 +383,7 @@
   font-weight: var(--weight-semibold);
 }
 
-/* Plant and listing cards: 1 column on a phone, 2 from 768px, 3 from 1024px */
+/* Listing and person cards: 1 column on a phone, 2 from 768px, 3 from 1024px. Plant cards: 2 already on a phone. */
 .community-grid,
 .people-grid {
   display: grid;
@@ -362,6 +394,43 @@
   .community-grid,
   .people-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Plant cards on a phone: two columns, square photos, a tighter card ── */
+/* Twice as many plants fit on the screen. Cards in one row stay the same height: grid items stretch to the row,
+   and the owner row is pushed to the bottom of each card (margin-top: auto in components.css). */
+@media (max-width: 767.98px) {
+  .community-grid-plants {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+}
+
+@media (max-width: 479.98px) {
+  .community-grid-plants {
+    gap: var(--space-8);
+  }
+
+  .community-grid-plants .card-media {
+    aspect-ratio: 1 / 1;
+  }
+
+  .community-grid-plants .card-media-badges {
+    top: var(--space-8);
+    left: var(--space-8);
+  }
+
+  .community-grid-plants .card-body {
+    padding: var(--space-8) var(--space-12) var(--space-12);
+  }
+
+  .community-grid-plants .plant-card-name {
+    font-size: var(--text-body);
+  }
+
+  .community-grid-plants .plant-card-owner .avatar {
+    display: none;   /* the @username needs the whole width of a half-screen card */
   }
 }
 

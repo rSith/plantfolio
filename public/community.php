@@ -276,6 +276,15 @@ if ($count === 0) {
 // "Plant lovers matching …" above the plant results (p16, element 6): only for a search, three at most
 $people_row = ($tab === 'plants' && $term !== '') ? array_slice($people, 0, 3) : [];
 
+// The search box says what the open tab searches. The placeholder is short, so it is never cut off on a phone;
+// the label (read by screen readers) says everything the search looks through.
+$search_placeholder = ['plants' => 'Search plants', 'exchange' => 'Search listings', 'people' => 'Search people'][$tab];
+$search_label       = [
+    'plants'   => 'Search plants by name, species or @username',
+    'exchange' => 'Search listings by title, species or @username',
+    'people'   => 'Search people by name, town or @username',
+][$tab];
+
 // The four-step exchange flow (p17, element 2)
 $steps = ['Browse listings', "Tap \u{201C}I'm interested\u{201D}", "Get the owner's contact", 'Swap, then rate'];
 
@@ -285,7 +294,7 @@ $page_js    = 'community.js';
 
 include __DIR__ . '/../includes/header.php';
 ?>
-<?php // The top band: title and exchange buttons, the one search box, the three tabs ?>
+<?php // The top band: title and exchange buttons, the three tabs, then the search box for the open tab ?>
 <section class="community-top">
   <div class="container">
     <div class="community-head">
@@ -296,13 +305,24 @@ include __DIR__ . '/../includes/header.php';
       <div class="community-actions">
         <?php if ($current_user): ?>
           <a class="btn btn-secondary" href="<?= e(url('my-exchanges.php')) ?>"><?= icon('repeat') ?> My exchanges</a>
-          <a class="btn btn-primary" href="<?= e(url('listing-form.php')) ?>"><?= icon('plus') ?> List a plant</a>
+          <?php // Hidden on a phone (community.css): the bottom bar's round + button does the same job there ?>
+          <a class="btn btn-primary community-list-btn" href="<?= e(url('listing-form.php')) ?>"><?= icon('plus') ?> List a plant</a>
         <?php else: ?>
           <?php // A visitor has no exchanges to manage, so one button: listing a plant needs an account ?>
           <a class="btn btn-primary" href="<?= e(url('login.php')) ?>"><?= icon('plus') ?> Log in to list a plant</a>
         <?php endif; ?>
       </div>
     </div>
+
+    <?php // The tabs come before the search box, because the open tab decides what the search looks through.
+          // Links, not buttons (and not role="tab"): each tab has its own address, so Back and shared links work. ?>
+    <nav class="community-tabs" aria-label="Community sections">
+      <?php foreach ($tabs as $name => $label): ?>
+        <a class="community-tab" href="<?= e($tab_url($name)) ?>"<?= $name === $tab ? ' aria-current="page"' : '' ?>>
+          <?= e($label) ?> <span class="chip-count"><?= e($counts[$name]) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </nav>
 
     <?php // One GET form for the search AND the sidebar: the sidebar's fields sit further down the page and join it
           // with form="community-form", so Search and Apply both send the word and every filter together. ?>
@@ -315,20 +335,11 @@ include __DIR__ . '/../includes/header.php';
 
       <div class="input-icon community-search-box">
         <?= icon('search') ?>
-        <label class="visually-hidden" for="community-q">Search plants, species, listings or @usernames</label>
-        <input class="input" type="search" id="community-q" name="q" value="<?= e($q) ?>" placeholder="Search plants, species, listings or @usernames" maxlength="100">
+        <label class="visually-hidden" for="community-q"><?= e($search_label) ?></label>
+        <input class="input" type="search" id="community-q" name="q" value="<?= e($q) ?>" placeholder="<?= e($search_placeholder) ?>" maxlength="100">
       </div>
       <button type="submit" class="btn btn-primary">Search</button>
     </form>
-
-    <?php // Links, not buttons: each tab has its own address, so Back and shared links work ?>
-    <nav class="community-tabs" aria-label="Community sections">
-      <?php foreach ($tabs as $name => $label): ?>
-        <a class="community-tab" href="<?= e($tab_url($name)) ?>"<?= $name === $tab ? ' aria-current="page"' : '' ?>>
-          <?= e($label) ?> <span class="chip-count"><?= e($counts[$name]) ?></span>
-        </a>
-      <?php endforeach; ?>
-    </nav>
   </div>
 </section>
 
@@ -551,7 +562,7 @@ include __DIR__ . '/../includes/header.php';
         <section class="popular-plants" aria-labelledby="popular-title">
           <h2 class="community-section-title" id="popular-title">Popular plants</h2>
           <p class="popular-text">The most-liked public plants in the community.</p>
-          <div class="community-grid">
+          <div class="community-grid community-grid-plants">
             <?php foreach ($popular_plants as $plant): ?>
               <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
             <?php endforeach; ?>
@@ -559,7 +570,7 @@ include __DIR__ . '/../includes/header.php';
         </section>
       <?php endif; ?>
     <?php elseif ($tab === 'plants'): ?>
-      <div class="community-grid">
+      <div class="community-grid community-grid-plants">
         <?php foreach ($plants as $plant): ?>
           <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
         <?php endforeach; ?>
