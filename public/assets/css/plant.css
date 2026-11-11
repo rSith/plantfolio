@@ -1,23 +1,56 @@
 /* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
 /* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
-   Phone: one column, photo first (p23). Desktop: gallery beside the identity, then tabs beside the reminders card. */
+   Layout (2026-11-11): phone — one column: photo, name and actions, health alert, care guide, quick facts,
+   reminders, story. Desktop (1024px+) — photo, quick facts and reminders on the left; name, actions, health alert
+   and care guide on the right; the story full width underneath.
+   Spacing uses only the scale in variables.css: 4, 8, 12, 16, 24, 32, 48, 64. Cards: 24 inside. Cards in a column:
+   16 apart. Major sections: 48 apart (64 on a desktop). Pixel values left in this file are sizes, borders and the
+   timeline's drawing, not spacing. */
 
 .plant-breadcrumb {
   margin-bottom: var(--space-16);
 }
 
-/* ── Top: gallery and identity ──────────────────────── */
+/* ── Page layout ────────────────────────────────────── */
+/* The HTML order is the phone order: gallery, info, aside. On a desktop, grid areas put the aside under the
+   gallery, so the left column is no longer short beside a long right column. */
 
 .plant-top {
   display: grid;
   gap: var(--space-24);
-  margin-bottom: var(--space-32);
+  margin-bottom: var(--space-48);
 }
 
 .plant-gallery,
-.plant-info {
+.plant-info,
+.plant-aside {
   min-width: 0;
 }
+
+.plant-aside {
+  display: grid;
+  gap: var(--space-16);
+  align-content: start;
+}
+
+@media (min-width: 1024px) {
+  .plant-top {
+    grid-template-columns: 5fr 7fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "gallery info"
+      "aside   info";
+    gap: var(--space-24) var(--space-48);
+    align-items: start;
+    margin-bottom: var(--space-64);
+  }
+
+  .plant-gallery { grid-area: gallery; }
+  .plant-info    { grid-area: info; }
+  .plant-aside   { grid-area: aside; }
+}
+
+/* ── Gallery ────────────────────────────────────────── */
 
 /* 4:3 like every card photo; object-fit crops instead of stretching */
 .plant-photo {
@@ -74,7 +107,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-4);
   min-height: 44px;
   border: 1px dashed var(--color-line-strong);
   border-radius: var(--radius-input);
@@ -89,6 +122,8 @@
   border-color: var(--color-leaf);
   color: var(--color-forest);
 }
+
+/* ── Identity, status and actions ───────────────────── */
 
 .plant-name {
   margin-bottom: var(--space-4);
@@ -105,7 +140,7 @@
   color: var(--color-ink);
 }
 
-/* Status badge and key dates on one line, wrapping on a phone */
+/* Status badge and "Updated …" on one line, wrapping on a phone */
 .plant-meta {
   display: flex;
   flex-wrap: wrap;
@@ -121,60 +156,378 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
-  margin-bottom: var(--space-16);
+  margin-bottom: var(--space-24);
 }
 
-@media (min-width: 1024px) {
-  .plant-top {
-    grid-template-columns: 5fr 7fr;
-    gap: var(--space-32);
-    align-items: start;
+/* Very small phones: the one primary button gets a row of its own, the others wrap beneath it */
+.plant-actions .btn-primary {
+  flex: 1 1 100%;
+}
+
+@media (min-width: 400px) {
+  .plant-actions .btn-primary {
+    flex: 0 0 auto;
   }
 }
 
-/* ── Bottom: tabs and reminders card ────────────────── */
+/* ── Health alert (partials/health-alert.php) ───────── */
+/* The same tint and text colour as the status badge: red for Sick, amber for Needs attention */
 
-.plant-bottom {
-  display: grid;
-  gap: var(--space-24);
-  align-items: start;
+.health-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  margin-bottom: var(--space-24);
+  padding: var(--space-16) var(--space-24);
+  border-radius: var(--radius-card);
 }
 
-.plant-main {
-  min-width: 0;
+.health-alert-sick {
+  background: var(--status-sick-bg);
+  color: var(--status-sick-text);
 }
 
-/* "Story": a heading drawn like the active tab of the tab bar it replaced */
-.plant-section-title {
+.health-alert-needs-attention {
+  background: var(--status-needs-attention-bg);
+  color: var(--status-needs-attention-text);
+}
+
+.health-alert-icon {
+  flex-shrink: 0;
+  margin-top: var(--space-4);
+}
+
+.health-alert-title {
   margin: 0;
-  box-shadow: inset 0 -1px 0 var(--color-line);
+  color: inherit;
   font-family: var(--font-body);
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
 }
 
-.plant-section-title span {
+.health-alert-meta {
+  margin: var(--space-4) 0 0;
+  color: var(--color-ink);
+  font-size: var(--text-small);
+}
+
+/* A text link, still a 44px target for a finger */
+.health-alert-link {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-4);
   min-height: 44px;
-  color: var(--color-forest);
-  box-shadow: inset 0 -2px 0 var(--color-leaf);
+  color: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
 }
 
-.plant-story {
-  padding-top: var(--space-24);
+.health-alert-link:hover {
+  text-decoration: underline;
 }
 
-@media (min-width: 1024px) {
-  .plant-bottom {
-    grid-template-columns: 2fr 1fr;
-    gap: var(--space-32);
+/* ── AI care guide (partials/care-guide.php) ────────── */
+/* Kept in one block so its look is easy to change: a white card with a header, five small cards in a grid and a
+   footer; the sparkle marks AI content, as in the story. */
+
+.ai-guide {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.ai-guide-head {
+  padding: var(--space-24) var(--space-24) var(--space-16);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ai-guide-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-title .icon {
+  color: var(--color-leaf);
+}
+
+.ai-guide-meta {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Five small cards: one column on a phone, two from a tablet up */
+.ai-guide-list {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+  padding: var(--space-24);
+}
+
+.ai-guide-item {
+  padding: var(--space-16);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+}
+
+/* Icon and title on top, the text below */
+.ai-guide-item dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-item dd {
+  margin: var(--space-8) 0 0;
+  font-size: var(--text-body-sm);
+}
+
+@media (min-width: 768px) {
+  .ai-guide-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Five cards: the last one would sit alone, so it spans both columns */
+  .ai-guide-item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 
-/* ── Story: a timeline ──────────────────────────────── */
-/* A vertical line on the left with a dot for each entry; the newest dot is filled */
+/* A small sage circle behind each section's icon */
+.ai-guide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-leaf);
+}
 
+/* The cards sit on cream, so their icon circles turn white to stay visible */
+.ai-guide-item .ai-guide-icon {
+  background: var(--color-white);
+}
+
+.ai-guide-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-16);
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--color-line);
+}
+
+.ai-guide-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Generating: a status line, then grey bars where the five texts will appear */
+.ai-guide-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  margin: 0;
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
+}
+
+.ai-guide-status .spinner {
+  flex-shrink: 0;
+  margin-top: var(--space-4);
+  border-color: var(--color-white);
+  border-top-color: var(--color-leaf);
+}
+
+.ai-guide-skeleton {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.ai-guide-skeleton span {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+  animation: ai-guide-pulse 1.4s ease-in-out infinite;
+}
+
+.ai-guide-skeleton span:last-child {
+  width: 60%;
+}
+
+@keyframes ai-guide-pulse {
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-guide-skeleton span {
+    animation: none;
+  }
+}
+
+/* Offline, unreadable answer or no species: what happened and what to do next */
+.ai-guide-problem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-24);
+}
+
+.ai-guide-problem-title {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-problem-text {
+  margin: var(--space-4) 0 var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+/* ── Left-column cards: Quick facts, Reminders, Owner ── */
+
+/* 24 inside, like every card on this page (the shared .panel has 16) */
+.plant-panel {
+  padding: var(--space-24);
+}
+
+.plant-panel > .panel-title {
+  margin-bottom: var(--space-8);
+}
+
+/* Quick facts: the label on the left, the value on the right, one fact per line */
+.quick-facts {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.quick-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-16);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.quick-facts > div:first-child {
+  border-top: 0;
+}
+
+.quick-facts dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-muted);
+}
+
+.quick-facts dd {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  text-align: right;
+}
+
+/* Reminders: one task per line, its date on the right */
+.side-reminders,
+.plant-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-body-sm);
+}
+
+.side-reminders li,
+.plant-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
+}
+
+/* Reminder icons keep their task colour (.task); the owner card's icons are grey */
+.plant-facts .icon {
+  color: var(--color-muted);
+}
+
+.side-due {
+  margin-left: auto;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.side-due-due {
+  color: var(--color-terracotta);
+}
+
+.side-due-overdue {
+  color: var(--color-danger);
+}
+
+.side-due-upcoming {
+  color: var(--color-muted);
+  font-weight: var(--weight-regular);
+}
+
+/* Owner card (what a visitor sees instead of Reminders) */
+.plant-facts {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
+
+.owner-card .label {
+  margin-bottom: var(--space-12);
+}
+
+.owner-card-member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.owner-card-member > span {
+  display: grid;
+  line-height: 1.4;
+}
+
+.owner-card-btn {
+  width: 100%;
+  margin-top: var(--space-16);
+}
+
+/* ── Story: full width under both columns ───────────── */
+/* A plain section heading: with only one section there is nothing to switch, so no tab bar */
+
+.plant-story-title {
+  margin: 0 0 var(--space-24);
+  font-size: var(--text-h2);
+}
+
+/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled */
 .story {
   margin: 0;
   padding: 0;
@@ -228,7 +581,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-12);
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-16) var(--space-24);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
@@ -249,270 +602,11 @@
 
 .story-ai {
   display: flex;
-  gap: 6px;
+  gap: var(--space-8);
   color: var(--color-muted);
 }
 
 .story-ai .icon {
   margin-top: 0.2em;
   color: var(--color-leaf);
-}
-
-/* ── AI care guide (partials/care-guide.php) ────────── */
-/* Under the plant's name, above the buttons. Kept in one block so its look is easy to change: a white card with
-   a title, one row per section and a footer; the sparkle marks AI content, as in the story. */
-
-.ai-guide {
-  margin-bottom: var(--space-16);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-}
-
-.ai-guide-head {
-  padding: var(--space-16) var(--space-16) var(--space-12);
-  border-bottom: 1px solid var(--color-line);
-}
-
-.ai-guide-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-semibold);
-}
-
-.ai-guide-title .icon {
-  color: var(--color-leaf);
-}
-
-.ai-guide-meta {
-  margin: var(--space-4) 0 0;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
-.ai-guide-list {
-  margin: 0;
-}
-
-.ai-guide-item {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-12) var(--space-16);
-  border-top: 1px solid var(--color-line);
-}
-
-.ai-guide-item:first-child {
-  border-top: 0;
-}
-
-.ai-guide-item dt {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-size: var(--text-body-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.ai-guide-item dd {
-  margin: 0;
-  font-size: var(--text-body-sm);
-}
-
-/* A small sage circle behind each section's icon */
-.ai-guide-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-sage);
-  color: var(--color-leaf);
-}
-
-/* Tablet and up: the label beside its text, like the species guide */
-@media (min-width: 768px) {
-  .ai-guide-item {
-    grid-template-columns: 220px 1fr;
-    gap: var(--space-16);
-    align-items: start;
-  }
-
-  .ai-guide-item dt {
-    min-height: 28px;
-  }
-
-  .ai-guide-item dd {
-    padding-top: 3px;
-  }
-}
-
-/* Desktop: the card shares the row with the photo, so the label column gives the text more room */
-@media (min-width: 1024px) {
-  .ai-guide-item {
-    grid-template-columns: 205px 1fr;
-  }
-}
-
-.ai-guide-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8) var(--space-16);
-  padding: var(--space-12) var(--space-16);
-  border-top: 1px solid var(--color-line);
-}
-
-.ai-guide-note {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
-/* Generating: a status line, then grey bars where the five texts will appear */
-.ai-guide-status {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-12);
-  margin: 0;
-  padding: var(--space-12) var(--space-16);
-  border-bottom: 1px solid var(--color-line);
-  background: var(--color-sage);
-  color: var(--color-forest);
-  font-size: var(--text-body-sm);
-}
-
-.ai-guide-status .spinner {
-  flex-shrink: 0;
-  margin-top: 3px;
-  border-color: var(--color-white);
-  border-top-color: var(--color-leaf);
-}
-
-.ai-guide-skeleton {
-  display: grid;
-  gap: 6px;
-  padding-top: 6px;
-}
-
-.ai-guide-skeleton span {
-  display: block;
-  height: 10px;
-  border-radius: var(--radius-pill);
-  background: var(--color-neutral-bg);
-  animation: ai-guide-pulse 1.4s ease-in-out infinite;
-}
-
-.ai-guide-skeleton span:last-child {
-  width: 60%;
-}
-
-@keyframes ai-guide-pulse {
-  50% { opacity: 0.5; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ai-guide-skeleton span {
-    animation: none;
-  }
-}
-
-/* Offline, unreadable answer or no species: what happened and what to do next */
-.ai-guide-problem {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-12);
-  padding: var(--space-16);
-}
-
-.ai-guide-problem-title {
-  margin: 0;
-  font-size: var(--text-body-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.ai-guide-problem-text {
-  margin: var(--space-4) 0 var(--space-12);
-  color: var(--color-muted);
-  font-size: var(--text-body-sm);
-}
-
-/* ── Reminders card ─────────────────────────────────── */
-
-.side-reminders,
-.plant-facts {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-body-sm);
-}
-
-.side-reminders li,
-.plant-facts li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-8) 0;
-}
-
-/* Reminder icons keep their task colour (.task); only the facts' icons are grey */
-.plant-facts .icon {
-  color: var(--color-muted);
-}
-
-.side-due {
-  margin-left: auto;
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
-}
-
-.side-due-due {
-  color: var(--color-terracotta);
-}
-
-.side-due-overdue {
-  color: var(--color-danger);
-}
-
-.side-due-upcoming {
-  color: var(--color-muted);
-  font-weight: var(--weight-regular);
-}
-
-.plant-facts {
-  margin-top: var(--space-8);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--color-line);
-  color: var(--color-muted);
-}
-
-/* ── Owner card (read-only view) ────────────────────── */
-
-.owner-card .label {
-  margin-bottom: var(--space-12);
-}
-
-.owner-card-member {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-}
-
-.owner-card-member > span {
-  display: grid;
-  line-height: 1.4;
-}
-
-.owner-card-btn {
-  width: 100%;
-  margin-top: var(--space-16);
 }

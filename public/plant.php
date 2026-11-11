@@ -86,6 +86,20 @@ if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'],
     $guide_state = $guide_preview;
 }
 
+// Health alert (under the buttons): the newest AI health check, shown while the plant is Needs attention or Sick
+// and that check found a disease. Stage B: the plant's newest ml_predictions row of type 'disease'.
+$health_alert = null;
+if (in_array($plant['health_status'], ['needs_attention', 'sick'], true)) {
+    foreach ($story as $log) {   // newest first, so the first disease check is the latest one
+        if ($log['prediction_type'] === 'disease') {
+            if (!str_contains(strtolower($log['predicted_label']), 'healthy')) {
+                $health_alert = $log;
+            }
+            break;
+        }
+    }
+}
+
 /** The words in front of a story entry: the oldest is the day the plant arrived, an AI diagnosis is a Health check. */
 function story_kind($log, $is_oldest)
 {
@@ -140,28 +154,19 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
+    <?php // Right column (phone: straight after the photo): who it is, what to do, then how to care for it ?>
     <div class="plant-info">
       <?php // Identity and status (p12, element 3) ?>
       <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
       <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
-      <?php // No collection here: the breadcrumb above already names it ?>
+      <?php // "With you since" / "Growing since" lives in Quick facts, so it is not repeated here ?>
       <p class="plant-meta">
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-        <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?> · <?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
+        <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
       </p>
 
-      <?php // How to care for it, right under its name: the AI care guide replaces the old Care tab ?>
-      <?php partial('care-guide', [
-          'plant'     => $plant,
-          'is_owner'  => $is_owner,
-          'state'     => $guide_state,
-          'guide'     => $guide,
-          'guide_row' => $guide_row,
-          'species'   => $guide_species,
-      ]); ?>
-
       <?php if ($is_owner): ?>
-        <?php // Primary actions (p12, element 4): one green button; the rest are secondary or in the ⋯ menu ?>
+        <?php // Primary actions (p12, element 4): right under the status, so nobody has to scroll for them ?>
         <div class="plant-actions">
           <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
           <button type="button" class="btn btn-primary"><?= icon('pencil') ?> Log update</button>
@@ -181,101 +186,140 @@ include __DIR__ . '/../includes/header.php';
         </div>
       <?php endif; ?>
 
+      <?php if ($health_alert): ?>
+        <?php partial('health-alert', [
+            'log'       => $health_alert,
+            'status'    => $plant['health_status'],
+            // The Disease control card exists only when a guide is showing; otherwise the guide's own box
+            'treat_url' => $guide_state === 'ready' ? '#guide-disease-control' : '#care-guide',
+        ]); ?>
+      <?php endif; ?>
+
+      <?php // How to care for it: reference content, so it comes after the actions and the alert ?>
+      <?php partial('care-guide', [
+          'plant'     => $plant,
+          'is_owner'  => $is_owner,
+          'state'     => $guide_state,
+          'guide'     => $guide,
+          'guide_row' => $guide_row,
+          'species'   => $guide_species,
+      ]); ?>
     </div>
-  </div>
 
-  <div class="plant-bottom">
-    <div class="plant-main">
-      <?php // One section left, so a heading instead of a tab bar; it keeps the tab's underline look ?>
-      <h2 class="plant-section-title" id="plant-story"><span>Story</span></h2>
-
-      <div class="plant-story">
-        <?php // Plant story (p12, element 6): newest first; an AI entry carries a sparkle and its confidence ?>
-        <?php if (!$story): ?>
-          <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
-        <?php endif; ?>
-        <ol class="story">
-          <?php foreach ($story as $number => $log): ?>
-            <?php $is_oldest = $number === count($story) - 1; ?>
-            <li class="story-entry">
-              <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
-              <div class="story-card">
-                <?php if ($log['photo']): ?>
-                  <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="">
+    <?php // Left column under the photo on a desktop; after the care guide on a phone ?>
+    <div class="plant-aside">
+      <?php // Quick facts: the small facts that used to be spread over the meta line and the Reminders card ?>
+      <section class="panel plant-panel" aria-labelledby="facts-title">
+        <h2 class="panel-title" id="facts-title">Quick facts</h2>
+        <dl class="quick-facts">
+          <?php if ($is_owner): ?>
+            <?php // Only the owner sees the collection: a visitor's breadcrumb shows the owner, not their collections ?>
+            <div>
+              <dt><?= icon('layout-grid') ?> Collection</dt>
+              <dd>
+                <?php if ($plant['collection_id'] !== null): ?>
+                  <a href="<?= e($collection_url) ?>"><?= e($plant['collection_name']) ?></a>
+                <?php else: ?>
+                  No collection
                 <?php endif; ?>
-                <div class="story-body">
-                  <?php partial('status-badge', ['status' => $log['status']]); ?>
-                  <p class="story-note"><?= e($log['note']) ?></p>
-                  <?php if ($log['source'] === 'ml'): ?>
-                    <?php $percent = round($log['confidence'] * 100); ?>
-                    <p class="story-ai">
-                      <?= icon('sparkles') ?>
-                      <?php // One <span>: the line is a flex row, which would put a gap between every bit of text ?>
-                      <span>
-                        <?php if ($log['prediction_type'] === 'species'): ?>
-                          Species identified by AI: <em><?= e($log['predicted_label']) ?></em> · <?= e($percent) ?>% confidence
-                        <?php else: ?>
-                          Health check found <?= e(mb_strtolower(prediction_name(['type' => 'disease', 'predicted_label' => $log['predicted_label']]))) ?> · <?= e($percent) ?>% confidence
-                        <?php endif; ?>
-                      </span>
-                    </p>
-                  <?php endif; ?>
-                </div>
-              </div>
-            </li>
-          <?php endforeach; ?>
-        </ol>
-      </div>
-    </div>
-
-    <?php if ($is_owner): ?>
-      <?php // Reminders card (p12, element 7): active reminders with their next dates, visibility and likes ?>
-      <aside class="panel plant-side" aria-labelledby="reminders-title">
-        <div class="panel-head">
-          <h2 class="panel-title" id="reminders-title">Reminders</h2>
-          <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>"><?= icon('plus') ?> Add</a>
-        </div>
-        <ul class="side-reminders">
-          <?php foreach ($reminders as $reminder): ?>
-            <?php $due = care_due($reminder['next_due']); ?>
-            <li>
-              <span><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
-              <span class="side-due side-due-<?= e($due['state']) ?>"><?= e($due['state'] === 'upcoming' ? format_day($reminder['next_due']) : ($due['state'] === 'due' ? 'Today' : $due['text'])) ?></span>
-            </li>
-          <?php endforeach; ?>
-        </ul>
-        <ul class="plant-facts">
-          <li>
-            <?php if ($plant['is_public']): ?>
-              <?= icon('eye') ?> Public · shown in Explore
-            <?php else: ?>
-              <?= icon('lock') ?> Private · only you can see it
-            <?php endif; ?>
-          </li>
-          <?php if ($plant['is_public']): ?>
-            <li><?= icon('heart') ?> <?= e($like_count) ?> <?= $like_count === 1 ? 'like' : 'likes' ?> from the community</li>
+              </dd>
+            </div>
           <?php endif; ?>
-        </ul>
-      </aside>
-    <?php else: ?>
-      <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
-      <aside class="panel plant-side owner-card" aria-labelledby="owner-title">
-        <h2 class="label" id="owner-title">Grown by</h2>
-        <div class="owner-card-member">
-          <?php partial('avatar', ['member' => $owner]); ?>
-          <span>
-            <strong><?= e($owner['full_name']) ?></strong>
-            <span class="text-small">@<?= e($owner['username']) ?> · <?= e($owner['location']) ?></span>
-          </span>
-        </div>
-        <ul class="plant-facts">
-          <li><?= icon('leaf') ?> <?= e($owner['plant_count']) ?> plants · member since <?= e(date('M Y', strtotime($owner['created_at']))) ?></li>
-          <li><?php partial('rating', ['rating' => $owner]); ?> as a trader</li>
-          <li><?= icon('heart') ?> <?= e($like_count) ?> <?= $like_count === 1 ? 'like' : 'likes' ?> from the community</li>
-        </ul>
-        <a class="btn btn-secondary owner-card-btn" href="<?= e($owner_url) ?>">View profile</a>
-      </aside>
-    <?php endif; ?>
+          <div>
+            <dt><?= icon('calendar') ?> <?= $is_owner ? 'With you since' : 'Growing since' ?></dt>
+            <dd><?= e(date('M Y', strtotime($plant['acquired_on']))) ?></dd>
+          </div>
+          <?php if ($is_owner): ?>
+            <div>
+              <dt><?= icon($plant['is_public'] ? 'eye' : 'lock') ?> Visibility</dt>
+              <dd><?= $plant['is_public'] ? 'Public · shown in Explore' : 'Private · only you can see it' ?></dd>
+            </div>
+          <?php endif; ?>
+          <?php if ($plant['is_public']): ?>
+            <div>
+              <dt><?= icon('heart') ?> Likes</dt>
+              <dd><?= e($like_count) ?> from the community</dd>
+            </div>
+          <?php endif; ?>
+        </dl>
+      </section>
+
+      <?php if ($is_owner): ?>
+        <?php // Reminders card (p12, element 7): active reminders with their next dates ?>
+        <section class="panel plant-panel" aria-labelledby="reminders-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="reminders-title">Reminders</h2>
+            <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>"><?= icon('plus') ?> Add</a>
+          </div>
+          <ul class="side-reminders">
+            <?php foreach ($reminders as $reminder): ?>
+              <?php $due = care_due($reminder['next_due']); ?>
+              <li>
+                <span><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
+                <span class="side-due side-due-<?= e($due['state']) ?>"><?= e($due['state'] === 'upcoming' ? format_day($reminder['next_due']) : ($due['state'] === 'due' ? 'Today' : $due['text'])) ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        </section>
+      <?php else: ?>
+        <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
+        <section class="panel plant-panel owner-card" aria-labelledby="owner-title">
+          <h2 class="label" id="owner-title">Grown by</h2>
+          <div class="owner-card-member">
+            <?php partial('avatar', ['member' => $owner]); ?>
+            <span>
+              <strong><?= e($owner['full_name']) ?></strong>
+              <span class="text-small">@<?= e($owner['username']) ?> · <?= e($owner['location']) ?></span>
+            </span>
+          </div>
+          <ul class="plant-facts">
+            <li><?= icon('leaf') ?> <?= e($owner['plant_count']) ?> plants · member since <?= e(date('M Y', strtotime($owner['created_at']))) ?></li>
+            <li><?php partial('rating', ['rating' => $owner]); ?> as a trader</li>
+          </ul>
+          <a class="btn btn-secondary owner-card-btn" href="<?= e($owner_url) ?>">View profile</a>
+        </section>
+      <?php endif; ?>
+    </div>
   </div>
+
+  <?php // Plant story (p12, element 6): full width under both columns. One section, so a plain heading, not a tab. ?>
+  <section class="plant-story-section" aria-labelledby="story-title">
+    <h2 class="plant-story-title" id="story-title">Story</h2>
+    <?php // Newest first; an AI entry carries a sparkle and its confidence ?>
+    <?php if (!$story): ?>
+      <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
+    <?php endif; ?>
+    <ol class="story">
+      <?php foreach ($story as $number => $log): ?>
+        <?php $is_oldest = $number === count($story) - 1; ?>
+        <li class="story-entry">
+          <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
+          <div class="story-card">
+            <?php if ($log['photo']): ?>
+              <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="">
+            <?php endif; ?>
+            <div class="story-body">
+              <?php partial('status-badge', ['status' => $log['status']]); ?>
+              <p class="story-note"><?= e($log['note']) ?></p>
+              <?php if ($log['source'] === 'ml'): ?>
+                <?php $percent = round($log['confidence'] * 100); ?>
+                <p class="story-ai">
+                  <?= icon('sparkles') ?>
+                  <?php // One <span>: the line is a flex row, which would put a gap between every bit of text ?>
+                  <span>
+                    <?php if ($log['prediction_type'] === 'species'): ?>
+                      Species identified by AI: <em><?= e($log['predicted_label']) ?></em> · <?= e($percent) ?>% confidence
+                    <?php else: ?>
+                      Health check found <?= e(mb_strtolower(prediction_name(['type' => 'disease', 'predicted_label' => $log['predicted_label']]))) ?> · <?= e($percent) ?>% confidence
+                    <?php endif; ?>
+                  </span>
+                </p>
+              <?php endif; ?>
+            </div>
+          </div>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+  </section>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
