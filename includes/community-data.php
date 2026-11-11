@@ -10,7 +10,7 @@
 function community_default_filters($tab, $has_town = false)
 {
     $defaults = [
-        'plants'   => ['species' => [], 'health' => '', 'location' => '', 'exchange' => ''],
+        'plants'   => ['species' => [], 'location' => ''],
         'exchange' => ['type' => '', 'distance' => $has_town ? '25' : 'any', 'species' => []],
         'people'   => ['location' => '', 'rating' => ''],
     ];
@@ -27,8 +27,7 @@ function community_text_matches(array $texts, $term)
 // ── Plants tab ───────────────────────────────────────────
 
 /**
- * Public plants matching the search and the Plants filters (species ids, health, location, and exchange = '1' for
- * only the plants that an open exchange listing offers).
+ * Public plants matching the search and the Plants filters (species ids, location).
  * $skip_species = true ignores the species filter: the sidebar counts each species from those rows.
  *
  * Stage B:
@@ -43,8 +42,7 @@ function community_text_matches(array $texts, $term)
  *   WHERE plants.is_public = 1
  *     AND (plants.nickname LIKE ? OR plant_species.common_name LIKE ? OR plant_species.scientific_name LIKE ?
  *          OR users.username LIKE ?)
- *     AND plants.species_id IN (?, ?) AND plants.health_status = ? AND users.location = ?   -- only the filters in use
- *     AND exchange_listings.id IS NOT NULL                                                  -- "Available for exchange"
+ *     AND plants.species_id IN (?, ?) AND users.location = ?   -- only the filters in use
  */
 function community_plants(array $public_plants, $term, array $filters, $skip_species = false)
 {
@@ -52,13 +50,7 @@ function community_plants(array $public_plants, $term, array $filters, $skip_spe
         if (!community_text_matches([$plant['nickname'], $plant['scientific_name'], $plant['common_name'], $plant['username']], $term)) {
             return false;
         }
-        if ($filters['health'] !== '' && $plant['health_status'] !== $filters['health']) {
-            return false;
-        }
         if ($filters['location'] !== '' && $plant['location'] !== $filters['location']) {
-            return false;
-        }
-        if (($filters['exchange'] ?? '') === '1' && !$plant['on_exchange']) {
             return false;
         }
         if (!$skip_species && $filters['species'] && !in_array($plant['species_id'], $filters['species'], true)) {

@@ -14,10 +14,12 @@ require_once __DIR__ . '/../includes/community-data.php';
 // Everything is in the address (GET), so a search can be shared and Back works. Anyone can type anything there,
 // so every value is checked against what is allowed; a wrong value falls back to its default.
 
-$tabs = ['plants' => 'Plants', 'exchange' => 'Exchange', 'people' => 'People'];
+// Exchange comes first and is the default: swapping is what most members come to Community for (Ranshitha, 11 Nov).
+// The tabs are drawn in this order.
+$tabs = ['exchange' => 'Exchange', 'plants' => 'Plants', 'people' => 'People'];
 $tab  = get_text('tab');
 if (!array_key_exists($tab, $tabs)) {
-    $tab = 'plants';
+    $tab = 'exchange';
 }
 
 $q                = mb_substr(trim(get_text('q')), 0, 100);
@@ -41,8 +43,7 @@ $has_town    = $viewer_town !== '';
 
 // ── Each tab's filters ──────────────────────────────────
 
-$health_options   = ['thriving', 'stable', 'needs_attention', 'sick'];
-$type_options     = ['' => 'All', 'swap' => 'Swap', 'free' => 'Free'];
+$type_options    = ['' => 'All', 'swap' => 'Swap', 'free' => 'Free'];
 $distance_choices = ['5', '10', '25', '50', 'any'];
 $rating_options   = ['' => 'Any', '4' => '4+', '4.5' => '4.5+'];
 
@@ -65,9 +66,7 @@ $filters = community_default_filters($tab, $has_town);
 if ($tab === 'plants') {
     $filters = [
         'species'  => $species_ids,
-        'health'   => allowed_text('health', $health_options),
         'location' => allowed_text('location', $plant_towns),
-        'exchange' => allowed_text('exchange', ['1']),   // only plants that an open listing offers
     ];
 } elseif ($tab === 'exchange') {
     $filters = [
@@ -185,9 +184,6 @@ foreach ($tab === 'people' ? [] : $species_ids as $species_id) {
         'href'  => $page_url(['species' => array_values(array_diff($species_ids, [$species_id]))]),
     ];
 }
-if (($filters['health'] ?? '') !== '') {
-    $active_filters[] = ['label' => health_label($filters['health']), 'href' => $page_url(['health' => ''])];
-}
 if (($filters['type'] ?? '') !== '') {
     $active_filters[] = ['label' => $type_options[$filters['type']], 'href' => $page_url(['type' => ''])];
 }
@@ -200,9 +196,6 @@ if (($filters['location'] ?? '') !== '') {
 }
 if (($filters['rating'] ?? '') !== '') {
     $active_filters[] = ['label' => 'Rated ' . $rating_options[$filters['rating']], 'href' => $page_url(['rating' => ''])];
-}
-if (($filters['exchange'] ?? '') === '1') {
-    $active_filters[] = ['label' => 'Available for exchange', 'href' => $page_url(['exchange' => ''])];
 }
 $active_count = count($active_filters);   // the filters only: the number on the Filters button
 
@@ -445,21 +438,8 @@ include __DIR__ . '/../includes/header.php';
         </fieldset>
       <?php endif; ?>
 
-      <?php if ($tab === 'plants'): ?>
-        <?php // Health: one choice, radio buttons drawn as chips (p16). "Any" is how a choice is taken back. ?>
-        <fieldset class="filter-group">
-          <legend class="label">Health</legend>
-          <div class="filter-chips">
-            <?php foreach (array_merge([''], $health_options) as $option): ?>
-              <label class="chip-choice">
-                <input type="radio" name="health" value="<?= e($option) ?>" form="community-form"<?= $option === $filters['health'] ? ' checked' : '' ?>>
-                <span class="chip"><?= e($option === '' ? 'Any' : health_label($option)) ?></span>
-              </label>
-            <?php endforeach; ?>
-          </div>
-        </fieldset>
-      <?php endif; ?>
-
+      <?php // Plants has no Health filter and no "Available for exchange" switch (Ranshitha, 11 Nov): health is the owner's
+            // business, and plants on offer have their own tab, Exchange. ?>
       <?php if ($tab === 'plants' || $tab === 'people'): ?>
         <div class="filter-group">
           <label class="label" for="filter-location">Location</label>
@@ -472,16 +452,6 @@ include __DIR__ . '/../includes/header.php';
               <?php endforeach; ?>
             </select>
           </div>
-        </div>
-      <?php endif; ?>
-
-      <?php if ($tab === 'plants'): ?>
-        <?php // Only the plants that an open exchange listing offers, shown right here on the Plants tab ?>
-        <div class="filter-group">
-          <label class="toggle">
-            <input type="checkbox" name="exchange" value="1" form="community-form"<?= $filters['exchange'] === '1' ? ' checked' : '' ?>>
-            Available for exchange
-          </label>
         </div>
       <?php endif; ?>
 
@@ -597,7 +567,7 @@ include __DIR__ . '/../includes/header.php';
           <p class="popular-text">The most-liked public plants in the community.</p>
           <div class="community-grid community-grid-compact">
             <?php foreach ($popular_plants as $plant): ?>
-              <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+              <?php partial('plant-card', ['plant' => $plant, 'community' => true, 'show_health' => false]); ?>
             <?php endforeach; ?>
           </div>
         </section>
@@ -607,7 +577,7 @@ include __DIR__ . '/../includes/header.php';
       <?php if ($tab === 'plants'): ?>
         <div class="community-grid community-grid-compact" data-grid>
           <?php foreach ($shown_rows as $plant): ?>
-            <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+            <?php partial('plant-card', ['plant' => $plant, 'community' => true, 'show_health' => false]); ?>
           <?php endforeach; ?>
         </div>
       <?php elseif ($tab === 'exchange'): ?>

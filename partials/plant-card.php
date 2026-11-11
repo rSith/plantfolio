@@ -9,6 +9,8 @@
 // (see $mock_public_plants).
 // Optional $show_owner = false (with $community): the collection instead of the owner and town. The Public Profile (P14)
 // uses it, because every card there has the same owner, already named at the top of the page.
+// Optional $show_health = false (with $community): no health badge on the photo. The Community page uses it: a plant's
+// health is its owner's business there; the Public Profile and the plant's own page still show it.
 // Optional $simple = true: no health badge and no care hint, so a single plant looks like a stack card
 // (partials/plant-stack.php). My Garden's grid uses it; the list view there still shows health and care.
 //
@@ -16,6 +18,7 @@
 // z-index, "Open to swap" and the @username. They are siblings, never one link inside another (not allowed in HTML).
 
 $community  = !empty($community);
+$show_health = !$community || ($show_health ?? true);
 $simple     = !empty($simple);
 $show_owner = $community && ($show_owner ?? true);
 $due        = ($community || $simple) ? null : care_hint($plant);   // null when the plant has no reminder yet
@@ -28,7 +31,7 @@ $offer       = ($community && !empty($plant['listing_id'])) ? ($plant['listing_t
   <div class="card-media">
     <?php // On a community card the name link already says which plant it is, so the drawing is decorative (alt="") ?>
     <img src="<?= e(photo_url($plant['photo'])) ?>" alt="<?= $community ? '' : 'Photo of ' . e($plant['nickname']) ?>" loading="lazy">
-    <?php if (!$simple): ?>
+    <?php if (!$simple && $show_health): ?>
       <div class="card-media-badges">
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
       </div>

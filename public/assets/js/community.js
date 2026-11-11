@@ -14,7 +14,7 @@ const form = document.getElementById('community-form');
 const desktop = window.matchMedia('(min-width: 900px)');
 
 // ── The address of the form's current choices ───────────
-// Like a GET form sends it, but without empty fields (health=&location=) and without page= (a new choice starts at
+// Like a GET form sends it, but without empty fields (location=&q=) and without page= (a new choice starts at
 // the top). form.elements also holds the sidebar's fields, which sit outside the <form> (form="community-form").
 function formAddress() {
   const address = new URL(form.action);
