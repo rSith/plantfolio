@@ -50,8 +50,6 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
 // ── Everything shown about it ───────────────────────────
 // Each list is one table filtered by plant_id: WHERE plant_id = ? in stage B.
 
-$species = $mock_species[$plant['species_id']] ?? null;
-
 $reminders = array_values(array_filter($mock_plant_reminders, fn ($r) => $r['plant_id'] === $plant['id']));
 usort($reminders, fn ($a, $b) => $a['next_due'] <=> $b['next_due']);   // soonest first
 
@@ -69,19 +67,10 @@ $like_count = $mock_like_counts[$plant['id']] ?? 0;
 $owner     = $mock_users[$plant['user_id']];
 $owner_url = url('user.php?u=' . urlencode($owner['username']));
 
-// Tabs (p12, element 6): links with ?tab=, so each tab has an address and works without JavaScript.
-// #plant-tabs makes the browser scroll down to the tabs instead of the top of the page.
-// Only two: reminders are in the side card and photos in the gallery and the story, so their tabs only repeated them.
-$tabs = [
-    'story' => 'Story',
-    'care'  => 'Care',
-];
-$tab = get_text('tab');   // tab[]=x or tab=%FF count as "not given" (helpers.php), so they fall back to Story
-if (!array_key_exists($tab, $tabs)) {
-    $tab = 'story';
-}
+// No tabs any more (Ranshitha's sketch, 2026-11-11): the care guide sits under the name, so the Story is the only
+// long section left and needs no tab. An old link with ?tab=care or ?tab=photos simply shows the page.
 
-// AI care guide (Care tab): one saved guide per species. Stage B: care_guide_get() reads the care_guides row;
+// AI care guide (under the name): one saved guide per species. Stage B: care_guide_get() reads the care_guides row;
 // when there is none, the card shows Generating and care-guide.js asks api/care-guide.php for it.
 $guide_species = care_guide_species($plant);
 $guide_row     = $guide_species === null ? null : ($mock_care_guides[normalise_species($guide_species)] ?? null);
@@ -161,6 +150,16 @@ include __DIR__ . '/../includes/header.php';
         <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?> · <?= $is_owner ? 'With you' : 'Growing' ?> since <?= e(date('M Y', strtotime($plant['acquired_on']))) ?></span>
       </p>
 
+      <?php // How to care for it, right under its name: the AI care guide replaces the old Care tab ?>
+      <?php partial('care-guide', [
+          'plant'     => $plant,
+          'is_owner'  => $is_owner,
+          'state'     => $guide_state,
+          'guide'     => $guide,
+          'guide_row' => $guide_row,
+          'species'   => $guide_species,
+      ]); ?>
+
       <?php if ($is_owner): ?>
         <?php // Primary actions (p12, element 4): one green button; the rest are secondary or in the ⋯ menu ?>
         <div class="plant-actions">
@@ -187,76 +186,45 @@ include __DIR__ . '/../includes/header.php';
 
   <div class="plant-bottom">
     <div class="plant-main">
-      <nav class="tabs" id="plant-tabs" aria-label="About this plant">
-        <?php foreach ($tabs as $key => $label): ?>
-          <a class="tab<?= $key === $tab ? ' is-active' : '' ?>" href="<?= e(url('plant.php?id=' . $plant['id'] . ($key === 'story' ? '' : '&tab=' . $key) . '#plant-tabs')) ?>"<?= $key === $tab ? ' aria-current="page"' : '' ?>>
-            <?= e($label) ?>
-          </a>
-        <?php endforeach; ?>
-      </nav>
+      <?php // One section left, so a heading instead of a tab bar; it keeps the tab's underline look ?>
+      <h2 class="plant-section-title" id="plant-story"><span>Story</span></h2>
 
-      <div class="tab-panel">
-        <?php if ($tab === 'story'): ?>
-          <?php // Plant story (p12, element 6): newest first; an AI entry carries a sparkle and its confidence ?>
-          <?php if (!$story): ?>
-            <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
-          <?php endif; ?>
-          <ol class="story">
-            <?php foreach ($story as $number => $log): ?>
-              <?php $is_oldest = $number === count($story) - 1; ?>
-              <li class="story-entry">
-                <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
-                <div class="story-card">
-                  <?php if ($log['photo']): ?>
-                    <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="">
-                  <?php endif; ?>
-                  <div class="story-body">
-                    <?php partial('status-badge', ['status' => $log['status']]); ?>
-                    <p class="story-note"><?= e($log['note']) ?></p>
-                    <?php if ($log['source'] === 'ml'): ?>
-                      <?php $percent = round($log['confidence'] * 100); ?>
-                      <p class="story-ai">
-                        <?= icon('sparkles') ?>
-                        <?php // One <span>: the line is a flex row, which would put a gap between every bit of text ?>
-                        <span>
-                          <?php if ($log['prediction_type'] === 'species'): ?>
-                            Species identified by AI: <em><?= e($log['predicted_label']) ?></em> · <?= e($percent) ?>% confidence
-                          <?php else: ?>
-                            Health check found <?= e(mb_strtolower(prediction_name(['type' => 'disease', 'predicted_label' => $log['predicted_label']]))) ?> · <?= e($percent) ?>% confidence
-                          <?php endif; ?>
-                        </span>
-                      </p>
-                    <?php endif; ?>
-                  </div>
-                </div>
-              </li>
-            <?php endforeach; ?>
-          </ol>
-
-        <?php else: ?>
-          <?php if ($species): ?>
-            <dl class="care-guide">
-              <div><dt><?= icon('sun') ?> Light</dt><dd><?= e($species['light']) ?></dd></div>
-              <div><dt><?= icon('droplet') ?> Water</dt><dd><?= e($species['water']) ?></dd></div>
-              <div><dt><?= icon('droplets') ?> Humidity</dt><dd><?= e($species['humidity']) ?></dd></div>
-              <div><dt><?= icon('paw-print') ?> Pets</dt><dd><?= $species['pet_safe'] ? 'Safe for cats and dogs' : 'Not safe for cats and dogs: keep it out of reach' ?></dd></div>
-              <div><dt><?= icon('calendar') ?> Usual schedule</dt><dd>Water every <?= e($species['water_interval_days']) ?> days · fertilise every <?= e($species['fertilise_interval_days']) ?> days</dd></div>
-            </dl>
-            <p class="care-notes"><?= e($species['notes']) ?></p>
-          <?php else: ?>
-            <p class="panel-empty"><?= icon('info') ?> No care guide for this species yet.</p>
-          <?php endif; ?>
-
-          <?php partial('care-guide', [
-              'plant'     => $plant,
-              'is_owner'  => $is_owner,
-              'state'     => $guide_state,
-              'guide'     => $guide,
-              'guide_row' => $guide_row,
-              'species'   => $guide_species,
-          ]); ?>
-
+      <div class="plant-story">
+        <?php // Plant story (p12, element 6): newest first; an AI entry carries a sparkle and its confidence ?>
+        <?php if (!$story): ?>
+          <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
         <?php endif; ?>
+        <ol class="story">
+          <?php foreach ($story as $number => $log): ?>
+            <?php $is_oldest = $number === count($story) - 1; ?>
+            <li class="story-entry">
+              <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
+              <div class="story-card">
+                <?php if ($log['photo']): ?>
+                  <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="">
+                <?php endif; ?>
+                <div class="story-body">
+                  <?php partial('status-badge', ['status' => $log['status']]); ?>
+                  <p class="story-note"><?= e($log['note']) ?></p>
+                  <?php if ($log['source'] === 'ml'): ?>
+                    <?php $percent = round($log['confidence'] * 100); ?>
+                    <p class="story-ai">
+                      <?= icon('sparkles') ?>
+                      <?php // One <span>: the line is a flex row, which would put a gap between every bit of text ?>
+                      <span>
+                        <?php if ($log['prediction_type'] === 'species'): ?>
+                          Species identified by AI: <em><?= e($log['predicted_label']) ?></em> · <?= e($percent) ?>% confidence
+                        <?php else: ?>
+                          Health check found <?= e(mb_strtolower(prediction_name(['type' => 'disease', 'predicted_label' => $log['predicted_label']]))) ?> · <?= e($percent) ?>% confidence
+                        <?php endif; ?>
+                      </span>
+                    </p>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        </ol>
       </div>
     </div>
 
