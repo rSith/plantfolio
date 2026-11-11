@@ -156,6 +156,48 @@
   color: var(--color-ink);
 }
 
+/* The name block, with Health check and List for exchange beside it (owner only).
+   Phone: the two buttons sit side by side under the status line. Tablet and up: stacked on the right. */
+.plant-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-24);
+  margin-bottom: var(--space-16);
+}
+
+.plant-identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.plant-identity .plant-meta {
+  margin-bottom: 0;
+}
+
+.plant-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .plant-head {
+    flex-wrap: nowrap;
+  }
+
+  /* Stacked, both buttons as wide as the wider one, text starting at the left like a list of tools */
+  .plant-head-actions {
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .plant-head-actions .btn {
+    justify-content: flex-start;
+  }
+}
+
 /* Status badge and "Updated …" on one line, wrapping on a phone */
 .plant-meta {
   display: flex;

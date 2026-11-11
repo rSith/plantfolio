@@ -142,14 +142,24 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Right column (phone: straight after the photo): who it is, then how to care for it ?>
     <div class="plant-info">
-      <?php // Identity and status (p12, element 3) ?>
-      <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
-      <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
-      <?php // "With you since" / "Growing since" lives in Quick facts, so it is not repeated here ?>
-      <p class="plant-meta">
-        <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-        <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
-      </p>
+      <?php // Identity and status (p12, element 3), with the owner's two plant tools beside it (Ranshitha's sketch) ?>
+      <div class="plant-head">
+        <div class="plant-identity">
+          <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
+          <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
+          <?php // "With you since" / "Growing since" lives in Quick facts, so it is not repeated here ?>
+          <p class="plant-meta">
+            <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+            <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
+          </p>
+        </div>
+        <?php if ($is_owner): ?>
+          <div class="plant-head-actions">
+            <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
+            <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
+          </div>
+        <?php endif; ?>
+      </div>
 
       <?php // How to care for it ?>
       <?php partial('care-guide', [
@@ -241,12 +251,10 @@ include __DIR__ . '/../includes/header.php';
   <?php // Action bar: full width under both columns and above the Story, on every screen size ?>
   <div class="plant-action-bar">
     <?php if ($is_owner): ?>
-      <?php // Primary actions (p12, element 4): one green button; the rest are secondary or in the ⋯ menu ?>
+      <?php // Primary action (p12, element 4) and the ⋯ menu; Health check and List for exchange sit beside the name ?>
       <div class="plant-actions">
         <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
         <button type="button" class="btn btn-primary"><?= icon('pencil') ?> Log update</button>
-        <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
-        <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
         <?php partial('plant-menu', ['plant' => $plant]); ?>
       </div>
     <?php else: ?>
