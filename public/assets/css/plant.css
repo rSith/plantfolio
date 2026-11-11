@@ -1,8 +1,8 @@
 /* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
 /* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
-   Layout (2026-11-11): phone — one column: photo, name and actions, health alert, care guide, quick facts,
-   reminders, story. Desktop (1024px+) — photo, quick facts and reminders on the left; name, actions, health alert
-   and care guide on the right; the story full width underneath.
+   Layout (2026-11-11): phone — one column: photo, name and actions, care guide, quick facts, reminders, story.
+   Desktop (1024px+) — photo, quick facts and reminders on the left; name, actions and care guide on the right;
+   the story full width underneath.
    Spacing uses only the scale in variables.css: 4, 8, 12, 16, 24, 32, 48, 64. Cards: 24 inside. Cards in a column:
    16 apart. Major sections: 48 apart (64 on a desktop). Pixel values left in this file are sizes, borders and the
    timeline's drawing, not spacing. */
@@ -168,63 +168,6 @@
   .plant-actions .btn-primary {
     flex: 0 0 auto;
   }
-}
-
-/* ── Health alert (partials/health-alert.php) ───────── */
-/* The same tint and text colour as the status badge: red for Sick, amber for Needs attention */
-
-.health-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-12);
-  margin-bottom: var(--space-24);
-  padding: var(--space-16) var(--space-24);
-  border-radius: var(--radius-card);
-}
-
-.health-alert-sick {
-  background: var(--status-sick-bg);
-  color: var(--status-sick-text);
-}
-
-.health-alert-needs-attention {
-  background: var(--status-needs-attention-bg);
-  color: var(--status-needs-attention-text);
-}
-
-.health-alert-icon {
-  flex-shrink: 0;
-  margin-top: var(--space-4);
-}
-
-.health-alert-title {
-  margin: 0;
-  color: inherit;
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-}
-
-.health-alert-meta {
-  margin: var(--space-4) 0 0;
-  color: var(--color-ink);
-  font-size: var(--text-small);
-}
-
-/* A text link, still a 44px target for a finger */
-.health-alert-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
-  min-height: 44px;
-  color: inherit;
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
-  text-decoration: none;
-}
-
-.health-alert-link:hover {
-  text-decoration: underline;
 }
 
 /* ── AI care guide (partials/care-guide.php) ────────── */

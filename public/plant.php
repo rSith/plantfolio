@@ -86,20 +86,6 @@ if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'],
     $guide_state = $guide_preview;
 }
 
-// Health alert (under the buttons): the newest AI health check, shown while the plant is Needs attention or Sick
-// and that check found a disease. Stage B: the plant's newest ml_predictions row of type 'disease'.
-$health_alert = null;
-if (in_array($plant['health_status'], ['needs_attention', 'sick'], true)) {
-    foreach ($story as $log) {   // newest first, so the first disease check is the latest one
-        if ($log['prediction_type'] === 'disease') {
-            if (!str_contains(strtolower($log['predicted_label']), 'healthy')) {
-                $health_alert = $log;
-            }
-            break;
-        }
-    }
-}
-
 /** The words in front of a story entry: the oldest is the day the plant arrived, an AI diagnosis is a Health check. */
 function story_kind($log, $is_oldest)
 {
@@ -186,16 +172,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
       <?php endif; ?>
 
-      <?php if ($health_alert): ?>
-        <?php partial('health-alert', [
-            'log'       => $health_alert,
-            'status'    => $plant['health_status'],
-            // The Disease control card exists only when a guide is showing; otherwise the guide's own box
-            'treat_url' => $guide_state === 'ready' ? '#guide-disease-control' : '#care-guide',
-        ]); ?>
-      <?php endif; ?>
-
-      <?php // How to care for it: reference content, so it comes after the actions and the alert ?>
+      <?php // How to care for it: reference content, so it comes after the actions ?>
       <?php partial('care-guide', [
           'plant'     => $plant,
           'is_owner'  => $is_owner,

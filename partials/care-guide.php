@@ -1,5 +1,5 @@
 <?php
-// AI care guide card on the Plant Profile (P05), in the right column under the actions and health alert: five sections
+// AI care guide card on the Plant Profile (P05), in the right column under the actions: five sections
 // an AI wrote for the plant's species, saved once per species in care_guides (new feature, 2026-11-11, UI half).
 // Look: a white card with a title, the species and date, five small cards in a grid and a footer (11 Nov).
 // Expects:
@@ -45,8 +45,7 @@ $problems = [
   </div>
 
   <?php if ($state === 'ready' || $state === 'generating'): ?>
-    <?php // The same five small cards in both states: while generating, grey bars stand where the text will appear.
-          // Each card has an id (guide-disease-control …), so the health alert can link straight to it. ?>
+    <?php // The same five small cards in both states: while generating, grey bars stand where the text will appear ?>
     <?php if ($state === 'generating'): ?>
       <p class="ai-guide-status" role="status">
         <span class="spinner" aria-hidden="true"></span>
@@ -55,7 +54,7 @@ $problems = [
     <?php endif; ?>
     <dl class="ai-guide-list"<?= $state === 'generating' ? ' aria-hidden="true"' : '' ?>>
       <?php foreach (care_guide_sections() as $key => $section): ?>
-        <div class="ai-guide-item" id="guide-<?= e(str_replace('_', '-', $key)) ?>">
+        <div class="ai-guide-item">
           <dt><span class="ai-guide-icon"><?= icon($section['icon']) ?></span> <?= e($section['label']) ?></dt>
           <?php if ($state === 'ready'): ?>
             <dd><?= e($guide[$key]) ?></dd>
