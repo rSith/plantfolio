@@ -175,6 +175,21 @@
   font-size: var(--text-h3);
 }
 
+/* A newly chosen photo (app.js) takes the place of the current avatar until the form is saved */
+.settings-photo:has(.settings-avatar-preview:not([hidden])) .avatar:not(.settings-avatar-preview) {
+  display: none;
+}
+
+.settings-avatar-preview {
+  object-fit: cover;
+}
+
+/* The hint gets a line of its own under the avatar and buttons */
+.settings-photo-hint {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .bio-count {
   justify-self: end;
 }

@@ -101,13 +101,16 @@ include __DIR__ . '/../includes/header.php';
           <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
           <h2 class="visually-hidden">Your photo</h2>
           <label class="dropzone" for="tool-photo">
+            <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+            <img class="dropzone-preview" id="tool-photo-preview" alt="" hidden>
             <span class="dropzone-icon"><?= icon('image-up') ?></span>
             <span class="dropzone-title">Add a photo of your plant</span>
             <span class="dropzone-text">The whole plant or one leaf, from your files or your phone camera</span>
             <span class="btn btn-secondary btn-sm"><?= icon('camera') ?> Choose photo</span>
           </label>
           <input class="visually-hidden" type="file" id="tool-photo" name="photo" accept="image/jpeg,image/png" required
-                 aria-describedby="tool-photo-hint<?= $photo_error ? ' tool-photo-error' : '' ?>"<?= $photo_error ? ' aria-invalid="true"' : '' ?>>
+                 aria-describedby="tool-photo-hint<?= $photo_error ? ' tool-photo-error' : '' ?>"<?= $photo_error ? ' aria-invalid="true"' : '' ?>
+                 data-photo-input data-photo-hint="tool-photo-hint" data-photo-preview="tool-photo-preview">
           <p class="field-hint photo-hint" id="tool-photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
           <?php if ($photo_error): ?>
             <p class="field-error" id="tool-photo-error" role="alert"><?= e($photo_error) ?></p>
@@ -119,7 +122,7 @@ include __DIR__ . '/../includes/header.php';
         <section class="form-card tool-photo<?= $is_analysing ? ' is-analysing' : '' ?>" aria-labelledby="photo-title">
           <h2 class="visually-hidden" id="photo-title">Your photo</h2>
           <div class="tool-photo-frame">
-            <img src="<?= e(photo_url($photo['image_path'])) ?>" alt="Your photo, <?= e($photo['upload_name']) ?>">
+            <img src="<?= e(photo_url($photo['image_path'])) ?>" alt="Your photo, <?= e($photo['upload_name']) ?>" id="tool-photo-current">
             <?php if ($is_analysing): ?><span class="tool-photo-scan" aria-hidden="true"></span><?php endif; ?>
           </div>
           <?php // Two file fields: capture="environment" opens the rear camera at once; the other offers the photo
@@ -127,16 +130,18 @@ include __DIR__ . '/../includes/header.php';
                 // novalidate lets the form go with only one of the two filled in; the server checks that one is.
                 // While analysing, every button is disabled, so the photo is not sent twice (p24, S2). ?>
           <form class="tool-photo-foot" method="post" action="<?= e(url('identify.php')) ?>" enctype="multipart/form-data" novalidate>
-            <span class="tool-photo-name"><?= e($photo['upload_name']) ?> · <?= e(number_format($photo['upload_size'] / 1048576, 1)) ?> MB</span>
+            <span class="tool-photo-name" id="tool-photo-name"><?= e($photo['upload_name']) ?> · <?= e(number_format($photo['upload_size'] / 1048576, 1)) ?> MB</span>
             <span class="tool-photo-actions">
               <?php if ($is_analysing): ?>
                 <button type="button" class="btn btn-secondary btn-sm" disabled><?= icon('camera') ?> Retake</button>
                 <button type="button" class="btn btn-secondary btn-sm" disabled><?= icon('upload') ?> Upload new</button>
               <?php else: ?>
                 <label class="btn btn-secondary btn-sm" for="photo-camera"><?= icon('camera') ?> Retake</label>
-                <input class="visually-hidden" type="file" id="photo-camera" name="photo_camera" accept="image/jpeg,image/png" capture="environment" required>
+                <input class="visually-hidden" type="file" id="photo-camera" name="photo_camera" accept="image/jpeg,image/png" capture="environment" required
+                       data-photo-input data-photo-hint="tool-photo-name" data-photo-preview="tool-photo-current">
                 <label class="btn btn-secondary btn-sm" for="photo-upload"><?= icon('upload') ?> Upload new</label>
-                <input class="visually-hidden" type="file" id="photo-upload" name="photo_upload" accept="image/jpeg,image/png" required>
+                <input class="visually-hidden" type="file" id="photo-upload" name="photo_upload" accept="image/jpeg,image/png" required
+                       data-photo-input data-photo-hint="tool-photo-name" data-photo-preview="tool-photo-current">
                 <button class="btn btn-primary btn-sm tool-photo-send" type="submit"><?= icon('sparkles') ?> Identify this photo</button>
               <?php endif; ?>
             </span>

@@ -115,13 +115,17 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="settings-photo">
             <?php partial('avatar', ['member' => $current_user, 'size' => 'lg']); ?>
+            <?php // app.js shows a newly chosen photo here; settings.css then hides the avatar above ?>
+            <img class="avatar avatar-lg settings-avatar-preview" id="avatar-preview" alt="" hidden>
             <?php // The label opens the hidden file input, like the photo area on the plant form ?>
             <label class="btn btn-secondary btn-sm" for="avatar-file"><?= icon('upload') ?> Change photo</label>
-            <input class="visually-hidden" type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png">
+            <input class="visually-hidden" type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png"
+                   aria-describedby="avatar-hint" data-photo-input data-photo-hint="avatar-hint" data-photo-preview="avatar-preview">
             <?php // Remove only appears when there is a photo to remove; without one the initials are shown ?>
             <?php if ($current_user['avatar']): ?>
               <button type="submit" class="btn btn-ghost btn-sm" name="remove_avatar" value="1">Remove</button>
             <?php endif; ?>
+            <p class="field-hint photo-hint settings-photo-hint" id="avatar-hint">JPG or PNG, up to 5 MB.</p>
           </div>
 
           <div class="field-row">

@@ -155,3 +155,100 @@ document.addEventListener('change', (event) => {
   }
 });
 
+// The photo rule of every upload (CLAUDE.md "Images"): JPG or PNG, 5 MB at most. One copy, used below and by plant.js.
+// Returns the message to show, or null when the file is fine. The server checks again in stage B (finfo, size), because
+// a browser check is only a help for the member: anyone can switch JavaScript off.
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_ERROR = 'Choose a JPG or PNG photo of 5 MB or less.';
+
+function photoProblem(file) {
+  if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > PHOTO_MAX_BYTES) {
+    return PHOTO_ERROR;
+  }
+  return null;
+}
+
+// "leaf.jpg · 1.2 MB"
+const photoWords = (file) => `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+
+// A photo field with a preview: <input type="file" data-photo-input data-photo-hint="hint-id" data-photo-preview="img-id">.
+// A good photo is shown in the <img> at once and its name and size in the hint; a wrong one is taken out of the field
+// (so the form cannot send it) and the hint turns into the error. Both data-photo-… ids are optional.
+// Stage F and B alike: this only changes what is on screen.
+document.querySelectorAll('input[type="file"][data-photo-input]').forEach((input) => {
+  const hint = document.getElementById(input.dataset.photoHint);
+  const preview = document.getElementById(input.dataset.photoPreview);
+  const hintHtml = hint ? hint.innerHTML : '';   // the page's own words (and icon), put back when the choice is undone
+  const previewSrc = preview ? preview.getAttribute('src') : null;   // a photo already there (Edit), or none
+  const previewAlt = preview ? preview.alt : '';
+  if (hint) {
+    hint.setAttribute('aria-live', 'polite');   // a screen reader hears the file name or the error
+  }
+
+  function showHint(text, isError) {
+    if (!hint) {
+      return;
+    }
+    hint.textContent = text;
+    hint.classList.toggle('field-error', isError);
+  }
+
+  function reset() {
+    if (hint) {
+      hint.innerHTML = hintHtml;
+      hint.classList.remove('field-error');
+    }
+    if (preview) {
+      preview.alt = previewAlt;
+      if (previewSrc) {
+        preview.src = previewSrc;
+      } else {
+        preview.removeAttribute('src');
+        preview.hidden = true;
+      }
+    }
+  }
+
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) {
+      reset();
+      return;
+    }
+    const problem = photoProblem(file);
+    if (problem) {
+      input.value = '';
+      reset();
+      showHint(problem, true);
+      input.setAttribute('aria-invalid', 'true');
+      return;
+    }
+    input.removeAttribute('aria-invalid');
+    showHint(photoWords(file), false);
+    if (preview) {
+      preview.src = URL.createObjectURL(file);
+      preview.alt = `The photo you chose, ${file.name}`;
+      preview.hidden = false;
+    }
+  });
+
+  // "Drag it here": a photo dropped on the drop area goes into the field, as if it had been chosen. Without this the
+  // browser opens the dropped file itself and the half-filled form is lost.
+  const drop = document.querySelector(`.dropzone[for="${input.id}"]`);
+  if (drop) {
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      drop.classList.add('is-dragging');
+    });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-dragging'));
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault();
+      drop.classList.remove('is-dragging');
+      if (event.dataTransfer.files.length) {
+        input.files = event.dataTransfer.files;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  }
+});
+

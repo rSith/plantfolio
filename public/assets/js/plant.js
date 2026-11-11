@@ -158,16 +158,17 @@ if (storyDialog && storyForm) {
       clearPhoto();
       return;
     }
-    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    const problem = photoProblem(file);   // app.js: JPG or PNG, 5 MB at most
+    if (problem) {
       clearPhoto();
-      photoHint.textContent = 'Choose a JPG or PNG photo of 5 MB or less.';
+      photoHint.textContent = problem;
       photoHint.classList.add('field-error');
       return;
     }
     photoPreview.src = URL.createObjectURL(file);
     photoPreview.hidden = false;
     photoButton.textContent = 'Change photo';
-    photoHint.textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+    photoHint.textContent = photoWords(file);
     photoHint.classList.remove('field-error');
   });
 
@@ -263,21 +264,22 @@ if (photoDialog && photoForm) {
     showHint(hintText, false);
   }
 
-  // The same checks the server makes in stage B (finfo, 5 MB): JPG or PNG only, and not too big
+  // The same checks the server makes in stage B (finfo, 5 MB): photoProblem() in app.js
   function usePhoto(file) {
     if (!file) {
       clearPhoto();
       return;
     }
-    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    const problem = photoProblem(file);
+    if (problem) {
       clearPhoto();
-      showHint('Choose a JPG or PNG photo of 5 MB or less.', true);
+      showHint(problem, true);
       return;
     }
     preview.src = URL.createObjectURL(file);
     preview.hidden = false;
     empty.hidden = true;
-    showHint(`${file.name} · ${(file.size / 1048576).toFixed(1)} MB`, false);
+    showHint(photoWords(file), false);
   }
 
   input.addEventListener('change', () => usePhoto(input.files[0]));

@@ -339,11 +339,13 @@ include __DIR__ . '/../includes/header.php';
                 <span class="field-label" id="photo-label">Photo</span>
                 <?php if ($is_edit && $listing['plant_id'] === null): ?>
                   <div class="photo-current">
-                    <img src="<?= e(photo_url($listing['photo'])) ?>" alt="Current photo of <?= e($listing['title']) ?>">
+                    <img src="<?= e(photo_url($listing['photo'])) ?>" alt="Current photo of <?= e($listing['title']) ?>" id="listing-photo-preview">
                     <label class="btn btn-secondary btn-sm photo-change" for="listing-photo"><?= icon('camera') ?> Change photo</label>
                   </div>
                 <?php else: ?>
                   <label class="dropzone listing-dropzone" for="listing-photo">
+                    <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+                    <img class="dropzone-preview" id="listing-photo-preview" alt="" hidden>
                     <span class="dropzone-icon"><?= icon('image-up') ?></span>
                     <span class="dropzone-title">Add a photo of what you offer</span>
                     <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
@@ -351,7 +353,8 @@ include __DIR__ . '/../includes/header.php';
                   </label>
                 <?php endif; ?>
                 <input class="visually-hidden" type="file" id="listing-photo" name="photo" accept="image/jpeg,image/png"
-                       capture="environment" aria-labelledby="photo-label"<?= $describe('photo', 'photo-hint') ?>>
+                       capture="environment" aria-labelledby="photo-label"<?= $describe('photo', 'photo-hint') ?>
+                       data-photo-input data-photo-hint="photo-hint" data-photo-preview="listing-photo-preview">
                 <p class="field-hint photo-hint" id="photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
                 <?php if (isset($errors['photo'])): ?>
                   <span class="field-error" id="photo-error"><?= e($errors['photo']) ?></span>

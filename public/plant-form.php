@@ -353,11 +353,13 @@ include __DIR__ . '/../includes/header.php';
           <?php if ($values['photo']): ?>
             <?php // A photo is already there: show it, with Change photo as another label of the same file input ?>
             <div class="photo-current">
-              <img src="<?= e(photo_url($values['photo'])) ?>" alt="Current photo of <?= e($values['nickname']) ?>">
+              <img src="<?= e(photo_url($values['photo'])) ?>" alt="Current photo of <?= e($values['nickname']) ?>" id="plant-photo-preview">
               <label class="btn btn-secondary btn-sm photo-change" for="plant-photo"><?= icon('camera') ?> Change photo</label>
             </div>
           <?php else: ?>
           <label class="dropzone" for="plant-photo">
+            <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+            <img class="dropzone-preview" id="plant-photo-preview" alt="" hidden>
             <span class="dropzone-icon"><?= icon('image-up') ?></span>
             <span class="dropzone-title">Add a photo of your plant</span>
             <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
@@ -365,7 +367,8 @@ include __DIR__ . '/../includes/header.php';
           </label>
           <?php endif; ?>
           <input class="visually-hidden" type="file" id="plant-photo" name="photo"
-                 accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint">
+                 accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint"
+                 data-photo-input data-photo-hint="photo-hint" data-photo-preview="plant-photo-preview">
           <?php if ($ai): ?>
             <p class="field-hint photo-hint" id="photo-hint"><?= icon('image') ?> <?= e($ai['upload_name']) ?> · <?= e(number_format($ai['upload_size'] / 1048576, 1)) ?> MB · uploaded</p>
           <?php else: ?>
