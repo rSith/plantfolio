@@ -271,11 +271,13 @@
 }
 
 /* Five small tiles: one column on a phone, two from a tablet up. Grid rows stretch by default, so the two tiles
-   of a row are always the same height. flex: 1 takes any extra height when the card is stretched. */
+   of a row are always the same height. When the card is stretched to line up with the left column, flex: 1 gives
+   the list the extra height and the rows share it (align-content: stretch), so no empty band appears above the
+   footer (Ranshitha's request, 11 Nov). */
 .ai-guide-list {
   display: grid;
   flex: 1;
-  align-content: start;
+  align-content: stretch;
   gap: var(--space-12);
   margin: 0;
   padding: var(--space-24);

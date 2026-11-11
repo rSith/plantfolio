@@ -250,14 +250,16 @@ include __DIR__ . '/../includes/header.php';
 
       <?php if ($is_owner): ?>
         <?php // Reminders card (p12, element 7), built like the Dashboard's Today's care: a count of what is due, one care
-              // row per reminder (partials/care-row.php, compact) with its due tag and Mark done, and the dashed
-              // Add a reminder button. Mark done is a POST: the date moves on, the Story gets a care line, and a
+              // row per reminder (partials/care-row.php, compact) with its due tag and Mark done; "+ Add" at the
+              // top opens the Add a reminder popup. Mark done is a POST: the date moves on, the Story gets a care line, and a
               // toast with Undo appears (reminder_mark_done()). Stage F keeps it in the session. ?>
         <section class="panel plant-panel plant-reminders" aria-labelledby="reminders-title">
           <div class="panel-head">
             <h2 class="panel-title" id="reminders-title">Reminders
               <?php if ($due_count > 0): ?><span class="badge badge-neutral"><?= e($due_count) ?> due</span><?php endif; ?>
             </h2>
+            <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
+            <a class="panel-link" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
           </div>
           <?php if ($reminders): ?>
             <div class="care-list">
@@ -268,8 +270,6 @@ include __DIR__ . '/../includes/header.php';
           <?php else: ?>
             <p class="text-small plant-reminders-empty">No reminders yet. Add one, and it shows here and on your Dashboard.</p>
           <?php endif; ?>
-          <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
-          <a class="dash-add-btn" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</a>
         </section>
       <?php else: ?>
         <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
