@@ -157,61 +157,51 @@
   color: var(--color-ink);
 }
 
-/* The name block, with the page's actions beside it: a stack of small buttons (Log update, Health check,
-   List for exchange; visitors: Like).
-   Phone: the actions wrap onto a row under the name. Tablet and up: on the right, and the stack is exactly as tall
-   as the name block (stretch), its three buttons spread from the top of the name to the bottom of "Updated …". */
+/* The name block. Phone: the name first, then every button in one wrapping row (.plant-tools lets its buttons join
+   that row with display: contents). Tablet and up: Edit at the top right, the two small tools under "Updated …". */
 .plant-head {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-12) var(--space-24);
+  align-items: center;
+  gap: var(--space-8);
   margin-bottom: var(--space-24);
 }
 
 .plant-identity {
-  flex: 1 1 auto;
+  flex: 1 1 100%;
   min-width: 0;
+  margin-bottom: var(--space-8);
 }
 
-.plant-head-actions {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-8);
-}
-
-.plant-head-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
+.plant-tools {
+  display: contents;
 }
 
 @media (min-width: 768px) {
   .plant-head {
-    flex-wrap: nowrap;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity edit"
+      "tools    tools";
+    align-items: start;
+    gap: var(--space-16) var(--space-24);
   }
 
-  /* stretch: the stack grows to the full height of the name block */
-  .plant-head-actions {
-    flex-shrink: 0;
-    align-items: stretch;
+  .plant-identity {
+    grid-area: identity;
+    margin-bottom: 0;
   }
 
-  .plant-head-stack {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: var(--space-4);
+  .plant-edit-btn {
+    grid-area: edit;
   }
 
-  /* Same width, text starting at the left like a list of tools. 32px tall (a mouse needs no 44px target), so three
-     of them fit inside the name block's height and stretch spreads them to its top and bottom lines. */
-  .plant-head-stack .btn {
-    justify-content: flex-start;
-    min-height: 32px;
-    padding-top: 0;
-    padding-bottom: 0;
+  .plant-tools {
+    grid-area: tools;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
   }
 }
 
@@ -451,7 +441,7 @@
   text-align: right;
 }
 
-/* Reminders: one task per line, its date on the right */
+/* Reminders: one task per line: the task, its relative date ("Today", "Tomorrow", "In 3 days", "Overdue") and Done */
 .side-reminders,
 .plant-facts {
   margin: 0;
@@ -473,10 +463,25 @@
   color: var(--color-muted);
 }
 
+.side-reminder-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .side-due {
-  margin-left: auto;
   font-weight: var(--weight-semibold);
   white-space: nowrap;
+}
+
+.side-done {
+  flex-shrink: 0;
+}
+
+/* Pressed: stays visible but quiet until the next date */
+.side-done.is-done {
+  border-color: transparent;
+  background: var(--color-sage);
+  color: var(--color-forest);
 }
 
 .side-due-due {
@@ -521,15 +526,115 @@
 }
 
 /* ── Story: full width under both columns ───────────── */
-/* A plain section heading: with only one section there is nothing to switch, so no tab bar */
+/* Phone: the filters as a scrolling chip row, then the timeline. Desktop: the timeline (at most 760px) with a
+   sticky panel of filters and stats in the free space to its right. */
+
+.story-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-8) var(--space-16);
+  margin-bottom: var(--space-24);
+}
 
 .plant-story-title {
-  margin: 0 0 var(--space-24);
+  margin: 0;
   font-size: var(--text-h2);
 }
 
-/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled.
-   At most 760px wide and left-aligned, so the cards do not stretch across a wide screen. */
+.story-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.story-layout {
+  display: grid;
+  gap: var(--space-24);
+}
+
+.story-main {
+  min-width: 0;
+}
+
+/* Phone: one row of chips that scrolls sideways instead of wrapping */
+.story-filters {
+  display: flex;
+  gap: var(--space-8);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.story-filter {
+  flex-shrink: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.story-stats {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .story-layout {
+    grid-template-columns: minmax(0, 760px) 240px;
+    grid-template-areas: "main panel";
+    justify-content: space-between;
+    gap: var(--space-48);
+    align-items: start;
+  }
+
+  .story-main {
+    grid-area: main;
+  }
+
+  /* Sticky: stays in view below the top bar while the timeline scrolls past */
+  .story-panel {
+    grid-area: panel;
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-24));
+    padding: var(--space-24);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    background: var(--color-white);
+  }
+
+  .story-filters {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .story-stats {
+    display: grid;
+    gap: var(--space-12);
+    margin: var(--space-24) 0 0;
+    padding: var(--space-16) 0 0;
+    border-top: 1px solid var(--color-line);
+    list-style: none;
+    color: var(--color-muted);
+    font-size: var(--text-small);
+  }
+
+  .story-stats li {
+    display: flex;
+    gap: var(--space-8);
+  }
+
+  .story-stats .icon {
+    flex-shrink: 0;
+    margin-top: 0.15em;
+    color: var(--color-leaf);
+  }
+
+  .story-stats strong {
+    color: var(--color-ink);
+  }
+}
+
+/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled */
 .story {
   max-width: 760px;
   margin: 0;
@@ -590,22 +695,10 @@
   background: var(--color-white);
 }
 
-/* An entry without a photo gets a plain leaf tile of the same size, so every entry's text starts at one line */
-.story-card .thumb {
-  flex-shrink: 0;
-}
-
-.story-thumb-empty {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-leaf);
-}
-
 .story-body {
   display: grid;
   justify-items: start;
-  gap: var(--space-4);
+  gap: var(--space-8);
   min-width: 0;
 }
 
@@ -624,4 +717,63 @@
 .story-ai .icon {
   margin-top: 0.2em;
   color: var(--color-leaf);
+}
+
+/* Photo and note entries: the photo under the text, larger than a thumbnail */
+.story-photo {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+/* Care: one compact line, no card */
+.story-entry-care {
+  padding-bottom: var(--space-16);
+}
+
+.story-care {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.story-care-task {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-weight: var(--weight-semibold);
+}
+
+.story-care-date,
+.story-care-note {
+  color: var(--color-muted);
+}
+
+/* Milestone: a small highlighted card in sage */
+.story-milestone {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border-color: transparent;
+  background: var(--color-sage);
+}
+
+.story-milestone .story-note {
+  color: var(--color-forest);
+  font-weight: var(--weight-semibold);
+}
+
+.story-milestone-icon {
+  display: inline-flex;
+  color: var(--color-leaf);
+}
+
+.story-filter-empty {
+  margin: 0;
 }

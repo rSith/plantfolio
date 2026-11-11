@@ -1,7 +1,8 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
-// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs (and $page_js,
+// one extra script in assets/js/),
 // and $hide_bottom_bar = true to leave out the phone bottom bar: inner pages with their own action bar (p23).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 // The stylesheets go through asset_url(), which adds ?v=<last change time>: after a CSS change every browser
@@ -60,6 +61,10 @@ if ($is_member) {
   <?php endif; ?>
   <?php // defer: the script waits until the whole page is read, so the elements it looks for exist ?>
   <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>
+  <?php // A page may add one script of its own, like $page_css: $page_js = 'story.js' ?>
+  <?php if (!empty($page_js)): ?>
+    <script src="<?= e(asset_url('assets/js/' . $page_js)) ?>" defer></script>
+  <?php endif; ?>
 </head>
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
   <a class="skip-link" href="#main">Skip to content</a>

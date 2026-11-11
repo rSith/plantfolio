@@ -53,7 +53,8 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
 $reminders = array_values(array_filter($mock_plant_reminders, fn ($r) => $r['plant_id'] === $plant['id']));
 usort($reminders, fn ($a, $b) => $a['next_due'] <=> $b['next_due']);   // soonest first
 
-$story  = array_values(array_filter($mock_health_logs, fn ($log) => $log['plant_id'] === $plant['id']));   // newest first
+$story  = array_values(array_filter($mock_health_logs, fn ($log) => $log['plant_id'] === $plant['id']));
+usort($story, fn ($a, $b) => $b['logged_at'] <=> $a['logged_at']);   // newest first (stage B: ORDER BY logged_at DESC)
 $photos = array_values(array_filter($mock_plant_photos, fn ($photo) => $photo['plant_id'] === $plant['id']));
 if (!$photos) {
     // No gallery rows yet: the profile photo is the only one
@@ -86,18 +87,16 @@ if (in_array($guide_preview, ['generating', 'offline', 'invalid', 'no-species'],
     $guide_state = $guide_preview;
 }
 
-/** The words in front of a story entry: the oldest is the day the plant arrived, an AI diagnosis is a Health check. */
-function story_kind($log, $is_oldest)
-{
-    if ($is_oldest) {
-        return 'Added to garden';
-    }
-    return $log['prediction_type'] === 'disease' ? 'Health check' : 'Update';
-}
+// Story stats for the side panel. Stage B: small COUNT() queries, or counted from the rows already loaded.
+$this_month    = date('Y-m');
+$watered_month = count(array_filter($story, fn ($log) => $log['type'] === 'care' && $log['care_task'] === 'water'
+    && substr($log['logged_at'], 0, 7) === $this_month));
+$last_update   = $story ? $story[0]['logged_at'] : null;
 
 $collection_url = url('garden.php?collection=' . $plant['collection_id']);
 $page_title     = $plant['nickname'];
 $page_css       = 'plant.css';
+$page_js        = 'story.js';   // story filters and the reminders' Done buttons (UI only in stage F)
 
 // The navigation follows the breadcrumb: your own plant is part of My Garden, anyone else's is part of Explore
 $nav_area = $is_owner ? 'garden' : 'explore';
@@ -142,36 +141,32 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // Right column (phone: straight after the photo): who it is, then how to care for it ?>
     <div class="plant-info">
-      <?php // Identity and status (p12, element 3), with the owner's two plant tools beside it (Ranshitha's sketch) ?>
+      <?php // Identity (p12, element 3). Owner: Edit at the top right, Health check and List for exchange under the
+            // "Updated" line. Phone: the name first, then all buttons in one wrapping row. No status badge here:
+            // each Story entry shows the status it was given. ?>
       <div class="plant-head">
         <div class="plant-identity">
           <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
           <p class="plant-species"><span class="scientific-name"><?= e($plant['scientific_name']) ?></span> · <?= e($plant['common_name']) ?></p>
-          <?php // No status badge here (Ranshitha's choice, 11 Nov): each Story entry shows the status at that date.
-                // "With you since" / "Growing since" lives in Quick facts. ?>
           <p class="plant-meta">Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></p>
         </div>
-        <?php // All of the page's actions, beside the name: a small stack as tall as the name block ?>
-        <div class="plant-head-actions">
-          <?php if ($is_owner): ?>
-            <div class="plant-head-stack">
-              <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
-              <button type="button" class="btn btn-primary btn-sm"><?= icon('pencil') ?> Log update</button>
-              <a class="btn btn-secondary btn-sm" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
-              <a class="btn btn-secondary btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
-            </div>
-          <?php else: ?>
-            <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
-            <div class="plant-head-stack">
-              <?php if ($current_user): ?>
-                <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
-                <button type="button" class="btn btn-secondary btn-sm" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
-              <?php else: ?>
-                <a class="btn btn-secondary btn-sm" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
-              <?php endif; ?>
-            </div>
-          <?php endif; ?>
-        </div>
+        <?php if ($is_owner): ?>
+          <a class="btn btn-primary plant-edit-btn" href="<?= e(url('plant-form.php?id=' . $plant['id'])) ?>"><?= icon('pencil') ?> Edit</a>
+          <div class="plant-tools">
+            <a class="btn btn-secondary btn-sm" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
+            <a class="btn btn-secondary btn-sm" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
+          </div>
+        <?php else: ?>
+          <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
+          <div class="plant-tools">
+            <?php if ($current_user): ?>
+              <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
+              <button type="button" class="btn btn-secondary btn-sm" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
+            <?php else: ?>
+              <a class="btn btn-secondary btn-sm" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
       </div>
 
       <?php // How to care for it ?>
@@ -230,15 +225,19 @@ include __DIR__ . '/../includes/header.php';
             <h2 class="panel-title" id="reminders-title">Reminders</h2>
             <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>"><?= icon('plus') ?> Add</a>
           </div>
+          <?php // Done ✓ (CORE-23, UI half): story.js adds a "Watered" line to the Story and moves the date forward
+                // without a reload. Stage F changes the page only; stage B saves both (like the Dashboard's Mark done). ?>
           <ul class="side-reminders">
             <?php foreach ($reminders as $reminder): ?>
-              <?php $due = care_due($reminder['next_due']); ?>
-              <li>
-                <span><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
-                <span class="side-due side-due-<?= e($due['state']) ?>"><?= e($due['state'] === 'upcoming' ? format_day($reminder['next_due']) : ($due['state'] === 'due' ? 'Today' : $due['text'])) ?></span>
+              <?php $due = due_label($reminder['next_due']); ?>
+              <li data-reminder data-task="<?= e($reminder['task']) ?>" data-interval="<?= e($reminder['interval_days']) ?>" data-done-label="<?= e(care_done_label($reminder['task'])) ?>">
+                <span class="side-reminder-text"><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
+                <span class="side-due side-due-<?= e($due['state']) ?>" data-due><?= e($due['text']) ?></span>
+                <button type="button" class="btn btn-secondary btn-sm side-done" data-reminder-done aria-label="Done: <?= e(task_label($reminder['task'])) ?> <?= e($plant['nickname']) ?>"><?= icon('check') ?> Done</button>
               </li>
             <?php endforeach; ?>
           </ul>
+          <p class="visually-hidden" role="status" data-story-status></p>
         </section>
       <?php else: ?>
         <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>
@@ -261,47 +260,54 @@ include __DIR__ . '/../includes/header.php';
     </div>
   </div>
 
-  <?php // Plant story (p12, element 6): full width under both columns. One section, so a plain heading, not a tab. ?>
+  <?php // Plant story (p12, element 6): full width under both columns, newest first. Each entry type looks different
+        // (partials/story-entry.php). Desktop: a sticky panel beside the timeline with filters and stats; phone:
+        // the filters as a scrolling chip row above it, no stats. ?>
   <section class="plant-story-section" aria-labelledby="story-title">
-    <h2 class="plant-story-title" id="story-title">Story</h2>
-    <?php // Newest first; an AI entry carries a sparkle and its confidence ?>
+    <div class="story-head">
+      <h2 class="plant-story-title" id="story-title">Story</h2>
+      <?php if ($is_owner): ?>
+        <a class="story-add-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#story-update')) ?>"><?= icon('plus') ?> Add to story</a>
+      <?php endif; ?>
+    </div>
+
     <?php if (!$story): ?>
       <p class="panel-empty"><?= icon('info') ?> No story entries yet.</p>
-    <?php endif; ?>
-    <ol class="story">
-      <?php foreach ($story as $number => $log): ?>
-        <?php $is_oldest = $number === count($story) - 1; ?>
-        <li class="story-entry">
-          <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
-          <div class="story-card">
-            <?php // Every entry starts with a 48px square, a photo or a plain leaf tile, so the text always lines up ?>
-            <?php if ($log['photo']): ?>
-              <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="" width="48" height="48" loading="lazy">
-            <?php else: ?>
-              <span class="thumb story-thumb-empty"><?= icon('leaf') ?></span>
-            <?php endif; ?>
-            <div class="story-body">
-              <?php partial('status-badge', ['status' => $log['status']]); ?>
-              <p class="story-note"><?= e($log['note']) ?></p>
-              <?php if ($log['source'] === 'ml'): ?>
-                <?php $percent = round($log['confidence'] * 100); ?>
-                <p class="story-ai">
-                  <?= icon('sparkles') ?>
-                  <?php // One <span>: the line is a flex row, which would put a gap between every bit of text ?>
-                  <span>
-                    <?php if ($log['prediction_type'] === 'species'): ?>
-                      Species identified by AI: <em><?= e($log['predicted_label']) ?></em> · <?= e($percent) ?>% confidence
-                    <?php else: ?>
-                      Health check found <?= e(mb_strtolower(prediction_name(['type' => 'disease', 'predicted_label' => $log['predicted_label']]))) ?> · <?= e($percent) ?>% confidence
-                    <?php endif; ?>
-                  </span>
-                </p>
-              <?php endif; ?>
-            </div>
+    <?php else: ?>
+      <div class="story-layout">
+        <aside class="story-panel" aria-label="Story filters and stats">
+          <?php // Filters only hide and show entries on this page (story.js); without JavaScript every entry shows ?>
+          <div class="story-filters" role="group" aria-label="Show">
+            <?php foreach (['all' => 'All', 'photos' => 'Photos', 'health' => 'Health', 'care' => 'Care'] as $key => $label): ?>
+              <button type="button" class="chip story-filter<?= $key === 'all' ? ' is-selected' : '' ?>" data-story-filter="<?= e($key) ?>" aria-pressed="<?= $key === 'all' ? 'true' : 'false' ?>"><?= e($label) ?></button>
+            <?php endforeach; ?>
           </div>
-        </li>
-      <?php endforeach; ?>
-    </ol>
+          <ul class="story-stats">
+            <li><?= icon('cloud-rain') ?> <span>Watered <strong data-stat-watered><?= e($watered_month) ?></strong> <span data-stat-watered-word><?= $watered_month === 1 ? 'time' : 'times' ?></span> this month</span></li>
+            <li><?= icon('calendar') ?> <span>Last update: <strong data-stat-last><?= e(date('j M', strtotime($last_update))) ?></strong></span></li>
+            <li><?= icon('book-open') ?> <span><strong data-stat-count><?= e(count($story)) ?></strong> entries in the story</span></li>
+          </ul>
+        </aside>
+
+        <div class="story-main">
+          <ol class="story" data-story>
+            <?php foreach ($story as $log): ?>
+              <?php partial('story-entry', ['log' => $log]); ?>
+            <?php endforeach; ?>
+          </ol>
+          <p class="panel-empty story-filter-empty" data-story-empty hidden><?= icon('info') ?> No entries of this kind yet.</p>
+        </div>
+      </div>
+
+      <?php if ($is_owner): ?>
+        <?php // What story.js copies when Done is pressed: an empty care line, filled in by the script ?>
+        <template id="story-care-template">
+          <li class="story-entry story-entry-care" data-kind="care" data-photo="0" data-health="0">
+            <p class="story-care"><span class="story-care-task"></span> <span class="story-care-date"></span></p>
+          </li>
+        </template>
+      <?php endif; ?>
+    <?php endif; ?>
   </section>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
