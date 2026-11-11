@@ -1,10 +1,13 @@
 <?php
 // Dashboard (P03, wireframe p10): the home screen after login — "What do my plants need today?" and
-// "Is anything wrong?" in one glance (CORE-24, UI half). With no plants it shows state S1 instead (CORE-25).
-// Members only. Reads the reminders, plants needing attention and garden counts from mock data.
+// a garden overview in one glance (CORE-24, UI half). With no plants it shows state S1 instead (CORE-25).
+// Members only. Reads the reminders and garden counts from mock data.
+// No "Needs attention" panel (p10, element 4): the member learns a plant is unwell from a Health Check they run
+// themselves, not from the Dashboard guessing for them.
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
+require_once __DIR__ . '/../includes/reminder-form.php';   // Add a reminder: checks, saving, toast
 
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
@@ -17,29 +20,81 @@ $hour       = (int) date('G');   // 0–23
 $greeting   = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
 $first_name = explode(' ', $current_user['full_name'])[0];
 
-// The summary chips count the same rows the sections below print, so the numbers always agree.
-$care_count      = count($mock_reminders);   // due today or overdue
-$attention_count = count($mock_attention);
-$has_plants      = $current_user['plant_count'] > 0;
+$care_count = count($mock_reminders);   // due today or overdue
+$has_plants = $current_user['plant_count'] > 0;
 
-// The four most frequent jobs, both AI tools included (p10, element 5)
-$quick_actions = [
-    ['label' => 'Add a plant',       'href' => 'plant-form.php',   'icon' => 'plus'],
-    ['label' => 'Identify a plant',  'href' => 'identify.php',     'icon' => 'sparkles'],
-    ['label' => 'Health check',      'href' => 'health-check.php', 'icon' => 'activity'],
-    ['label' => 'List for exchange', 'href' => 'listing-form.php', 'icon' => 'repeat'],
-];
+// All reminders popup: every reminder of the member, soonest first, grouped by day.
+// Stage B: SELECT care_reminders.*, plants.nickname, plants.photo FROM care_reminders JOIN plants …
+//          WHERE plants.user_id = ? ORDER BY next_due, nickname
+$plants_by_id  = array_column($mock_plants, null, 'id');
+$all_reminders = [];
+foreach ($mock_plant_reminders as $reminder) {
+    $plant           = $plants_by_id[$reminder['plant_id']];
+    $all_reminders[] = $reminder + ['nickname' => $plant['nickname'], 'photo' => $plant['photo']];
+}
+// Comparing two small arrays sorts by the date first, then by name within the same day
+usort($all_reminders, fn ($a, $b) => [$a['next_due'], $a['nickname']] <=> [$b['next_due'], $b['nickname']]);
 
-// Garden at a glance: each status's share of the garden becomes the width of its part of the bar
-$health_counts = $mock_garden_stats['health_counts'];
-$plant_total   = array_sum($health_counts);
+$reminder_days = [];   // '2026-11-03' => the reminders due that day
+foreach ($all_reminders as $reminder) {
+    $reminder_days[$reminder['next_due']][] = $reminder;
+}
 
-// Exchange activity: "4 people are interested in your Pothos 'Golden' …", or "in 2 of your listings"
-$interest_count  = count($mock_new_interests);
-$interest_titles = array_unique(array_column($mock_new_interests, 'title'));
-$interest_target = count($interest_titles) === 1
-    ? 'your ' . reset($interest_titles)
-    : count($interest_titles) . ' of your listings';
+/** The heading over one day of the All reminders list: "Overdue · 1 Nov", "Today", "Tomorrow" or "Saturday 7 Nov". */
+function reminder_day($date)
+{
+    $days = days_until($date);
+    if ($days < 0) {
+        return 'Overdue · ' . format_day($date);
+    }
+    if ($days === 0) {
+        return 'Today';
+    }
+    if ($days === 1) {
+        return 'Tomorrow';
+    }
+    return date('l j M', strtotime($date));
+}
+
+// ── Add a reminder (popup) ──────────────────────────────
+// Set like an alarm on a phone: which plant, which care task, at what time from which day, and how it repeats.
+// The checks and the saving are shared with the plant pages (includes/reminder-form.php). Stage F keeps the
+// reminder in the session, so it shows in All reminders and on the plant's page. Stage B: INSERT … (CORE-22).
+
+// The member's own plants, A to Z, for the plant picker. Only these ids are accepted (ownership check).
+$pick_plants = $mock_plants;
+usort($pick_plants, fn ($a, $b) => strcasecmp($a['nickname'], $b['nickname']));
+
+$reminder_values = reminder_defaults();
+$reminder_errors = [];   // field name => message, printed under that field in the popup
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'reminder') {
+    [$reminder_values, $reminder_errors] = reminder_form_save($plants_by_id);
+    if (!$reminder_errors) {
+        header('Location: ' . url('dashboard.php'));   // POST, then redirect: a reload cannot add it twice
+        exit;
+    }
+}
+
+// ── Mark done (CORE-23) ─────────────────────────────────
+// Shared with the Plant Profile: reminder_mark_done() in includes/reminder-form.php moves the date on, adds a care
+// line to the plant's Story and leaves the toast. Only a reminder in Today's care (Nimali's, due today or overdue)
+// can be marked here.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'done') {
+    reminder_mark_done(post_text('reminder'), $mock_reminders);
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
+
+// Undo in the toast: takes back the last Add reminder or Mark done (reminder_undo(), includes/reminder-form.php)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_text('form') === 'undo_reminder') {
+    reminder_undo();
+    header('Location: ' . url('dashboard.php'));
+    exit;
+}
+
+// The toast shows once; its Undo stays possible until the next Add reminder or Mark done
+$toast = reminder_toast_take();
 
 $page_title = 'Dashboard';
 $page_css   = 'dashboard.css';
@@ -47,183 +102,136 @@ $page_css   = 'dashboard.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
+  <?php // Greeting banner: just the greeting and the date (the counts are in the sections below), with leaves on the right ?>
   <div class="dash-head">
-    <div>
+    <div class="dash-head-text">
       <h1 class="dash-title"><?= e($greeting) ?>, <?= e($first_name) ?></h1>
-      <p class="dash-summary">
-        <span class="dash-date"><?= e(date('l, j F')) ?></span>
-        <?php if ($care_count > 0): ?>
-          <span class="badge badge-due"><?= icon('droplet') ?> <?= e($care_count) ?> care <?= $care_count === 1 ? 'task' : 'tasks' ?> due</span>
-        <?php endif; ?>
-        <?php if ($attention_count > 0): ?>
-          <span class="badge badge-warning"><?= icon('triangle-alert') ?> <?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant needs' : 'plants need' ?> attention</span>
-        <?php endif; ?>
-      </p>
+      <p class="dash-date"><?= icon('calendar') ?> <?= e(date('l, j F')) ?></p>
     </div>
-    <?php if ($has_plants): ?>
-      <?php // No reminders page exists yet; My Garden shows each plant's next care until one is decided ?>
-      <a class="btn btn-secondary btn-sm dash-week" href="<?= e(url('garden.php')) ?>"><?= icon('calendar') ?> This week</a>
-    <?php endif; ?>
+    <img class="dash-head-art" src="<?= e(url('assets/img/dashboard-leaves.svg')) ?>" alt="">
   </div>
 
   <div class="dash-grid">
     <div class="dash-main">
-      <?php if (!$has_plants): ?>
-        <?php // S1, right after sign-up: one clear next step plus the AI shortcut, instead of empty lists (p24) ?>
-        <section class="panel">
-          <?php partial('empty-state', [
-              'title'   => 'Your garden is waiting',
-              'text'    => 'Add your first plant to start its story.',
-              'actions' => [
-                  ['label' => 'Add a plant',          'href' => 'plant-form.php', 'icon' => 'plus'],
-                  ['label' => 'Identify from a photo', 'href' => 'identify.php',   'icon' => 'sparkles'],
-              ],
-          ]); ?>
-        </section>
-      <?php else: ?>
-        <section class="panel" aria-labelledby="care-title">
+      <?php // S1 (a new member, no plants yet): the same boxes and options, each with a short first-step message ?>
+        <?php // Both boxes are .dash-box: on a desktop they are the same fixed height, side by side (dashboard.css) ?>
+        <section class="panel dash-box" aria-labelledby="care-title">
           <div class="panel-head">
             <h2 class="panel-title" id="care-title">Today's care
               <?php if ($care_count > 0): ?><span class="badge badge-neutral"><?= e($care_count) ?> due</span><?php endif; ?>
             </h2>
-            <a class="panel-link" href="<?= e(url('garden.php')) ?>">All reminders</a>
+            <?php // app.js opens the All reminders popup; without JavaScript the link shows My Garden sorted by next care ?>
+            <a class="panel-link" href="<?= e(url('garden.php?sort=care')) ?>" data-dialog="all-reminders" aria-haspopup="dialog">All reminders</a>
           </div>
 
+          <div class="dash-box-body">
           <?php if ($care_count > 0): ?>
-            <div class="panel-list">
+            <?php // Three tasks show; more scroll inside the box, with no scrollbar drawn (.scroll-quiet) ?>
+            <div class="care-list scroll-quiet">
               <?php foreach ($mock_reminders as $reminder): ?>
                 <?php partial('care-row', ['reminder' => $reminder]); ?>
               <?php endforeach; ?>
             </div>
+          <?php elseif (!$has_plants): ?>
+            <p class="panel-empty"><?= icon('sprout') ?> No reminders yet. Start by adding a plant.</p>
           <?php else: ?>
             <p class="panel-empty"><?= icon('check') ?> Nothing due today. Your plants are all looked after.</p>
           <?php endif; ?>
+          </div>
+          <?php // No "Coming up this week" row: All reminders (top right) already shows the days ahead ?>
 
-          <a class="panel-foot" href="<?= e(url('garden.php')) ?>">
-            <span>Coming up this week · <strong><?= e($mock_garden_stats['upcoming_count']) ?> <?= $mock_garden_stats['upcoming_count'] === 1 ? 'task' : 'tasks' ?></strong></span>
-            <?= icon('chevron-right') ?>
-          </a>
+          <?php // Opens the Add a reminder popup below (app.js) ?>
+          <button type="button" class="dash-add-btn" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
         </section>
-
-        <?php if ($attention_count > 0): ?>
-          <section class="panel" aria-labelledby="attention-title">
-            <div class="panel-head">
-              <h2 class="panel-title" id="attention-title">Needs attention</h2>
-              <span class="panel-count"><?= e($attention_count) ?> <?= $attention_count === 1 ? 'plant' : 'plants' ?></span>
-            </div>
-
-            <div class="panel-list">
-              <?php foreach ($mock_attention as $plant): ?>
-                <?php
-                // The reason, in order of importance: a Health Check result, else overdue care, else the newest note
-                $from_check = $plant['log_source'] === 'ml' && $plant['predicted_label'] !== null;
-                $due        = $plant['next_due'] ? care_due($plant['next_due']) : null;
-                $overdue    = $due && $due['state'] === 'overdue';
-                $late_days  = $overdue ? -days_until($plant['next_due']) : 0;
-                $late_text  = $late_days . ($late_days === 1 ? ' day' : ' days');   // "Watering is 2 days overdue"
-                $plant_url  = url('plant.php?id=' . $plant['id']);
-                // A Health Check result is always a disease prediction
-                $condition  = $from_check ? prediction_name(['type' => 'disease', 'predicted_label' => $plant['predicted_label']]) : '';
-                ?>
-                <article class="attention-item">
-                  <img class="attention-photo" src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>">
-                  <div class="attention-body">
-                    <h3 class="attention-name">
-                      <a href="<?= e($plant_url) ?>"><?= e($plant['nickname']) ?></a>
-                      <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-                    </h3>
-                    <p class="attention-meta"><?= e($plant['common_name']) ?> · <?= e($plant['collection_name']) ?></p>
-
-                    <p class="attention-reason">
-                      <?php if ($from_check): ?>
-                        <?= icon('sparkles') ?>
-                        <span>Health check found <strong><?= e(mb_strtolower($condition)) ?></strong>
-                          (<?= e(round($plant['confidence'] * 100)) ?>% confidence) on <?= e(format_day($plant['logged_at'])) ?>.</span>
-                      <?php elseif ($overdue): ?>
-                        <?= icon(task_icon($plant['task'])) ?>
-                        <span><?= e($plant['task'] === 'water' ? 'Watering' : 'Fertilising') ?> is <?= e($late_text) ?> overdue. <?= e($plant['log_note']) ?></span>
-                      <?php else: ?>
-                        <?= icon('info') ?>
-                        <span><?= e($plant['log_note']) ?></span>
-                      <?php endif; ?>
-                    </p>
-
-                    <div class="attention-actions">
-                      <?php if ($from_check): ?>
-                        <?php // The care plan lives on the plant's profile; "Log update" opens a modal there from week 5 ?>
-                        <a class="btn btn-primary btn-sm" href="<?= e($plant_url) ?>">View care plan</a>
-                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                      <?php elseif ($overdue): ?>
-                        <?php // Stage F: does nothing yet. Stage B saves it like Mark done (CORE-23). ?>
-                        <button type="button" class="btn btn-secondary btn-sm"><?= icon(task_icon($plant['task'])) ?> <?= e($plant['task'] === 'water' ? 'Mark watered' : 'Mark fertilised') ?></button>
-                      <?php else: ?>
-                        <a class="btn btn-secondary btn-sm" href="<?= e($plant_url) ?>">Log update</a>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                </article>
-              <?php endforeach; ?>
-            </div>
-          </section>
-        <?php endif; ?>
-      <?php endif; ?>
     </div>
 
+    <?php // No Quick actions panel: Add plant is at the bottom of Garden at a glance, the AI tools in Plant Tools ?>
     <div class="dash-side">
-      <section class="panel" aria-labelledby="actions-title">
-        <h2 class="panel-title" id="actions-title">Quick actions</h2>
-        <div class="quick-actions">
-          <?php foreach ($quick_actions as $action): ?>
-            <a class="quick-action" href="<?= e(url($action['href'])) ?>">
-              <span class="quick-action-icon"><?= icon($action['icon']) ?></span>
-              <?= e($action['label']) ?>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      </section>
-
-      <?php if ($has_plants): ?>
-        <section class="panel" aria-labelledby="glance-title">
+        <section class="panel dash-box" aria-labelledby="glance-title">
           <div class="panel-head">
             <h2 class="panel-title" id="glance-title">Garden at a glance</h2>
-            <a class="panel-link" href="<?= e(url('garden.php')) ?>">My Garden</a>
           </div>
+          <div class="dash-box-body">
+          <?php if (!$has_plants): ?>
+            <p class="panel-empty"><?= icon('sprout') ?> No plants yet. Start by adding your first plant.</p>
+          <?php else: ?>
           <p class="glance-total">
             <strong><?= e($current_user['plant_count']) ?></strong>
             <span>plants in<br><?= e($current_user['collection_count']) ?> collections</span>
           </p>
 
-          <?php // The bar repeats the numbers in the list below it, so screen readers skip it ?>
-          <div class="health-bar" aria-hidden="true">
-            <?php foreach ($health_counts as $status => $count): ?>
-              <?php if ($count > 0): ?>
-                <span class="health-bar-<?= e(str_replace('_', '-', $status)) ?>" style="width: <?= e(round($count / $plant_total * 100, 1)) ?>%"></span>
-              <?php endif; ?>
-            <?php endforeach; ?>
-          </div>
-          <ul class="health-legend">
-            <?php foreach ($health_counts as $status => $count): ?>
-              <li><span class="health-dot health-bar-<?= e(str_replace('_', '-', $status)) ?>"></span> <?= e(health_label($status)) ?> <strong><?= e($count) ?></strong></li>
+          <?php // Where the plants are: one line per collection with its count and a few photos; each opens it in My Garden.
+                // Stage B: the collections query My Garden already uses (plant_count and three cover photos per row). ?>
+          <ul class="glance-collections scroll-quiet">
+            <?php foreach ($mock_collections as $collection): ?>
+              <?php $more = $collection['plant_count'] - count($collection['cover_photos']); ?>
+              <li>
+                <a class="glance-collection" href="<?= e(url('garden.php?collection=' . $collection['id'])) ?>">
+                  <span class="glance-collection-name">
+                    <?= e($collection['name']) ?>
+                    <?php if (!$collection['is_public']): ?><?= icon('lock') ?><span class="visually-hidden">(private)</span><?php endif; ?>
+                  </span>
+                  <strong class="glance-collection-count"><?= e($collection['plant_count']) ?></strong>
+                  <span class="glance-photos" aria-hidden="true">
+                    <?php foreach ($collection['cover_photos'] as $photo): ?>
+                      <img src="<?= e(photo_url($photo)) ?>" alt="" loading="lazy">
+                    <?php endforeach; ?>
+                    <?php if ($more > 0): ?><span class="glance-more">+<?= e($more) ?></span><?php endif; ?>
+                  </span>
+                </a>
+              </li>
             <?php endforeach; ?>
           </ul>
-        </section>
-      <?php endif; ?>
-
-      <?php if ($interest_count > 0): ?>
-        <section class="panel" aria-labelledby="exchange-title">
-          <h2 class="panel-title" id="exchange-title">Exchange activity</h2>
-          <div class="exchange-news">
-            <span class="avatar-stack">
-              <?php foreach (array_slice($mock_new_interests, 0, 3) as $interest): ?>
-                <?php partial('avatar', ['member' => $interest, 'size' => 'sm']); ?>
-              <?php endforeach; ?>
-            </span>
-            <p><strong><?= e($interest_count) ?> <?= $interest_count === 1 ? 'person is' : 'people are' ?></strong> interested in <?= e($interest_target) ?></p>
+          <?php endif; ?>
           </div>
-          <a class="btn btn-secondary btn-sm exchange-btn" href="<?= e(url('my-exchanges.php')) ?>">View interests</a>
+
+          <?php // The box ends like Today's care: a dashed add button, here to Add Plant (P06) ?>
+          <a class="dash-add-btn" href="<?= e(url('plant-form.php')) ?>"><?= icon('plus') ?> Add plant</a>
         </section>
-      <?php endif; ?>
     </div>
   </div>
+
+  <?php // All reminders popup (MOD-01). A <dialog> stays hidden until app.js calls showModal(). ?>
+    <dialog class="modal" id="all-reminders" aria-labelledby="all-reminders-title">
+      <div class="modal-head">
+        <h2 class="modal-title" id="all-reminders-title">All reminders</h2>
+        <?php // method="dialog": pressing this button closes the popup, no JavaScript needed ?>
+        <form method="dialog">
+          <button class="icon-btn" aria-label="Close"><?= icon('x') ?></button>
+        </form>
+      </div>
+      <div class="modal-body">
+        <?php if (!$reminder_days): ?>
+          <p class="panel-empty"><?= icon('info') ?> No reminders yet.</p>
+        <?php endif; ?>
+        <?php foreach ($reminder_days as $date => $day_reminders): ?>
+          <h3 class="label reminder-day reminder-day-<?= e(care_due($date)['state']) ?>"><?= e(reminder_day($date)) ?></h3>
+          <ul class="reminder-rows">
+            <?php foreach ($day_reminders as $reminder): ?>
+              <li class="reminder-row">
+                <img class="thumb" src="<?= e(photo_url($reminder['photo'])) ?>" alt="">
+                <span class="reminder-row-text">
+                  <a href="<?= e(url('plant.php?id=' . $reminder['plant_id'])) ?>"><strong><?= e($reminder['nickname']) ?></strong></a>
+                  <span class="reminder-row-task"><?= task_name($reminder['task']) ?> · <?= e(schedule_words($reminder)) ?></span>
+                </span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endforeach; ?>
+      </div>
+    </dialog>
+
+    <?php // Add a reminder popup (partials/reminder-dialog.php), shared with the plant pages ?>
+    <?php partial('reminder-dialog', [
+        'action' => url('dashboard.php'),
+        'values' => $reminder_values,
+        'errors' => $reminder_errors,
+        'plants' => $pick_plants,
+        'plant'  => null,
+    ]); ?>
+
+  <?php if ($toast): ?>
+    <?php partial('reminder-toast', ['toast' => $toast, 'action' => url('dashboard.php')]); ?>
+  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

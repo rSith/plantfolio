@@ -15,9 +15,9 @@ development, so teach as you build.
 
 | | |
 |---|---|
-| **Done (week 0)** | Project proposal · 25-page UX & wireframe document · clickable Figma prototype · repo skeleton |
-| **Current stage** | **F — Frontend first with mock data**, weeks 1–7 (5 Oct – 22 Nov 2026) |
-| **Next stages** | B — wire to PHP + MySQL (wk 8–10) · M — ML service (wk 11–14) · D — test, report, submit (wk 15–16) |
+| **Done** | Week 0: proposal · UX & wireframe document · Figma prototype · repo skeleton. **Stage F (closed 11 Nov 2026):** all pages UI built with mock data, QA pass done, schema changes from stage F accepted into `database/` |
+| **Current stage** | **B — wire to PHP + MySQL**, starting with CORE-01 `schema.sql` (18 tables, see [`database/README.md`](database/README.md)) |
+| **Next stages** | M — ML service (time-boxed) · D — test, report, submit |
 | **Build order** | [`docs/ROADMAP.md`](docs/ROADMAP.md) — follow it week by week |
 | **Task definitions** | PlantFolio Task Sheet (IDs like `CORE-14`, `COM-07`, `ML-12`) |
 
@@ -99,14 +99,17 @@ Don't add top-level folders or move files without asking — teammates' READMEs 
 | P06 | Add / Edit Plant | `plant-form.php` | Login | p13 | Functional |
 | P07 | Plant Identifier ✦AI | `identify.php` | Login | p14 | Functional |
 | P08 | Health Check ✦AI | `health-check.php` | Login | p15 | Functional |
-| P09 | Explore & Search | `explore.php?q=` | Public | p16 | Both |
-| P10 | Exchange Marketplace | `exchange.php` | Public | p17 | Both |
+| P09 | Community: Plants and People tabs (was Explore) | `community.php?tab=plants\|people&q=` | Public | p16 | Both |
+| P10 | Community: Exchange tab (was Exchange Marketplace) | `community.php?tab=exchange` | Public | p17 | Both |
 | P11 | Listing Detail | `listing.php?id=` | Public · interest needs login | p18 | Both |
 | P12 | Create Listing | `listing-form.php` | Login | p19 | Functional |
 | P13 | My Exchanges | `my-exchanges.php` | Login | p20 | Functional |
 | P14 | Public Profile | `user.php?u=` | Public | p21 | Warm |
 | P15 | Settings | `settings.php` | Login | p22 | Functional |
 | — | About · Community guidelines · Contact | `about.php` | Public | not in the wireframes | Warm |
+
+Explore and Exchange were merged into one page, **Community**, on 11 Nov 2026; `explore.php` and `exchange.php` now only
+redirect (301) to it, keeping their query string.
 
 `about.php` is an extra page: the footer links (wireframe p4) and the sign-up checkbox (p9) need somewhere to
 lead. It has three sections, `#about`, `#guidelines` and `#contact`. Its contact details are samples until final delivery.
@@ -279,7 +282,7 @@ the PlantFolio folder.
 
 ## Testing
 
-- **Stage F:** compare each page with its wireframe page and the Figma prototype; check 375, 768 and
+- **Stage F:** the wireframes are a guide, not a spec (decided 23 Oct 2026): compare data and features with them, not exact layout; check 375, 768 and
   1024+ px in DevTools; no horizontal scroll; no console errors; keyboard focus visible.
 - **Stage B onward:** run the Test Plan cases for the task (TC-001 … TC-058), then try wrong inputs:
   empty forms, wrong password, oversized or wrong-type files, `<script>` in text fields, `' OR '1'='1` in

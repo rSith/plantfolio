@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: echeveria rosette. Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#E6ECDC"/>
-  <rect y="232" width="400" height="68" fill="#D9E2CC"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
   <g fill="#8FB3A6">
     <path d="M200 200Q140 196 118 176Q160 166 200 192Z"/>

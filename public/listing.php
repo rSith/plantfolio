@@ -36,7 +36,7 @@ if (!$listing) {
             'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Listing not found',
             'text'    => 'This listing does not exist, or its owner has removed it.',
-            'actions' => [['label' => 'Browse the exchange', 'href' => 'exchange.php', 'icon' => 'repeat']],
+            'actions' => [['label' => 'Browse the exchange', 'href' => 'community.php?tab=exchange', 'icon' => 'repeat']],
         ]); ?>
       </section>
     </div>
@@ -200,7 +200,7 @@ include __DIR__ . '/../includes/header.php';
 <div class="container page">
   <nav aria-label="Breadcrumb">
     <ol class="breadcrumb listing-breadcrumb">
-      <li><a href="<?= e(url('exchange.php')) ?>">Exchange</a></li>
+      <li><a href="<?= e(url('community.php?tab=exchange')) ?>">Exchange</a></li>
       <li><span aria-current="page"><?= e($listing['title']) ?></span></li>
     </ol>
   </nav>
@@ -240,7 +240,7 @@ include __DIR__ . '/../includes/header.php';
         <h1 class="listing-title"><?= e($listing['title']) ?></h1>
         <p class="listing-place">
           <?= icon('map-pin') ?>
-          <span><?= e($listing['location']) ?><?php if ($show_distance): ?> · about <?= e($listing['distance_km']) ?> km from you<?php endif; ?></span>
+          <span><?= e($listing['location']) ?><?php if ($show_distance): ?> · <?= $listing['distance_km'] === 0 ? 'in your town' : 'about ' . e($listing['distance_km']) . ' km from you' ?><?php endif; ?></span>
         </p>
         <div class="listing-wants">
           <p class="label">Looking for</p>
@@ -260,7 +260,7 @@ include __DIR__ . '/../includes/header.php';
             <a class="btn btn-primary listing-interest-btn" href="<?= e(url('my-exchanges.php')) ?>"><?= icon('repeat') ?> Go to My exchanges</a>
           <?php else: ?>
             <p class="listing-interest-text">This plant has found a new home, so the listing no longer takes interest.</p>
-            <a class="btn btn-primary listing-interest-btn" href="<?= e(url('exchange.php')) ?>"><?= icon('repeat') ?> Browse the exchange</a>
+            <a class="btn btn-primary listing-interest-btn" href="<?= e(url('community.php?tab=exchange')) ?>"><?= icon('repeat') ?> Browse the exchange</a>
           <?php endif; ?>
 
         <?php elseif ($is_owner): ?>
@@ -357,6 +357,31 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
         <?php if ($listing['plant_condition'] !== null): ?>
           <div><dt>Condition</dt><dd><?= e($listing['plant_condition']) ?></dd></div>
+        <?php endif; ?>
+        <?php // Where to collect it: the town, and how far from its centre the owner said (the pick-up slider) ?>
+        <?php if ($listing['km_from_town'] !== null): ?>
+          <div>
+            <dt>Pick-up</dt>
+            <dd><?= $listing['km_from_town'] === 0 ? 'In ' . e($listing['location']) : 'About ' . e($listing['km_from_town']) . ' km from ' . e($listing['location']) ?></dd>
+          </div>
+        <?php endif; ?>
+        <?php // What the owner filed it under on Create Listing: the same words as the Exchange filters, so a visitor
+              // sees why it matched. Light and watering only when the owner was sure. ?>
+        <?php if ($listing['categories']): ?>
+          <div>
+            <dt>Category</dt>
+            <dd class="listing-categories">
+              <?php foreach ($listing['categories'] as $key): ?>
+                <span class="badge badge-tag"><?= icon(listing_categories()[$key]['icon']) ?> <?= e(listing_categories()[$key]['label']) ?></span>
+              <?php endforeach; ?>
+            </dd>
+          </div>
+        <?php endif; ?>
+        <?php if ($listing['light_level'] !== null): ?>
+          <div><dt>Light</dt><dd><?= e(light_levels()[$listing['light_level']]) ?></dd></div>
+        <?php endif; ?>
+        <?php if ($listing['water_need'] !== null): ?>
+          <div><dt>Watering</dt><dd><?= e(water_needs()[$listing['water_need']]) ?></dd></div>
         <?php endif; ?>
         <?php if ($source_plant): ?>
           <?php // Link to the plant's story (p18, element 3). "See her story" on p18: no he or she in page text. ?>

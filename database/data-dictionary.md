@@ -1,8 +1,8 @@
 # Data dictionary (DES-08)
 
-Every column of the 16 tables in the [table plan](README.md#table-plan-des-07-31-oct-2026). It follows
+Every column of the 18 tables in the [table plan](README.md#table-plan-des-07-31-oct-2026-updated-11-nov-2026). It follows
 `docs/PlantFolio — Database Design Document.pdf` with the seven [DES-07 decisions](README.md#decisions-des-07-31-oct-2026)
-applied; columns those decisions added or changed are marked **(DES-07)**. `schema.sql` (CORE-01, week 8) must match
+applied, marked **(DES-07)**, and the seven [stage F close changes](README.md#stage-f-close-11-nov-2026), marked **(F)**. `schema.sql` (CORE-01, week 8) must match
 this file.
 
 **Conventions.** MySQL/MariaDB, InnoDB, `utf8mb4` with `utf8mb4_unicode_ci`. Every table has an
@@ -23,6 +23,7 @@ One row per member: login details, public profile and Settings choices.
 | password_hash | VARCHAR(255) | No | | | From `password_hash()` |
 | bio | VARCHAR(500) | Yes | NULL | | |
 | town_id | INT UNSIGNED | Yes | NULL | FK → towns.id | **(DES-07)** Replaces `location`. NULL = no distances shown |
+| km_from_town | TINYINT UNSIGNED | Yes | NULL | CHECK 0–30 | **(F)** How far from the town's centre, set with the slider (0 = in the town). NULL when `town_id` is NULL |
 | avatar | VARCHAR(255) | Yes | NULL | | NULL shows initials |
 | new_plants_public | TINYINT(1) | No | 1 | | Settings: new plants start public |
 | dashboard_reminders | TINYINT(1) | No | 1 | | Settings: show care tasks on the Dashboard |
@@ -117,7 +118,9 @@ The dated plant story. Each row is a manual update or a saved AI result.
 | id | INT UNSIGNED | No | AUTO_INCREMENT | PK | |
 | plant_id | INT UNSIGNED | No | | FK → plants.id, Index (plant_id, logged_at) | |
 | prediction_id | INT UNSIGNED | Yes | NULL | FK → ml_predictions.id | Set when `source` = 'ml' |
-| status | ENUM('thriving','stable','needs_attention','sick') | No | | | |
+| type | ENUM('note','photo','care','health_check','milestone') | No | 'note' | | **(F)** How the Story draws the entry |
+| care_task | ENUM('water','fertilise','mist','rotate','prune','repot') | Yes | NULL | | **(F)** Set only when `type` = 'care': the task done ("Watered · 11 Nov") |
+| status | ENUM('thriving','stable','needs_attention','sick') | Yes | NULL | | **(F)** NULL for entries that say nothing about health, such as care |
 | source | ENUM('manual','ml') | No | 'manual' | | |
 | note | VARCHAR(500) | Yes | NULL | | Brown rings on the lower leaves. |
 | photo | VARCHAR(255) | Yes | NULL | | |
@@ -129,11 +132,14 @@ Care tasks. A switched-off reminder on the Add Plant form simply has no row.
 | Column | Type | Null | Default | Key | Notes |
 |---|---|---|---|---|---|
 | id | INT UNSIGNED | No | AUTO_INCREMENT | PK | |
-| plant_id | INT UNSIGNED | No | | FK → plants.id, UQ (plant_id, task) | One reminder per task per plant |
-| task | ENUM('water','fertilise','recheck') | No | | | **(DES-07)** `recheck` is P08's one-off "re-check in 7 days": deleted when marked done; a second one moves `next_due` (`ON DUPLICATE KEY UPDATE`) |
-| interval_days | SMALLINT UNSIGNED | No | | CHECK > 0 | 7 for a recheck |
+| plant_id | INT UNSIGNED | No | | FK → plants.id, UQ (plant_id, task) | One reminder per task per plant: a new one for the same task replaces it (`ON DUPLICATE KEY UPDATE`) |
+| task | ENUM('water','fertilise','mist','rotate','prune','repot','recheck') | No | | | **(F)** mist, rotate, prune, repot added. `recheck` **(DES-07)** is P08's one-off "re-check in 7 days", created only by a Health Check |
+| remind_time | TIME | No | '08:00:00' | | **(F)** Orders the Dashboard list; could drive email reminders later |
+| repeat_type | ENUM('once','daily','days','interval') | No | 'interval' | | **(F)** Does not repeat · Every day · On chosen days · Every few days. A recheck is 'once' |
+| repeat_days | SET('mon','tue','wed','thu','fri','sat','sun') | Yes | NULL | | **(F)** Set only when `repeat_type` = 'days' |
+| interval_days | SMALLINT UNSIGNED | Yes | NULL | CHECK > 0 | **(F)** 1 for 'daily', 2–365 for 'interval', NULL for 'once' and 'days' |
 | last_done | DATE | Yes | NULL | | NULL until first done |
-| next_due | DATE | No | | Index | Always `last_done + interval_days` |
+| next_due | DATE | No | | Index | `last_done + interval_days`, or the next chosen weekday for 'days'. A 'once' reminder is deleted when done |
 
 ## 10. plant_likes
 Likes on public plants (COM-15). One like per member per plant.
@@ -190,9 +196,12 @@ Plants offered for swap or free.
 | description | TEXT | Yes | NULL | | |
 | type | ENUM('swap','free','either') | No | 'swap' | | |
 | looking_for | VARCHAR(150) | Yes | NULL | | succulents or a snake plant pup |
-| town_id | INT UNSIGNED | No | | FK → towns.id | **(DES-07)** Replaces `location`. Pick-up town; can differ from the owner's town. Only the town is ever shown |
+| town_id | INT UNSIGNED | No | | FK → towns.id | **(DES-07)** Replaces `location`. Pick-up town; can differ from the owner's town. Cards and profiles show the town only |
+| km_from_town | TINYINT UNSIGNED | No | 0 | CHECK 0–30 | **(F)** How far the pick-up place is from the town's centre. Shown only on Listing Detail: "Pick-up: about 3 km from Kurunegala" |
 | size | VARCHAR(60) | Yes | NULL | | 3 cuttings, 15 to 20 cm |
 | plant_condition | VARCHAR(100) | Yes | NULL | | Not `condition`, a reserved word in MySQL |
+| light_level | ENUM('low','medium','bright') | Yes | NULL | | **(F)** Exchange Light filter. NULL = "Not sure" |
+| water_need | ENUM('low','moderate','high') | Yes | NULL | | **(F)** Exchange Watering filter. NULL = "Not sure" |
 | photo | VARCHAR(255) | No | | | Card photo |
 | share_email | TINYINT(1) | No | 1 | | Shown only after "I'm interested" |
 | share_phone | TINYINT(1) | No | 0 | | Shown only after "I'm interested" |
@@ -237,7 +246,27 @@ Trust ratings after a finished exchange. Both members may rate each other once.
 | comment | VARCHAR(500) | Yes | NULL | | |
 | created_at | DATETIME | No | CURRENT_TIMESTAMP | | Newest review first |
 
-## Foreign keys (25)
+## 17. listing_categories **(F)**
+The categories a listing is filed under. A listing has one or more (the form checks); there is no `id`, because the
+pair is the key.
+
+| Column | Type | Null | Default | Key | Notes |
+|---|---|---|---|---|---|
+| listing_id | INT UNSIGNED | No | | PK (listing_id, category), FK → exchange_listings.id | |
+| category | ENUM('indoor','outdoor','succulents','air_purifying','flowering','edible','pet_friendly') | No | | PK, Index | The Exchange Category filter looks rows up by this column |
+
+## 18. care_guides **(F)**
+Cache of AI care guides (P05). The local LLM writes a guide once per species; every later visit reads the saved row.
+
+| Column | Type | Null | Default | Key | Notes |
+|---|---|---|---|---|---|
+| id | INT UNSIGNED | No | AUTO_INCREMENT | PK | |
+| species | VARCHAR(150) | No | | UQ | Normalised name from `normalise_species()`: "monstera deliciosa". No FK, so a typed `custom_species` can have a guide too |
+| guide_json | JSON | No | | | The five sections: light, soil_fertilizer, watering, disease_control, structure_pruning. Saved only when all five are present |
+| model_used | VARCHAR(50) | No | | | ollama:llama3.2 |
+| created_at | DATETIME | No | CURRENT_TIMESTAMP | | |
+
+## Foreign keys (26)
 
 CASCADE removes the child rows with the parent; SET NULL keeps them and clears the link; RESTRICT refuses to delete
 a parent that is still in use.
@@ -264,6 +293,7 @@ a parent that is still in use.
 | exchange_listings.town_id | towns.id | RESTRICT |
 | exchange_listings.exchanged_with | users.id | SET NULL |
 | listing_photos.listing_id | exchange_listings.id | CASCADE |
+| listing_categories.listing_id | exchange_listings.id | CASCADE |
 | listing_interests.listing_id | exchange_listings.id | CASCADE |
 | listing_interests.user_id | users.id | CASCADE |
 | user_ratings.rater_id | users.id | SET NULL |
@@ -282,9 +312,11 @@ a parent that is still in use.
 | uq_plant_likes | plant_likes | One like per member per plant |
 | uq_reminders_plant_task | care_reminders | One reminder per task per plant |
 | uq_disease_guides_label | disease_guides | One guide per model class |
+| uq_care_guides_species | care_guides | One AI care guide per species name |
 | uq_interests_listing_user | listing_interests | One interest row per member per listing |
 | uq_ratings_rater_listing | user_ratings | One rating per member per exchange (several NULLs are allowed) |
-| chk_reminders_interval | care_reminders | `interval_days > 0` |
+| chk_reminders_interval | care_reminders | `interval_days > 0` (NULL passes) |
+| chk_users_km · chk_listings_km | users, exchange_listings | `km_from_town BETWEEN 0 AND 30` |
 | chk_predictions_confidence | ml_predictions | `confidence BETWEEN 0 AND 1` |
 | chk_ratings_score | user_ratings | `score BETWEEN 1 AND 5` |
 
@@ -293,7 +325,10 @@ These span rows or tables, so a column constraint cannot check them.
 
 - Every UPDATE and DELETE checks ownership in its WHERE clause (`user_id` = the session user).
 - `plants.species_id` and `plants.custom_species` are never both set.
-- `plants.health_status` equals the newest health log's status (updated in the same transaction as the log INSERT).
+- `plants.health_status` equals the status of the newest health log that has one (updated in the same transaction as the log INSERT).
+- `health_logs.care_task` is set only for `type` = 'care'; `care_reminders.repeat_days` only for `repeat_type` = 'days', and `interval_days` is NULL exactly for 'once' and 'days'.
+- A listing has at least one `listing_categories` row.
+- `users.km_from_town` is NULL when `users.town_id` is NULL.
 - `exchanged_with` and `exchanged_at` are set only when `status` = 'closed'.
 - A rating needs a closed listing; the rater must be its owner or `exchanged_with`, and `rated_id` differs from `rater_id`.
 - Private plants and collections (`is_public` = 0) are never returned to other members.

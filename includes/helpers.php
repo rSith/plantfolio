@@ -54,7 +54,24 @@ date_default_timezone_set(config('timezone') ?? 'Asia/Colombo');
  */
 function url($path = '')
 {
-    return rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
+    $address = rtrim(config('base_url'), '/') . '/' . ltrim($path, '/');
+
+    // Stage F preview: on a page shown as a brand-new member (?empty=1, mock-data.php), every link to one of our pages
+    // keeps empty=1, so that browser tab stays in the preview while another tab shows the full garden. The mark goes
+    // before a #part, and never on images, styles or scripts.
+    if (!empty($GLOBALS['preview_empty'])) {
+        [$before, $hash] = array_pad(explode('#', $address, 2), 2, null);
+        if (str_ends_with(strtok($before, '?'), '.php')) {
+            $address = $before . (str_contains($before, '?') ? '&' : '?') . 'empty=1' . ($hash !== null ? '#' . $hash : '');
+        }
+    }
+    return $address;
+}
+
+/** Stage F preview: the hidden field that keeps ?empty=1 in a GET form (a GET form replaces the address's query). */
+function preview_field()
+{
+    return !empty($GLOBALS['preview_empty']) ? '<input type="hidden" name="empty" value="1">' : '';
 }
 
 /**
@@ -81,11 +98,13 @@ function query_url($page, array $params)
     // An empty list ([]) is dropped too: http_build_query() would print nothing for it and leave a bare "?"
     $params = array_filter($params, fn ($value) => $value !== null && $value !== '' && $value !== []);
 
-    return url($page) . ($params ? '?' . http_build_query($params) : '');
+    $address = url($page);   // may already end in ?empty=1 (the new-member preview)
+
+    return $address . ($params ? (str_contains($address, '?') ? '&' : '?') . http_build_query($params) : '');
 }
 
 /**
- * One piece of text from the address, e.g. get_text('q') for explore.php?q=monstera, or '' when it is not given.
+ * One piece of text from the address, e.g. get_text('q') for community.php?q=monstera, or '' when it is not given.
  * Anyone can type anything there: a hand-made address can send a list where one word belongs (q[]=x makes $_GET['q']
  * an array, and string functions then fail) or bytes that are not real UTF-8 text (q=%FF, which e() prints as an empty
  * string). Both count as "not given", so the page falls back to its default as for any other wrong value.
@@ -130,7 +149,7 @@ function current_page()
 /**
  * The aria-current attribute of a navigation link, so a screen reader hears which link is lit, as the eye sees it.
  * $is_lit is the same test that gives the link its .is-active class. A lit link that opens this very page gets
- * aria-current="page" (Exchange on exchange.php); a lit link whose area the page only belongs to gets
+ * aria-current="page" (Community on community.php); a lit link whose area the page only belongs to gets
  * aria-current="true", "the current item of this set" (Exchange on listing.php, My Garden on a plant's profile).
  * A link that is not lit gets nothing. Print the result without e(): it is fixed text.
  */
@@ -146,7 +165,7 @@ function nav_current($is_lit, $href)
 }
 
 /**
- * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'exchange' …
+ * The area of the site the current page belongs to, from the sitemap on wireframe p4: 'garden', 'community' …
  * The navigation highlights a whole area, so "My Garden" stays lit on a plant's profile and on the plant form.
  * Returns '' for pages outside every area (landing, sign up, log in).
  */
@@ -156,8 +175,8 @@ function current_area()
         'dashboard' => ['dashboard.php'],
         'garden'    => ['garden.php', 'plant.php', 'plant-form.php'],
         'tools'     => ['identify.php', 'health-check.php'],
-        'explore'   => ['explore.php'],
-        'exchange'  => ['exchange.php', 'listing.php', 'listing-form.php', 'my-exchanges.php'],
+        // Explore and Exchange became one page, Community; the listing pages and My exchanges belong to it
+        'community' => ['community.php', 'listing.php', 'listing-form.php', 'my-exchanges.php'],
         'profile'   => ['user.php', 'settings.php'],
     ];
 
@@ -256,18 +275,145 @@ function health_label($status)
     return $labels[$status] ?? 'Unknown';
 }
 
+/**
+ * The care tasks a member can choose in Add a reminder (Dashboard), in the order of the list.
+ * recheck is not here: only a Health Check creates one (P08).
+ */
+function reminder_tasks()
+{
+    return ['water', 'fertilise', 'mist', 'rotate', 'prune', 'repot'];
+}
+
 /** The word for a care_reminders.task value: water gives "Water". */
 function task_label($task)
 {
-    $labels = ['water' => 'Water', 'fertilise' => 'Fertilise'];
+    $labels = [
+        'water'     => 'Water',
+        'fertilise' => 'Fertilise',
+        'mist'      => 'Mist',
+        'rotate'    => 'Rotate',
+        'prune'     => 'Prune',
+        'repot'     => 'Repot',
+        'recheck'   => 'Re-check',
+    ];
 
     return $labels[$task] ?? ucfirst($task);
 }
 
-/** The icon for a care task: a droplet for watering, a sprout for fertilising. */
+/** The icon for a care task, e.g. rain for watering, a flask of plant food for fertilising, scissors for pruning. */
 function task_icon($task)
 {
-    return $task === 'fertilise' ? 'sprout' : 'droplet';
+    $icons = [
+        'water'     => 'cloud-rain',
+        'fertilise' => 'flask-conical',
+        'mist'      => 'spray-can',
+        'rotate'    => 'rotate-cw',
+        'prune'     => 'scissors',
+        'repot'     => 'shovel',
+        'recheck'   => 'stethoscope',
+    ];
+
+    return $icons[$task] ?? 'calendar';
+}
+
+/** A care task in the past tense, for the Mark done toast ("Watered Monty") and a Story care line. */
+function task_done_label($task)
+{
+    $labels = [
+        'water'     => 'Watered',
+        'fertilise' => 'Fertilised',
+        'mist'      => 'Misted',
+        'rotate'    => 'Rotated',
+        'prune'     => 'Pruned',
+        'repot'     => 'Repotted',
+        'recheck'   => 'Re-checked',
+    ];
+
+    return $labels[$task] ?? 'Done:';
+}
+
+/**
+ * How a reminder repeats, in words: "every 7 days", "every day", "on Mon, Wed, Fri" or "once".
+ * The mock rows have no repeat_type yet: they repeat every interval_days, like every reminder before Add a reminder.
+ */
+function repeat_words($reminder)
+{
+    $type = $reminder['repeat_type'] ?? 'interval';
+    if ($type === 'once') {
+        return 'once';
+    }
+    if ($type === 'days') {
+        return 'on ' . implode(', ', array_map('ucfirst', $reminder['repeat_days']));
+    }
+    $days = (int) $reminder['interval_days'];
+
+    return $days === 1 ? 'every day' : 'every ' . $days . ' days';
+}
+
+/** A reminder's schedule in one line: "every 7 days at 8:00 AM", or without the time when none was set. */
+function schedule_words($reminder)
+{
+    $time = $reminder['remind_time'] ?? null;
+
+    return repeat_words($reminder) . ($time ? ' at ' . date('g:i A', strtotime($time)) : '');
+}
+
+/**
+ * A task's icon and name in the task's own colour, e.g. blue Water, olive Fertilise (.task in components.css).
+ * Returns HTML like icon(), so print it with <?= task_name($task) ?>, not inside e().
+ */
+function task_name($task)
+{
+    return '<span class="task task-' . e($task) . '">' . icon(task_icon($task)) . ' ' . e(task_label($task)) . '</span>';
+}
+
+/**
+ * What a listing can be filed under, so swappers find it (Exchange filters, Create Listing; table accepted 11 Nov 2026
+ * listing_categories). Key => [words, icon]. A listing has one or more; the owner ticks them on the listing form.
+ */
+function listing_categories()
+{
+    return [
+        'indoor'        => ['label' => 'Indoor plants',      'icon' => 'house'],
+        'outdoor'       => ['label' => 'Outdoor plants',     'icon' => 'trees'],
+        'succulents'    => ['label' => 'Succulents & cacti', 'icon' => 'sprout'],
+        'air_purifying' => ['label' => 'Air purifying',      'icon' => 'wind'],
+        'flowering'     => ['label' => 'Flowering',          'icon' => 'flower-2'],
+        'edible'        => ['label' => 'Herbs & edibles',    'icon' => 'carrot'],
+        'pet_friendly'  => ['label' => 'Pet friendly',       'icon' => 'paw-print'],
+    ];
+}
+
+/** The light a plant needs: exchange_listings.light_level (NULL = the owner is not sure). */
+function light_levels()
+{
+    return ['low' => 'Low light', 'medium' => 'Medium light', 'bright' => 'Bright light'];
+}
+
+/** How much water a plant needs: exchange_listings.water_need (NULL = the owner is not sure). */
+function water_needs()
+{
+    return ['low' => 'Low', 'moderate' => 'Moderate', 'high' => 'High'];
+}
+
+/**
+ * Straight-line distance in whole km between two towns of $towns (rows with latitude and longitude, keyed by name),
+ * or null when either town is not in the list. The Haversine formula: the distance between two points on a sphere,
+ * here the Earth (radius 6371 km). Stage B does the same sum inside the SQL query, with the towns table.
+ */
+function town_distance_km(array $towns, $from, $to)
+{
+    if (!isset($towns[$from], $towns[$to])) {
+        return null;
+    }
+    $lat1 = deg2rad($towns[$from]['latitude']);
+    $lat2 = deg2rad($towns[$to]['latitude']);
+    $dlat = $lat2 - $lat1;
+    $dlon = deg2rad($towns[$to]['longitude'] - $towns[$from]['longitude']);
+
+    $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
+
+    return (int) round(6371 * 2 * atan2(sqrt($a), sqrt(1 - $a)));
 }
 
 /** The words and icon for an exchange_listings.type value (swap, free or either). */

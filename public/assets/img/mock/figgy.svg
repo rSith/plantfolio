@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: fiddle-leaf fig. Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#EEE8DB"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
   <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
   <path d="M200 194V70" fill="none" stroke="#6B5238" stroke-width="6" stroke-linecap="round"/>

@@ -308,16 +308,16 @@ include __DIR__ . '/../includes/header.php';
     <p class="text-small sg-note">Contact details never appear on a card. Each card opens its Listing Detail page (P11); with <span class="sg-code">'preview' =&gt; true</span> (the live preview of Create Listing, P12) the title is plain text, because the listing has no page yet.</p>
   </section>
 
-  <section class="sg-card" aria-labelledby="sg-member-cards">
-    <h2 class="label" id="sg-member-cards">Member card</h2>
+  <section class="sg-card" aria-labelledby="sg-person-cards">
+    <h2 class="label" id="sg-person-cards">Person card</h2>
     <div class="sg-cards">
       <?php foreach ($sample_members as $member): ?>
-        <?php partial('member-card', ['member' => $member]); ?>
+        <?php partial('person-card', ['member' => $member]); ?>
       <?php endforeach; ?>
     </div>
     <div class="sg-cards sg-cards-wide sg-row-spaced">
       <?php foreach ($sample_members as $member): ?>
-        <?php partial('member-card', ['member' => $member, 'compact' => true]); ?>
+        <?php partial('person-card', ['member' => $member, 'compact' => true]); ?>
       <?php endforeach; ?>
     </div>
     <p class="text-small sg-note">Explore's People tab (upright from tablet width, avatar beside the text on a phone) and the compact card of its "Plant lovers matching" row. Each opens the member's Public Profile; email and phone are never shown.</p>

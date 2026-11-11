@@ -34,7 +34,7 @@ if (!$member) {
     // A very long name is cut to 40 letters. Its "…" then ends the sentence, so no full stop follows it.
     $shown_name = mb_strlen($asked_for) > 40 ? mb_substr($asked_for, 0, 40) . '…' : $asked_for . '.';
     $page_title = 'Member not found';
-    $nav_area   = 'explore';   // looking for a member is part of Explore
+    $nav_area   = 'community';   // looking for a member is part of Community (People tab)
     include __DIR__ . '/../includes/header.php';
     ?>
     <div class="container page">
@@ -43,9 +43,9 @@ if (!$member) {
             'heading' => 'h1',   // the whole page: its one main heading
             'title'   => 'Member not found',
             'text'    => $asked_for === ''
-                ? 'The address does not say which member to show. You can find people on Explore.'
-                : 'Nobody is called @' . $shown_name . ' Check the spelling, or search for the member on Explore.',
-            'actions' => [['label' => 'Find people', 'url' => query_url('explore.php', ['tab' => 'people']), 'icon' => 'search']],
+                ? 'The address does not say which member to show. You can find people on Community.'
+                : 'Nobody is called @' . $shown_name . ' Check the spelling, or search for the member on Community.',
+            'actions' => [['label' => 'Find people', 'url' => query_url('community.php', ['tab' => 'people']), 'icon' => 'search']],
         ]); ?>
       </section>
     </div>
@@ -67,6 +67,11 @@ $collections = array_values(array_filter(
     array_merge($mock_collections, $mock_community_collections),
     fn ($collection) => $collection['user_id'] === $member['id'] && $collection['is_public']
 ));
+// Mock-only: a collection made in the preview carries its public-only numbers (mock_add_collection()); use those here
+$collections = array_map(fn ($collection) => array_merge($collection, [
+    'plant_count'  => $collection['public_plant_count'] ?? $collection['plant_count'],
+    'cover_photos' => $collection['public_cover_photos'] ?? $collection['cover_photos'],
+]), $collections);
 
 // Plants: $mock_public_plants holds public plants only. The most recently updated come first: a living portfolio.
 $plants = array_values(array_filter($mock_public_plants, fn ($plant) => $plant['user_id'] === $member['id']));
@@ -170,7 +175,7 @@ $page_title = $member['full_name'] . ' (' . $handle . ')';
 $page_css   = 'profile.css';
 
 // Like the Plant Profile: your own profile lights Profile in the navigation, anyone else's is part of Explore
-$nav_area = $is_owner ? 'profile' : 'explore';
+$nav_area = $is_owner ? 'profile' : 'community';
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -376,7 +381,7 @@ include __DIR__ . '/../includes/header.php';
                    'actions' => [['label' => 'List a plant', 'href' => 'listing-form.php', 'icon' => 'plus']]]
                 : ['title' => 'No open listings',
                    'text' => $handle . ' has nothing on the exchange right now.',
-                   'actions' => [['label' => 'Browse the exchange', 'href' => 'exchange.php', 'icon' => 'repeat']]]); ?>
+                   'actions' => [['label' => 'Browse the exchange', 'href' => 'community.php?tab=exchange', 'icon' => 'repeat']]]); ?>
           </section>
         <?php endif; ?>
 

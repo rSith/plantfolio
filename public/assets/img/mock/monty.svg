@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <!-- Placeholder illustration: Monstera deliciosa. Replace with a real photo when one is available. -->
-  <rect width="400" height="300" fill="#E2EADB"/>
-  <rect y="232" width="400" height="68" fill="#D3DECB"/>
+  <rect width="400" height="300" fill="#ECE8DD"/>
+  <rect y="232" width="400" height="68" fill="#E3DACA"/>
   <ellipse cx="200" cy="268" rx="60" ry="7" fill="#2B2B28" opacity=".1"/>
   <g fill="none" stroke="#2F6B3D" stroke-width="5" stroke-linecap="round">
     <path d="M200 192Q198 150 205 118"/>

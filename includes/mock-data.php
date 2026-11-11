@@ -23,6 +23,7 @@ $current_user = [
     'phone'      => '+94 77 000 1234',       // p18 and p19: shared only with people interested in a listing
     'bio'        => 'Balcony gardener growing aroids and far too many pothos. Always happy to swap cuttings.',
     'location'   => 'Kurunegala',
+    'km_from_town' => 3,   // users.km_from_town: Nimali lives about 3 km from Kurunegala's centre (invented)
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
     'created_at' => '2025-03-14 09:00:00',   // "Member since Mar 2025"
 
@@ -34,7 +35,8 @@ $current_user = [
     // Not columns of `users`: stage B calculates these with COUNT() and AVG() on other tables.
     // Her own pages count everything, private plants and collections included. Other people see smaller,
     // public-only numbers: those are in $mock_users below (13 plants, 2 collections).
-    'plant_count'      => 18,
+    // 20 = the 18 in her three collections (p11) + Penny and Heidi, who are in no collection yet.
+    'plant_count'      => 20,
     'collection_count' => 3,
     'swap_count'       => 12,
     'rating_avg'       => 4.9,
@@ -57,21 +59,39 @@ if (isset($_GET['guest'])) {
     $_SESSION['preview_visitor'] = true;
 }
 if (isset($_GET['member'])) {
-    $_SESSION['preview_visitor']   = false;
-    $_SESSION['preview_empty']     = false;   // ?member is always Nimali with her full garden
-    $_SESSION['preview_interests'] = [];      // … and the interests of the mock data (see mock_send_interest())
-    $_SESSION['preview_exchanges'] = [];      // … the listings of the mock data, none marked exchanged (mock_mark_exchanged())
-    $_SESSION['preview_ratings']   = [];      // … and no ratings given in the preview (mock_rate_exchange())
+    $_SESSION['preview_visitor'] = false;
+    // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
+    // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
+    // mock_add_collection())
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'health_logs', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
+        $_SESSION['preview_' . $list]          = [];
+        $_SESSION['preview_' . $list . '_new'] = [];
+    }
 }
 if (!empty($_SESSION['preview_visitor'])) {
     $current_user = null;
+}
+
+// Preview switch: ?empty=1 shows Nimali as a brand-new member, before her first plant (state S1). It belongs to the
+// address, not the session, so each browser tab keeps its own: url() (helpers.php) copies empty=1 onto every link and
+// form of such a page, and a page opened without it shows her full garden. (In a session, a second tab opened as a
+// new member would have turned the first tab's next page empty too.) Create account starts it.
+$preview_empty = isset($_GET['empty']);
+
+/**
+ * Mock-only: the session key of one list of preview actions (interests, exchanges, ratings, reminders). The new-member
+ * preview keeps its own copy, so two tabs never mix what was done in each: preview_key('ratings') is 'preview_ratings'
+ * for the full garden and 'preview_ratings_new' for the new member.
+ */
+function preview_key($list)
+{
+    return 'preview_' . $list . (!empty($GLOBALS['preview_empty']) ? '_new' : '');
 }
 
 /** Mock-only: log out, i.e. switch the preview to visitor mode (logout.php). Returns null for $current_user. */
 function mock_become_visitor()
 {
     $_SESSION['preview_visitor'] = true;
-    $_SESSION['preview_empty']   = false;
     return null;
 }
 
@@ -83,11 +103,13 @@ function mock_become_visitor()
 function mock_log_in_and_go($page, $new_account = false)
 {
     $_SESSION['preview_visitor'] = false;
-    $_SESSION['preview_empty']   = $new_account;
     if ($new_account) {
-        $_SESSION['preview_interests'] = [];   // a brand-new account has shown interest in nothing yet
-        $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
-        $_SESSION['preview_ratings']   = [];
+        // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'health_logs', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
+            $_SESSION['preview_' . $list . '_new'] = [];
+        }
+        header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
+        exit;
     }
     header('Location: ' . url($page));
     exit;
@@ -128,6 +150,24 @@ $mock_plants = [
      'task' => 'water', 'interval_days' => 7, 'next_due' => mock_date(3),
      'last_logged_at' => mock_date(-9) . ' 17:30:00'],
 
+    // Two more snake plants in Living room, so Sergeant and these two show as one stack in My Garden (prototype on
+    // feature/plant-stacks). They are two of Living room's 7 that had no sample row yet, so no count changes.
+    // Public like the rest of Living room (13 public plants = Living room 7 + Balcony 6). Stripes is sick on purpose:
+    // the stack card must show that one of three is in trouble.
+    ['id' => 64, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 3, 'nickname' => 'Stripes',
+     'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-05-11', 'health_status' => 'sick', 'is_public' => 1,
+     'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
+     'collection_name' => 'Living room',
+     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(-1),
+     'last_logged_at' => mock_date(-2) . ' 17:05:00'],
+
+    ['id' => 65, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 3, 'nickname' => 'Slim',
+     'photo' => 'mock/sergeant.svg', 'acquired_on' => '2025-05-11', 'health_status' => 'thriving', 'is_public' => 1,
+     'scientific_name' => 'Dracaena trifasciata', 'common_name' => 'Snake plant',
+     'collection_name' => 'Living room',
+     'task' => 'water', 'interval_days' => 14, 'next_due' => mock_date(5),
+     'last_logged_at' => mock_date(-12) . ' 09:00:00'],
+
     ['id' => 48, 'user_id' => 1, 'collection_id' => 1, 'species_id' => 7, 'nickname' => 'Lily',
      'photo' => 'mock/lily.svg', 'acquired_on' => '2025-09-02', 'health_status' => 'stable', 'is_public' => 1,
      'scientific_name' => 'Spathiphyllum wallisii', 'common_name' => 'Peace lily',
@@ -156,6 +196,23 @@ $mock_plants = [
      'collection_name' => 'Succulents',
      'task' => 'water', 'interval_days' => 10, 'next_due' => mock_date(6),
      'last_logged_at' => mock_date(-26) . ' 10:15:00'],
+
+    // Two new plants not sorted into a collection yet (collection_id NULL, "No collection" on Add plant), so the
+    // New collection popup has plants to pick (CORE-13). Private, so the public counts (13 plants) stay the same.
+    // No reminder yet: task, interval_days and next_due are NULL, as the LEFT JOIN on care_reminders gives.
+    ['id' => 62, 'user_id' => 1, 'collection_id' => null, 'species_id' => 11, 'nickname' => 'Penny',
+     'photo' => 'mock/pip.svg', 'acquired_on' => mock_date(-6), 'health_status' => 'stable', 'is_public' => 0,
+     'scientific_name' => 'Pilea peperomioides', 'common_name' => 'Chinese money plant',
+     'collection_name' => null,
+     'task' => null, 'interval_days' => null, 'next_due' => null,
+     'last_logged_at' => mock_date(-6) . ' 11:00:00'],
+
+    ['id' => 63, 'user_id' => 1, 'collection_id' => null, 'species_id' => 12, 'nickname' => 'Heidi',
+     'photo' => 'mock/goldie.svg', 'acquired_on' => mock_date(-4), 'health_status' => 'thriving', 'is_public' => 0,
+     'scientific_name' => 'Philodendron hederaceum', 'common_name' => 'Heartleaf philodendron',
+     'collection_name' => null,
+     'task' => null, 'interval_days' => null, 'next_due' => null,
+     'last_logged_at' => mock_date(-4) . ' 15:30:00'],
 ];
 
 // Nimali's collections — rows of `collections` (wireframe p11, element 2), plus two calculated columns:
@@ -331,12 +388,62 @@ $mock_listings = [
      'size' => '3 cuttings, about 15 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 ];
 
-// A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
-// when nobody is logged in. Every page that shows listings (Landing, Exchange, Public Profile) then hides the distance.
-if (!$current_user) {
-    foreach ($mock_listings as $index => $listing) {
-        $mock_listings[$index]['distance_km'] = null;
-    }
+// What each listing is filed under, so swappers can find it with the Exchange filters (Create Listing asks for these).
+// Accepted 11 Nov 2026 (database/README.md, stage F close): exchange_listings.light_level ENUM('low','medium','bright') NULL,
+// exchange_listings.water_need ENUM('low','moderate','high') NULL, and a table listing_categories (listing_id, category),
+// because one listing can be in several categories; stage B reads them back with GROUP_CONCAT as `categories`.
+// All values are invented, chosen to match each plant (aloe and peace lily are not pet safe; echeveria is).
+$listing_traits = [
+    7  => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Pothos 'Golden'
+    8  => [['indoor', 'succulents'],                  'bright', 'low'],        // Aloe vera pups
+    12 => [['indoor', 'air_purifying'],               'medium', 'moderate'],   // Monstera cutting
+    9  => [['indoor', 'air_purifying'],               'low',    'low'],        // Snake plant 'Laurentii'
+    13 => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Heartleaf philodendron
+    10 => [['outdoor', 'edible'],                     'bright', 'high'],       // Tomato seedlings
+    6  => [['indoor', 'flowering', 'air_purifying'], 'low',    'high'],       // Peace lily
+    11 => [['succulents', 'outdoor', 'pet_friendly'], 'bright', 'low'],        // Echeveria cuttings
+    14 => [['indoor', 'air_purifying'],               'low',    'low'],        // Snake plant pups (closed)
+    5  => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Marble Queen (closed)
+];
+// km_from_town: how far the pick-up place is from its town's centre, 0 = in the town (proposed
+// exchange_listings.km_from_town, set with the slider on Create Listing). Listing Detail shows it as "Pick-up: about 3 km
+// from Kurunegala"; cards show the town only. The Kurunegala values are p17's printed distances, the others invented.
+$listing_km = [7 => 3, 8 => 5, 12 => 5, 9 => 2, 13 => 4, 10 => 0, 6 => 1, 11 => 0, 14 => 1, 5 => 2];
+foreach ($mock_listings as $index => $listing) {
+    [$categories, $light, $water] = $listing_traits[$listing['id']] ?? [[], null, null];
+    $mock_listings[$index] += ['categories' => $categories, 'light_level' => $light, 'water_need' => $water,
+                               'km_from_town' => $listing_km[$listing['id']] ?? null];
+}
+
+// Towns with coordinates: rows of the `towns` table accepted in DES-07 (id, name, latitude, longitude), keyed by name.
+// Sri Lanka's main cities (every district capital and a few large towns) plus the listings' own smaller towns
+// (Kuliyapitiya, Pannala, Wariyapola). Coordinates are the town centres, rounded to 4 decimals. The Exchange tab's "Near"
+// list shows them A–Z. Stage B: SELECT id, name, latitude, longitude FROM towns ORDER BY name.
+$mock_towns = [];
+foreach ([
+    ['Ampara', 7.2975, 81.6820], ['Anuradhapura', 8.3114, 80.4037], ['Badulla', 6.9934, 81.0550],
+    ['Batticaloa', 7.7310, 81.6747], ['Chilaw', 7.5758, 79.7953], ['Colombo', 6.9271, 79.8612],
+    ['Dambulla', 7.8742, 80.6511], ['Galle', 6.0535, 80.2210], ['Gampaha', 7.0840, 80.0098],
+    ['Hambantota', 6.1241, 81.1185], ['Jaffna', 9.6615, 80.0255], ['Kalutara', 6.5854, 79.9607],
+    ['Kandy', 7.2906, 80.6337], ['Kegalle', 7.2513, 80.3464], ['Kilinochchi', 9.3803, 80.3770],
+    ['Kuliyapitiya', 7.4688, 80.0401], ['Kurunegala', 7.4863, 80.3647], ['Mannar', 8.9810, 79.9044],
+    ['Matale', 7.4675, 80.6234], ['Matara', 5.9549, 80.5550], ['Monaragala', 6.8728, 81.3507],
+    ['Mullaitivu', 9.2671, 80.8142], ['Negombo', 7.2008, 79.8737], ['Nuwara Eliya', 6.9497, 80.7891],
+    ['Pannala', 7.3297, 80.0181], ['Polonnaruwa', 7.9403, 81.0188], ['Puttalam', 8.0362, 79.8283],
+    ['Ratnapura', 6.6828, 80.3992], ['Trincomalee', 8.5874, 81.2152], ['Vavuniya', 8.7514, 80.4971],
+    ['Wariyapola', 7.6280, 80.2400],
+] as $id => [$name, $latitude, $longitude]) {
+    $mock_towns[$name] = ['id' => $id + 1, 'name' => $name, 'latitude' => $latitude, 'longitude' => $longitude];
+}
+
+// distance_km: how far each listing's town is from the viewer's town, in a straight line between the town centres
+// (town_distance_km() in helpers.php; stage B works it out in the query with the same Haversine formula). Two listings
+// in the viewer's own town are 0 km away, and the cards say "in town". A visitor has no town: NULL, and the pages hide
+// the distance. (Until 11 Nov these were typed numbers from p17; the Community page now measures from any town.)
+foreach ($mock_listings as $index => $listing) {
+    $mock_listings[$index]['distance_km'] = $current_user
+        ? town_distance_km($mock_towns, $current_user['location'], $listing['location'])
+        : null;
 }
 
 // ── Listing Detail (P11, COM-08) ────────────────────────
@@ -395,8 +502,8 @@ $seeded_interest_ids = array_column(
  */
 function mock_send_interest($listing_id, $user_id, $message)
 {
-    $_SESSION['preview_interests'][$listing_id] = [
-        'id'         => $_SESSION['preview_interests'][$listing_id]['id'] ?? 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
+    $_SESSION[preview_key('interests')][$listing_id] = [
+        'id'         => $_SESSION[preview_key('interests')][$listing_id]['id'] ?? 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
         'listing_id' => $listing_id,
         'user_id'    => $user_id,
         'message'    => $message,
@@ -408,7 +515,7 @@ function mock_send_interest($listing_id, $user_id, $message)
 /** Mock-only: "Withdraw interest". Stage B: UPDATE listing_interests SET status = 'withdrawn' WHERE id = ? AND user_id = ?. */
 function mock_withdraw_interest($interest)
 {
-    $_SESSION['preview_interests'][$interest['listing_id']] = array_merge($interest, ['status' => 'withdrawn']);
+    $_SESSION[preview_key('interests')][$interest['listing_id']] = array_merge($interest, ['status' => 'withdrawn']);
 }
 
 /**
@@ -418,7 +525,7 @@ function mock_withdraw_interest($interest)
  */
 function mock_mark_exchanged($listing_id, $user_id)
 {
-    $_SESSION['preview_exchanges'][$listing_id] = ['exchanged_with' => $user_id, 'exchanged_at' => date('Y-m-d H:i:s')];
+    $_SESSION[preview_key('exchanges')][$listing_id] = ['exchanged_with' => $user_id, 'exchanged_at' => date('Y-m-d H:i:s')];
 }
 
 /**
@@ -428,7 +535,7 @@ function mock_mark_exchanged($listing_id, $user_id)
  */
 function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
 {
-    $_SESSION['preview_ratings'][$listing_id] = [
+    $_SESSION[preview_key('ratings')][$listing_id] = [
         'id'         => 900 + $listing_id,   // made up: stage B's AUTO_INCREMENT
         'rater_id'   => $rater_id,
         'rated_id'   => $rated_id,
@@ -437,6 +544,143 @@ function mock_rate_exchange($listing_id, $rater_id, $rated_id, $score, $comment)
         'comment'    => $comment,
         'created_at' => date('Y-m-d H:i:s'),
     ];
+}
+
+/**
+ * Mock-only: "Add reminder" and "Mark done" on the Dashboard (CORE-22, CORE-23). Kept in the session like an interest, and laid over
+ * $mock_plant_reminders at the end of this file, so All reminders, Today's care and the plant's page all show it.
+ * The key is plant and task: UNIQUE (plant_id, task) allows one reminder per task per plant, so adding the same
+ * pair again replaces the earlier one. Returns the row it replaced, or null, so that Undo can put it back.
+ * Stage B: INSERT INTO care_reminders (…) VALUES (…) ON DUPLICATE KEY UPDATE …
+ */
+function mock_add_reminder($reminder)
+{
+    $key      = $reminder['plant_id'] . '-' . $reminder['task'];
+    $previous = $_SESSION[preview_key('reminders')][$key] ?? null;
+    $_SESSION[preview_key('reminders')][$key] = $reminder;
+
+    return $previous;
+}
+
+/**
+ * Mock-only: a Story entry added in the preview (Mark done adds a care line). Kept in the session and added to
+ * $mock_health_logs at the end of this file. Returns its made-up id, which Undo needs.
+ * Stage B: INSERT INTO health_logs (plant_id, type, care_task, status, source, note, photo, logged_at) VALUES (…).
+ */
+function mock_add_health_log($row)
+{
+    $id = 2000 + count($_SESSION[preview_key('health_logs')] ?? []);
+    while (isset($_SESSION[preview_key('health_logs')][$id])) {
+        $id++;
+    }
+    $_SESSION[preview_key('health_logs')][$id] = ['id' => $id] + $row;
+    return $id;
+}
+
+/** Mock-only: Undo of a Mark done also takes back its Story line. Stage B: DELETE FROM health_logs WHERE id = ? */
+function mock_remove_health_log($id)
+{
+    unset($_SESSION[preview_key('health_logs')][$id]);
+}
+
+/**
+ * Mock-only: Undo in the "Reminder added" toast. Puts back the reminder the new one replaced, or removes the new one;
+ * a replaced row of the mock data comes back by itself, because nothing lies over it any more.
+ * Stage B: DELETE FROM care_reminders WHERE id = ? (or an UPDATE back to the old values) after checking the owner.
+ */
+function mock_undo_reminder($key, $previous)
+{
+    if ($previous) {
+        $_SESSION[preview_key('reminders')][$key] = $previous;
+    } else {
+        unset($_SESSION[preview_key('reminders')][$key]);
+    }
+}
+
+/**
+ * Mock-only: "+ New collection" on My Garden (CORE-13). Kept in the session and added to $mock_collections at the end
+ * of this file, so the new tab shows on My Garden, in Garden at a glance and in the Add plant form. A new collection
+ * holds the plants in $plant_ids (already checked by the page: her own, and in no collection yet). Returns the row with
+ * its made-up id, so the page can open the new tab.
+ * Stage B, in one transaction: INSERT INTO collections (user_id, name, is_public) VALUES (?, ?, ?), then
+ * UPDATE plants SET collection_id = ? WHERE id IN (…) AND user_id = ? AND collection_id IS NULL.
+ */
+function mock_add_collection($name, $is_public, array $plant_ids = [])
+{
+    global $current_user;
+
+    $collection = [
+        'id'           => 900 + count($_SESSION[preview_key('collections')] ?? []),   // made up: stage B's AUTO_INCREMENT
+        'user_id'      => $current_user['id'],
+        'name'         => $name,
+        'is_public'    => $is_public ? 1 : 0,
+        'plant_count'  => 0,
+        'cover_photos' => [],
+        // Mock-only: the Public Profile's numbers, public plants only (stage B: its query adds AND plants.is_public = 1).
+        // The three mock collections need no such keys: their private plants are all in private Succulents.
+        'public_plant_count'  => 0,
+        'public_cover_photos' => [],
+    ];
+    $_SESSION[preview_key('collections')][] = $collection;
+    // plant id => its new collection id: the one column the UPDATE above changes
+    foreach ($plant_ids as $plant_id) {
+        $_SESSION[preview_key('collection_plants')][$plant_id] = $collection['id'];
+    }
+
+    return $collection;
+}
+
+/**
+ * Mock-only: Save plant on Add plant (CORE-16), with "How many?" (prototype, feature/plant-stacks). Keeps the new
+ * plants rows in the session; the end of this file adds them to $mock_plants. Several of one species in one
+ * collection then show as one stack in My Garden, with nothing else to do. Returns the new ids.
+ * Stage B: one INSERT INTO plants per plant inside a transaction, plus each plant's reminders and first health log.
+ */
+function mock_add_plants(array $rows)
+{
+    $ids = [];
+    foreach ($rows as $row) {
+        $row['id'] = 1000 + count($_SESSION[preview_key('plants')] ?? []);   // made up: stage B's AUTO_INCREMENT
+        $_SESSION[preview_key('plants')][] = $row;
+        $ids[] = $row['id'];
+    }
+
+    return $ids;
+}
+
+/**
+ * Mock-only: Delete on a plant in My Garden (CORE-20), after the confirmation that names the plant. Remembers the id
+ * in the session; the end of this file then leaves the plant out everywhere.
+ * Stage B: DELETE FROM plants WHERE id = ? AND user_id = ?, which also removes its reminders, health logs, photos and
+ * likes (ON DELETE CASCADE), and deletes its photo files from public/uploads/.
+ */
+function mock_delete_plant($plant_id)
+{
+    $_SESSION[preview_key('deleted_plants')][$plant_id] = true;
+}
+
+/**
+ * Mock-only: "Add plants" on an open collection in My Garden (CORE-13). The same session list as New collection uses:
+ * plant id => collection id, applied at the end of this file. The page has already checked the ids (her own plants,
+ * in no collection yet) and that the collection is hers.
+ * Stage B: UPDATE plants SET collection_id = ? WHERE id IN (…) AND user_id = ? AND collection_id IS NULL.
+ */
+function mock_add_to_collection($collection_id, array $plant_ids)
+{
+    foreach ($plant_ids as $plant_id) {
+        $_SESSION[preview_key('collection_plants')][$plant_id] = $collection_id;
+    }
+}
+
+/**
+ * Mock-only: "Delete collection" on My Garden (CORE-13). Remembers the id in the session; the end of this file then
+ * leaves the collection out and puts its plants in no collection. The plants themselves are kept.
+ * Stage B: DELETE FROM collections WHERE id = ? AND user_id = ?. The foreign key plants.collection_id is
+ * ON DELETE SET NULL, so MySQL itself moves the plants to "No collection".
+ */
+function mock_delete_collection($collection_id)
+{
+    $_SESSION[preview_key('deleted_collections')][$collection_id] = true;
 }
 
 // ── Landing page (P01, CORE-27) ─────────────────────────
@@ -497,35 +741,8 @@ $mock_quote_member = [
 
 // ── Dashboard (P03, CORE-24 and CORE-25) ────────────────
 
-// Numbers for Nimali's whole garden, which the Dashboard cannot count from the short lists above.
-// Stage B: SELECT health_status, COUNT(*) FROM plants WHERE user_id = ? GROUP BY health_status
-//          SELECT COUNT(*) FROM care_reminders … WHERE next_due BETWEEN tomorrow AND 7 days from today
-$mock_garden_stats = [
-    'health_counts'  => ['thriving' => 13, 'stable' => 3, 'needs_attention' => 1, 'sick' => 1],   // adds up to 18 plants
-    'upcoming_count' => 5,   // "Coming up this week · 5 tasks"
-];
-
-// Plants marked Sick or Needs attention (wireframe p10, element 4) — plants rows joined with:
-//   plant_species  → common_name          collections → collection_name
-//   health_logs    → log_note, log_source, logged_at of the plant's newest entry
-//   ml_predictions → predicted_label, confidence, when that entry came from a Health Check (source 'ml')
-//   care_reminders → task, next_due of the plant's soonest reminder
-$mock_attention = [
-    ['id' => 47, 'nickname' => 'Tommy', 'photo' => 'mock/tommy.svg', 'health_status' => 'sick',
-     'common_name' => 'Tomato', 'collection_name' => 'Balcony',
-     'log_note' => 'Brown rings on the lower leaves.', 'log_source' => 'ml', 'logged_at' => mock_date(-1) . ' 07:46:00',
-     'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92,
-     'task' => 'water', 'next_due' => mock_date(1)],
-
-    ['id' => 43, 'nickname' => 'Goldie', 'photo' => 'mock/goldie.svg', 'health_status' => 'needs_attention',
-     'common_name' => 'Golden pothos', 'collection_name' => 'Living room',
-     'log_note' => 'Leaves may start to droop.', 'log_source' => 'manual', 'logged_at' => mock_date(-3) . ' 18:10:00',
-     'predicted_label' => null, 'confidence' => null,
-     'task' => 'water', 'next_due' => mock_date(-2)],
-];
-
-// New interest in Nimali's listings (wireframe p10, element 7): $mock_new_interests, the rows of
-// $mock_received_interests with status 'new'. It is built in the My Exchanges section below, from the same rows.
+// The Dashboard reads the rows above: $mock_reminders (Today's care), $mock_plant_reminders (All reminders),
+// $mock_plants (the reminder popup) and $mock_collections (Garden at a glance).
 
 // ── Plant Profile (P05, CORE-18 and CORE-21) ───────────
 
@@ -618,74 +835,98 @@ $mock_plant_reminders = [
     ['id' => 22, 'plant_id' => 49, 'task' => 'water',     'interval_days' => 10, 'last_done' => mock_date(-4),  'next_due' => mock_date(6)],
 ];
 
-// The plant story — rows of `health_logs`, newest first (wireframe p12, element 6). An entry written by an AI tool
+// The plant story — rows of `health_logs` (wireframe p12, element 6). Pages sort them newest first.
+// Columns accepted 11 Nov 2026 (stage F close): type — 'note', 'photo', 'care', 'health_check' or 'milestone',
+// which decides how the Story draws the entry; care_task — for a care entry, the task done (water, fertilise, prune,
+// repot); status may be NULL (a care entry says nothing about health). An entry written by an AI tool
 // has source 'ml' and is joined with its ml_predictions row: prediction_type, predicted_label, confidence.
 // A plant's oldest entry is the day it was added to the garden. The newest date of each plant matches its
 // last_logged_at in $mock_plants, and Tommy's and Goldie's newest notes are the ones on the Dashboard.
 $mock_health_logs = [
-    ['id' => 101, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/monty.svg',
+    ['id' => 101, 'plant_id' => 42, 'type' => 'photo', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/monty.svg',
      'note' => 'New leaf unfurled, the biggest one yet, with four splits.', 'logged_at' => mock_date(-5) . ' 18:20:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 95, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+    ['id' => 95, 'plant_id' => 42, 'type' => 'note', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
      'note' => 'Repotted into a 25 cm terracotta pot with chunky aroid mix.', 'logged_at' => mock_date(-31) . ' 16:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 61, 'plant_id' => 42, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/monty.svg',
+    ['id' => 61, 'plant_id' => 42, 'type' => 'milestone', 'care_task' => null, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/monty.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-03-20 10:00:00',
      'prediction_type' => 'species', 'predicted_label' => 'Monstera deliciosa', 'confidence' => 0.91],
 
-    ['id' => 99, 'plant_id' => 43, 'status' => 'needs_attention', 'source' => 'manual', 'photo' => null,
+    ['id' => 99, 'plant_id' => 43, 'type' => 'note', 'care_task' => null, 'status' => 'needs_attention', 'source' => 'manual', 'photo' => null,
      'note' => 'Leaves may start to droop.', 'logged_at' => mock_date(-3) . ' 18:10:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 62, 'plant_id' => 43, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/goldie.svg',
+    ['id' => 62, 'plant_id' => 43, 'type' => 'milestone', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/goldie.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-04-02 11:30:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 93, 'plant_id' => 44, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+    ['id' => 93, 'plant_id' => 44, 'type' => 'note', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
      'note' => 'Two new pups at the base.', 'logged_at' => mock_date(-12) . ' 09:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 88, 'plant_id' => 44, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/sergeant.svg',
+    ['id' => 88, 'plant_id' => 44, 'type' => 'note', 'care_task' => null, 'status' => 'thriving', 'source' => 'ml', 'photo' => 'mock/sergeant.svg',
      'note' => 'Checked the species with the Plant Identifier.', 'logged_at' => mock_date(-40) . ' 10:20:00',
      'prediction_type' => 'species', 'predicted_label' => 'Dracaena trifasciata', 'confidence' => 0.96],
-    ['id' => 63, 'plant_id' => 44, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/sergeant.svg',
+    ['id' => 63, 'plant_id' => 44, 'type' => 'milestone', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/sergeant.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-05-11 15:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 96, 'plant_id' => 45, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+    ['id' => 96, 'plant_id' => 45, 'type' => 'note', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
      'note' => 'Dropped one lower leaf after the move to the window.', 'logged_at' => mock_date(-9) . ' 17:30:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 64, 'plant_id' => 45, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/figgy.svg',
+    ['id' => 64, 'plant_id' => 45, 'type' => 'milestone', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/figgy.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-06-18 12:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 94, 'plant_id' => 48, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+    ['id' => 94, 'plant_id' => 48, 'type' => 'note', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
      'note' => 'Drooped on Sunday, perked up an hour after watering.', 'logged_at' => mock_date(-15) . ' 08:40:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 70, 'plant_id' => 48, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/lily.svg',
+    ['id' => 70, 'plant_id' => 48, 'type' => 'milestone', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/lily.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-09-02 10:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 91, 'plant_id' => 46, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
+    ['id' => 91, 'plant_id' => 46, 'type' => 'photo', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
      'note' => 'Four pups ready to pot up.', 'logged_at' => mock_date(-20) . ' 16:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 65, 'plant_id' => 46, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
+    ['id' => 65, 'plant_id' => 46, 'type' => 'milestone', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/vera.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-07-06 09:30:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 102, 'plant_id' => 47, 'status' => 'sick', 'source' => 'ml', 'photo' => 'mock/tommy.svg',
+    ['id' => 102, 'plant_id' => 47, 'type' => 'health_check', 'care_task' => null, 'status' => 'sick', 'source' => 'ml', 'photo' => 'mock/tommy.svg',
      'note' => 'Brown rings on the lower leaves.', 'logged_at' => mock_date(-1) . ' 07:46:00',
      'prediction_type' => 'disease', 'predicted_label' => 'Tomato___Early_blight', 'confidence' => 0.92],
-    ['id' => 98, 'plant_id' => 47, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
+    ['id' => 98, 'plant_id' => 47, 'type' => 'note', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => null,
      'note' => 'Fruit setting on the first truss.', 'logged_at' => mock_date(-6) . ' 17:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 66, 'plant_id' => 47, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/tommy.svg',
+    ['id' => 66, 'plant_id' => 47, 'type' => 'milestone', 'care_task' => null, 'status' => 'stable', 'source' => 'manual', 'photo' => 'mock/tommy.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-08-23 08:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 
-    ['id' => 90, 'plant_id' => 49, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
+    ['id' => 90, 'plant_id' => 49, 'type' => 'note', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => null,
      'note' => 'Moved to the sunniest windowsill.', 'logged_at' => mock_date(-26) . ' 10:15:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
-    ['id' => 71, 'plant_id' => 49, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/pearl.svg',
+    ['id' => 71, 'plant_id' => 49, 'type' => 'milestone', 'care_task' => null, 'status' => 'thriving', 'source' => 'manual', 'photo' => 'mock/pearl.svg',
      'note' => 'Added to garden.', 'logged_at' => '2025-09-27 11:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+
+    // Care done: one compact line each (type 'care', the care_task that was done, no status, no note needed).
+    // Their dates match last_done in $mock_plant_reminders. Added 2026-11-11 for the Story's Care filter and stats.
+    ['id' => 103, 'plant_id' => 47, 'type' => 'care', 'care_task' => 'water', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => '', 'logged_at' => mock_date(-1) . ' 07:30:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 104, 'plant_id' => 47, 'type' => 'care', 'care_task' => 'water', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => '', 'logged_at' => mock_date(-3) . ' 07:40:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 105, 'plant_id' => 47, 'type' => 'care', 'care_task' => 'fertilise', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => 'Tomato feed, half strength.', 'logged_at' => mock_date(-7) . ' 08:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 106, 'plant_id' => 42, 'type' => 'care', 'care_task' => 'water', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => '', 'logged_at' => mock_date(-7) . ' 18:00:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 107, 'plant_id' => 42, 'type' => 'care', 'care_task' => 'water', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => '', 'logged_at' => mock_date(-14) . ' 18:10:00',
+     'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
+    ['id' => 108, 'plant_id' => 42, 'type' => 'care', 'care_task' => 'fertilise', 'status' => null, 'source' => 'manual', 'photo' => null,
+     'note' => '', 'logged_at' => mock_date(-18) . ' 17:00:00',
      'prediction_type' => null, 'predicted_label' => null, 'confidence' => null],
 ];
 
@@ -967,6 +1208,86 @@ $mock_disease_guide = [
     ],
 ];
 
+// AI care guides — rows of the `care_guides` table (accepted 11 Nov 2026) (AI care guide, new feature 2026-11-11), keyed by species,
+// the normalised name normalise_species() makes (includes/care-guide.php). guide_json is a JSON string, as the
+// database stores it, so the page decodes it like it will in stage B. Written by me in the style the prompt asks for;
+// stage B fills the table from the local LLM (Ollama) instead. Pilea and Philodendron have no row on purpose, so
+// Penny (62) and Heidi (63) show the Generating state.
+$mock_care_guides = [
+    'monstera deliciosa' => ['id' => 1, 'species' => 'monstera deliciosa', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-9) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright, indirect light near a window. Direct afternoon sun can scorch the leaves.',
+        'soil_fertilizer' => 'A chunky, well-draining aroid mix with bark and perlite. Feed with a balanced liquid fertiliser once a month while it is growing.',
+        'watering' => 'Water when the top 5 cm of soil are dry and let the extra drain away. Never leave the pot standing in water.',
+        'disease_control' => 'Soggy soil causes root rot, so watering less is the best defence. Check under the leaves for spider mites and wipe them off.',
+        'structure_pruning' => 'Give it a moss pole to climb so it grows upright. Cut yellow or damaged leaves off at the base with clean scissors.',
+     ])],
+    'epipremnum aureum' => ['id' => 2, 'species' => 'epipremnum aureum', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-8) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Copes with low light, but keeps its golden streaks best in bright, indirect light.',
+        'soil_fertilizer' => 'Ordinary potting mix with some perlite for drainage. Feed lightly once a month in the growing season.',
+        'watering' => 'Water when the top half of the soil is dry. Drooping leaves usually mean it is thirsty.',
+        'disease_control' => 'Yellow, soft stems point to overwatering and root rot. Mealybugs look like white fluff: wipe them off with a cotton bud.',
+        'structure_pruning' => 'Pinch back long vines to make it bushier. The cut pieces root easily in a glass of water.',
+     ])],
+    'dracaena trifasciata' => ['id' => 3, 'species' => 'dracaena trifasciata', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-12) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Happy in low light or bright, indirect light. A few hours of gentle sun is fine.',
+        'soil_fertilizer' => 'A free-draining cactus or succulent mix. Feed only two or three times a year, in the growing season.',
+        'watering' => 'Water only when the soil is completely dry, about every two weeks. Water even less in the rainy season.',
+        'disease_control' => 'Too much water makes the base of the leaves soft and mushy. Remove those leaves and let the soil dry out.',
+        'structure_pruning' => 'Cut damaged leaves off at soil level. When the pot gets crowded, divide the plant and pot the pups on their own.',
+     ])],
+    'ficus lyrata' => ['id' => 4, 'species' => 'ficus lyrata', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-15) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright light near a window with some gentle morning sun. Turn the pot now and then so it grows evenly.',
+        'soil_fertilizer' => 'Well-draining potting mix with bark or perlite. Feed with a liquid fertiliser once a month while it is growing.',
+        'watering' => 'Water well when the top 3 cm are dry, then let it drain. Brown patches on the leaves often mean too much water.',
+        'disease_control' => 'Cut off leaves with spreading brown patches and water less. Wipe the leaves so dust and pests do not settle.',
+        'structure_pruning' => 'Cut just above a leaf to make it branch. It dislikes being moved, so pick a spot and keep it there.',
+     ])],
+    'aloe vera' => ['id' => 5, 'species' => 'aloe vera', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-20) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Plenty of bright light, including some direct sun. Too little light makes it stretch and lean.',
+        'soil_fertilizer' => 'Sandy cactus mix in a pot with a drainage hole. Feed once or twice a year at most.',
+        'watering' => 'Water deeply, then wait until the soil is completely dry. Keep it out of constant rain in the rainy season.',
+        'disease_control' => 'Mushy brown leaves mean rot from too much water. Scale insects look like small bumps: scrape them off.',
+        'structure_pruning' => 'Cut dry outer leaves off at the base. Pot up the pups around it once they have a few leaves.',
+     ])],
+    'solanum lycopersicum' => ['id' => 6, 'species' => 'solanum lycopersicum', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-3) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Full sun, at least 6 to 8 hours a day. Less sun means fewer flowers and fruit.',
+        'soil_fertilizer' => 'Rich, well-draining soil with compost mixed in. Once flowers appear, feed every two weeks with a fertiliser high in potassium.',
+        'watering' => 'Water deeply at the base in the morning, keeping the soil evenly moist. Uneven watering can crack the fruit.',
+        'disease_control' => 'Keep the leaves dry and remove spotted lower leaves to slow early blight. Leave space between plants so air can move.',
+        'structure_pruning' => 'Tie the stem to a stake as it grows. Pinch out the side shoots so the plant puts its energy into fruit.',
+     ])],
+    'spathiphyllum wallisii' => ['id' => 7, 'species' => 'spathiphyllum wallisii', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-15) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Medium to bright, indirect light. Direct sun burns the leaves.',
+        'soil_fertilizer' => 'Potting mix that holds some moisture, with a little perlite. Feed with a diluted fertiliser every six to eight weeks.',
+        'watering' => 'Keep the soil lightly moist. It droops when thirsty and perks up soon after watering.',
+        'disease_control' => 'Yellow leaves in soggy soil point to root rot, so let the top dry a little. Wipe the leaves to keep spider mites away.',
+        'structure_pruning' => 'Cut faded flower stalks off at the base. Remove yellow leaves where they meet the soil.',
+     ])],
+    'echeveria elegans' => ['id' => 8, 'species' => 'echeveria elegans', 'model_used' => 'ollama:llama3.2',
+     'created_at' => mock_date(-26) . ' 09:00:00',
+     'guide_json' => json_encode([
+        'light' => 'Bright light with a few hours of direct sun keeps the rosette tight and colourful.',
+        'soil_fertilizer' => 'Gritty cactus mix in a pot with a drainage hole. Feed with a diluted cactus fertiliser two or three times a year.',
+        'watering' => 'Soak the soil, then wait until it is completely dry. Water the soil, not into the rosette.',
+        'disease_control' => 'Rot starts where water sits in the rosette, so keep the centre dry. Look for mealybugs between the leaves.',
+        'structure_pruning' => 'Pull off dry lower leaves. A stretched, leaning plant can be cut and its top replanted.',
+     ])],
+];
+
 // Likes per public plant: COUNT(*) on the optional plant_likes table (COM-15), keyed by plant id.
 // Private plants (Vera, Pearl) cannot be seen by others, so they have none.
 // Thai Con 87, Big Momma 48, Swiss 31, Monty 12, Leafy 9, Holey 7 are from wireframe p16; Pip's 48 from the Landing page.
@@ -1099,9 +1420,9 @@ $mock_rating_counts = [
 //   exchange_listings → title
 // Stage B: … JOIN exchange_listings ON exchange_listings.id = listing_interests.listing_id
 //          WHERE exchange_listings.user_id = ? AND listing_interests.status <> 'withdrawn' ORDER BY created_at DESC
-// Each listing's rows add up to its interest_count in $mock_listings. Listing 7's four rows are the Dashboard's new
-// interest (p10), with the notes of p20. All four stay 'new', as on the Dashboard: stage B marks rows seen when the
-// owner opens them (p20, UX notes), so p20's mix of New and Seen comes after a first visit. The other rows are invented.
+// Each listing's rows add up to its interest_count in $mock_listings. Listing 7's four rows have the notes of p20 and
+// all stay 'new' (the header bell's four): stage B marks rows seen when the owner opens them (p20, UX notes), so p20's
+// mix of New and Seen comes after a first visit. The other rows are invented.
 // The ratings are those of $mock_users (p20 prints 5.0 (4) and 4.8 (31), which disagree with p16 and p21).
 $mock_received_interests = [
     ['id' => 21, 'listing_id' => 7, 'user_id' => 4, 'message' => 'Would love to swap for a snake plant pup!',
@@ -1149,20 +1470,11 @@ $mock_received_interests = [
      'title' => "Pothos 'Marble Queen' cuttings (3)"],
 ];
 
-// The Dashboard's "new interest" (p10, element 7): the same rows, only those the owner has not opened yet
-$mock_new_interests = array_values(array_filter($mock_received_interests, fn ($interest) => $interest['status'] === 'new'));
 
-// Preview switch: ?empty shows Nimali as a brand-new member, before her first plant (state S1).
-// Like ?guest it is kept in the session, so every page agrees: the Dashboard, My Garden and her profile all
-// stay empty until ?member or Log in brings her garden back. Create account turns it on.
-// It empties only her own rows. The Landing page ignores it: its collage borrows Monty as a public sample.
-if (isset($_GET['empty'])) {
-    $_SESSION['preview_empty']     = true;
-    $_SESSION['preview_interests'] = [];   // a brand-new member has shown interest in nothing yet
-    $_SESSION['preview_exchanges'] = [];   // … and has exchanged and rated nothing
-    $_SESSION['preview_ratings']   = [];
-}
-if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'index.php') {
+// The new-member preview ($preview_empty, set near the top from ?empty=1): every page agrees, because every link of
+// such a page carries empty=1. It empties only her own rows. The Landing page ignores it: its collage borrows Monty
+// as a public sample.
+if ($preview_empty && $current_user && current_page() !== 'index.php') {
     $current_user['plant_count']        = 0;
     $current_user['collection_count']   = 0;
     $current_user['new_interest_count'] = 0;
@@ -1178,13 +1490,7 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_health_logs   = [];
     $mock_plant_photos  = [];
     $mock_reminders     = [];
-    $mock_attention     = [];
     $mock_received_interests = [];
-    $mock_new_interests = [];
-    $mock_garden_stats  = [
-        'health_counts'  => ['thriving' => 0, 'stable' => 0, 'needs_attention' => 0, 'sick' => 0],
-        'upcoming_count' => 0,
-    ];
 
     // A new account has no listings yet, and nothing to count on its public profile
     $mock_listings = array_values(array_filter($mock_listings, fn ($listing) => $listing['user_id'] !== $current_user['id']));
@@ -1204,10 +1510,146 @@ if (!empty($_SESSION['preview_empty']) && $current_user && current_page() !== 'i
     $mock_listing_interests = [];
 }
 
+// Collections Nimali created in the preview (mock_add_collection()). Built after the ?empty switch, so a brand-new
+// Nimali keeps the ones she makes. The counts follow, as COUNT() on collections would: all of them on her own pages,
+// public ones only on her Public Profile. Like the interests below, a visitor sees her new public collections too.
+foreach ($_SESSION[preview_key('collections')] ?? [] as $preview_row) {
+    $mock_collections[] = $preview_row;
+    if ($current_user) {
+        $current_user['collection_count']++;
+    }
+    if ($preview_row['is_public']) {
+        $mock_users[$preview_row['user_id']]['collection_count']++;
+    }
+}
+
+// Collections deleted in the preview (mock_delete_collection()), as ON DELETE SET NULL leaves them: the row is gone,
+// its plants stay with collection_id NULL, and the counts drop by one. This runs before the plant moves below, so a
+// plant freed here can be picked for a new collection, and a plant moved into a collection deleted later stays free.
+$deleted_collections = $_SESSION[preview_key('deleted_collections')] ?? [];
+foreach ($mock_collections as $index => $collection) {
+    if (!isset($deleted_collections[$collection['id']])) {
+        continue;
+    }
+    unset($mock_collections[$index]);
+    if ($current_user) {
+        $current_user['collection_count']--;
+    }
+    if ($collection['is_public']) {
+        $mock_users[$collection['user_id']]['collection_count']--;
+    }
+}
+$mock_collections = array_values($mock_collections);   // renumber 0, 1, 2 … after unset()
+foreach ($mock_plants as $index => $plant) {
+    if ($plant['collection_id'] !== null && isset($deleted_collections[$plant['collection_id']])) {
+        $mock_plants[$index]['collection_id']   = null;
+        $mock_plants[$index]['collection_name'] = null;
+    }
+}
+
+// Plants added in the preview with Save plant (mock_add_plants()). Each joins its collection as COUNT() and
+// GROUP_CONCAT() would show it; a collection deleted since then leaves the plant in no collection (ON DELETE SET NULL).
+// Runs before the plant moves below, so a new plant in no collection can still be chosen for a collection.
+$collection_index = array_flip(array_column($mock_collections, 'id'));
+foreach ($_SESSION[preview_key('plants')] ?? [] as $new_plant) {
+    if ($new_plant['collection_id'] !== null && !isset($collection_index[$new_plant['collection_id']])) {
+        $new_plant['collection_id'] = null;
+    }
+    $new_plant['collection_name'] = null;
+    if ($new_plant['collection_id'] !== null) {
+        $row = &$mock_collections[$collection_index[$new_plant['collection_id']]];
+        $row['public_plant_count']  ??= $row['is_public'] ? $row['plant_count'] : 0;
+        $row['public_cover_photos'] ??= $row['is_public'] ? $row['cover_photos'] : [];
+        $new_plant['collection_name'] = $row['name'];
+        $row['plant_count']++;
+        if (count($row['cover_photos']) < 3) {
+            $row['cover_photos'][] = $new_plant['photo'];
+        }
+        if ($new_plant['is_public']) {
+            $row['public_plant_count']++;
+            if (count($row['public_cover_photos']) < 3) {
+                $row['public_cover_photos'][] = $new_plant['photo'];
+            }
+        }
+        unset($row);   // break the reference, so later code cannot change the collection by accident
+    }
+    $mock_plants[] = $new_plant;
+    if ($current_user) {
+        $current_user['plant_count']++;
+    }
+    if ($new_plant['is_public']) {
+        $mock_users[$new_plant['user_id']]['plant_count']++;
+    }
+}
+
+// Plants put into a new collection: collection_id and the joined collection_name change, and the collection's
+// plant_count and cover_photos follow, as COUNT() and GROUP_CONCAT() would. Only a plant still in no collection
+// can move, so an old row in the session can never pull Monty out of Living room.
+$collection_index = array_flip(array_column($mock_collections, 'id'));
+foreach ($_SESSION[preview_key('collection_plants')] ?? [] as $plant_id => $new_collection_id) {
+    foreach ($mock_plants as $index => $plant) {
+        if ($plant['id'] !== $plant_id || $plant['collection_id'] !== null || !isset($collection_index[$new_collection_id])) {
+            continue;
+        }
+        $row = &$mock_collections[$collection_index[$new_collection_id]];
+        // The three mock collections have no public-only numbers yet: until now theirs were the same as the totals
+        $row['public_plant_count']  ??= $row['is_public'] ? $row['plant_count'] : 0;
+        $row['public_cover_photos'] ??= $row['is_public'] ? $row['cover_photos'] : [];
+        $mock_plants[$index]['collection_id']   = $new_collection_id;
+        $mock_plants[$index]['collection_name'] = $row['name'];
+        $row['plant_count']++;
+        if (count($row['cover_photos']) < 3) {
+            $row['cover_photos'][] = $plant['photo'];
+        }
+        // A private plant never reaches the Public Profile, even inside a public collection
+        if ($plant['is_public']) {
+            $row['public_plant_count']++;
+            if (count($row['public_cover_photos']) < 3) {
+                $row['public_cover_photos'][] = $plant['photo'];
+            }
+        }
+        unset($row);   // a reference stays linked after the loop; unset() breaks the link so later code cannot change the row by accident
+    }
+}
+
+// Plants deleted in the preview (mock_delete_plant()): gone from every list, as DELETE FROM plants with its
+// ON DELETE CASCADE foreign keys leaves things: no card, no reminders in Today's care, not in Explore, and every count
+// one lower. Runs after the plants were added and moved above, so it also removes a plant added in the preview.
+$deleted_plants = $_SESSION[preview_key('deleted_plants')] ?? [];
+if ($deleted_plants) {
+    $collection_index = array_flip(array_column($mock_collections, 'id'));
+    foreach ($mock_plants as $index => $plant) {
+        if (!isset($deleted_plants[$plant['id']])) {
+            continue;
+        }
+        if ($plant['collection_id'] !== null && isset($collection_index[$plant['collection_id']])) {
+            $row = &$mock_collections[$collection_index[$plant['collection_id']]];
+            $row['public_plant_count'] ??= $row['is_public'] ? $row['plant_count'] : 0;
+            $row['plant_count'] = max(0, $row['plant_count'] - 1);
+            if ($plant['is_public']) {
+                $row['public_plant_count'] = max(0, $row['public_plant_count'] - 1);
+            }
+            unset($row);
+        }
+        if ($current_user) {
+            $current_user['plant_count'] = max(0, $current_user['plant_count'] - 1);
+        }
+        if ($plant['is_public']) {
+            $mock_users[$plant['user_id']]['plant_count'] = max(0, $mock_users[$plant['user_id']]['plant_count'] - 1);
+        }
+        unset($mock_plants[$index]);
+    }
+    $mock_plants = array_values($mock_plants);
+    // Its reminders go with it (care_reminders.plant_id is ON DELETE CASCADE)
+    $kept = fn ($row) => !isset($deleted_plants[$row['plant_id']]);
+    $mock_reminders       = array_values(array_filter($mock_reminders, $kept));
+    $mock_plant_reminders = array_values(array_filter($mock_plant_reminders, $kept));
+}
+
 // Nimali's interests as the preview changed them (mock_send_interest(), mock_withdraw_interest()): a row kept in the
 // session replaces the mock row of the same listing. Built here, after the ?empty switch, so a brand-new Nimali starts
 // with none but keeps the ones she sends. A visitor's pages count them too: they are Nimali's rows, whoever looks.
-foreach ($_SESSION['preview_interests'] ?? [] as $preview_row) {
+foreach ($_SESSION[preview_key('interests')] ?? [] as $preview_row) {
     $mock_listing_interests = array_values(array_filter(
         $mock_listing_interests,
         fn ($interest) => $interest['listing_id'] !== $preview_row['listing_id']
@@ -1230,7 +1672,7 @@ foreach ($mock_listings as $index => $listing) {
 // Listings Nimali marked as exchanged in the preview (mock_mark_exchanged()): closed, with the member and the date, as
 // stage B's UPDATE leaves them. Only an open listing can change, so an old row in the session can do no harm.
 // Like the interests above, they count for every viewer: a visitor no longer finds the listing on the Exchange page.
-foreach ($_SESSION['preview_exchanges'] ?? [] as $listing_id => $exchange) {
+foreach ($_SESSION[preview_key('exchanges')] ?? [] as $listing_id => $exchange) {
     foreach ($mock_listings as $index => $listing) {
         if ($listing['id'] === $listing_id && $listing['status'] === 'open') {
             $mock_listings[$index] = array_merge($listing, ['status' => 'closed'], $exchange);
@@ -1243,15 +1685,89 @@ $mock_site_stats['open_listing_count'] = count(array_filter($mock_listings, fn (
 // Ratings Nimali gave in the preview (mock_rate_exchange()). Only My exchanges reads them: the exchange moves from
 // "Waiting for your rating" to "Ratings you gave". The rated member's average and reviews follow in stage B, where the
 // INSERT makes every COUNT() and AVG() on user_ratings include the new row.
-$mock_preview_ratings = array_values($_SESSION['preview_ratings'] ?? []);
+$mock_preview_ratings = array_values($_SESSION[preview_key('ratings')] ?? []);
+
+// Story entries added in the preview (mock_add_health_log(): a Mark done's care line), for Nimali's own plants only.
+// The plant's "Updated …" (last_logged_at) follows its newest entry.
+if (current_page() !== 'index.php') {
+    $own_ids = array_column($mock_plants, 'id');
+    foreach ($_SESSION[preview_key('health_logs')] ?? [] as $preview_log) {
+        if (!in_array($preview_log['plant_id'], $own_ids, true)) {
+            continue;
+        }
+        $mock_health_logs[] = $preview_log;
+        foreach ($mock_plants as $index => $plant) {
+            if ($plant['id'] === $preview_log['plant_id'] && $preview_log['logged_at'] > $plant['last_logged_at']) {
+                $mock_plants[$index]['last_logged_at'] = $preview_log['logged_at'];
+            }
+        }
+    }
+}
+
+// Reminders Nimali added or marked done in the preview (mock_add_reminder()). Each replaces the mock row for the same
+// plant and task, as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due
+// today or earlier. A row marked 'deleted' (a one-off reminder that was done) removes the pair from every list.
+// Built after the ?empty switch, so a brand-new Nimali (no plants) gets none. The Landing page's collage keeps the
+// original mock rows: it shows Monty as a public sample, not Nimali's preview.
+if (current_page() !== 'index.php') {
+    $own_plants     = array_column($mock_plants, null, 'id');
+    $touched_plants = [];
+    foreach ($_SESSION[preview_key('reminders')] ?? [] as $preview_row) {
+        $plant = $own_plants[$preview_row['plant_id']] ?? null;
+        if (!$plant) {
+            continue;
+        }
+        $touched_plants[$plant['id']] = true;
+        $other_task = fn ($row) => !($row['plant_id'] === $preview_row['plant_id'] && $row['task'] === $preview_row['task']);
+        $mock_plant_reminders   = array_values(array_filter($mock_plant_reminders, $other_task));
+        $mock_reminders         = array_values(array_filter($mock_reminders, $other_task));
+        if (!empty($preview_row['deleted'])) {
+            continue;
+        }
+        $mock_plant_reminders[] = $preview_row;
+        if ($preview_row['next_due'] <= date('Y-m-d')) {
+            $mock_reminders[] = $preview_row + [
+                'nickname' => $plant['nickname'], 'photo' => $plant['photo'], 'common_name' => $plant['common_name'],
+            ];
+        }
+    }
+    // Overdue first, then A to Z within a day, as the mock rows were
+    usort($mock_reminders, fn ($a, $b) => [$a['next_due'], $a['nickname']] <=> [$b['next_due'], $b['nickname']]);
+
+    // A plant card shows the plant's soonest reminder (task, next_due on each plants row), so a changed plant gets
+    // its soonest one again. Stage B finds it with a subquery on care_reminders.
+    foreach ($mock_plants as $index => $plant) {
+        if (empty($touched_plants[$plant['id']])) {
+            continue;
+        }
+        $soonest = null;
+        foreach ($mock_plant_reminders as $row) {
+            if ($row['plant_id'] === $plant['id'] && (!$soonest || $row['next_due'] < $soonest['next_due'])) {
+                $soonest = $row;
+            }
+        }
+        $mock_plants[$index]['task']          = $soonest['task'] ?? null;
+        $mock_plants[$index]['interval_days'] = $soonest['interval_days'] ?? null;
+        $mock_plants[$index]['next_due']      = $soonest['next_due'] ?? null;
+    }
+}
 
 // Every public plant in the community, as Explore (P09) searches them: Nimali's public plants and everyone else's,
 // each joined with its owner (users: username, full_name, avatar, location), plus two calculated columns:
 //   like_count  — COUNT(*) on plant_likes
 //   on_exchange — 1 when an open exchange listing offers this plant (EXISTS on exchange_listings)
+//   listing_id, listing_type — that open listing's id and type (swap, free or either), null when there is none,
+//                  so the Community card's "Swap"/"Free" badge can link to it. Stage B: LEFT JOIN exchange_listings
+//                  ON exchange_listings.plant_id = plants.id AND exchange_listings.status = 'open'.
 // Built here, after the ?empty switch, so a brand-new Nimali has no plants in it. Stage B: one query with
 // WHERE plants.is_public = 1, so a private plant can never reach the page.
-$listed_plant_ids = array_column(array_filter($mock_listings, fn ($listing) => $listing['status'] === 'open'), 'plant_id');
+$open_listing_by_plant = [];
+foreach ($mock_listings as $listing) {
+    if ($listing['status'] === 'open' && $listing['plant_id'] !== null) {
+        $open_listing_by_plant[$listing['plant_id']] = $listing;
+    }
+}
+$listed_plant_ids = array_keys($open_listing_by_plant);
 
 $mock_public_plants = [];
 foreach (array_merge($mock_plants, $mock_community_plants) as $plant) {
@@ -1260,11 +1776,13 @@ foreach (array_merge($mock_plants, $mock_community_plants) as $plant) {
     }
     $owner = $mock_users[$plant['user_id']];
     $mock_public_plants[] = array_merge($plant, [
-        'username'    => $owner['username'],
-        'full_name'   => $owner['full_name'],
-        'avatar'      => $owner['avatar'],
-        'location'    => $owner['location'],
-        'like_count'  => $mock_like_counts[$plant['id']] ?? 0,
-        'on_exchange' => in_array($plant['id'], $listed_plant_ids, true) ? 1 : 0,
+        'username'     => $owner['username'],
+        'full_name'    => $owner['full_name'],
+        'avatar'       => $owner['avatar'],
+        'location'     => $owner['location'],
+        'like_count'   => $mock_like_counts[$plant['id']] ?? 0,
+        'on_exchange'  => in_array($plant['id'], $listed_plant_ids, true) ? 1 : 0,
+        'listing_id'   => $open_listing_by_plant[$plant['id']]['id'] ?? null,
+        'listing_type' => $open_listing_by_plant[$plant['id']]['type'] ?? null,
     ]);
 }

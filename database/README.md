@@ -21,36 +21,41 @@ mysql -u root plantfolio < database/seed.sql
 > **Design these early.** The database tasks DES-06/07/08/13 finish in weeks 1–2 even though the tables are only created
 > in week 8, because the frontend's mock data uses the same column names.
 
-## Table plan (DES-07, accepted 31 Oct 2026)
+## Table plan (DES-07, accepted 31 Oct 2026, updated 11 Nov 2026)
 
-**16 tables, 25 foreign keys.** The proposal's 10 tables, plus 4 that the built pages rely on (`plant_photos`,
-`plant_likes`, `listing_photos`, `disease_guides`) and 2 added by the decisions below (`towns`, `remember_tokens`).
+**18 tables, 26 foreign keys.** The proposal's 10 tables, plus 4 that the built pages rely on (`plant_photos`,
+`plant_likes`, `listing_photos`, `disease_guides`), 2 added by the 31 Oct decisions (`towns`, `remember_tokens`) and
+2 added when stage F closed (`listing_categories`, `care_guides`, see [below](#stage-f-close-11-nov-2026)).
 Column types, nulls, defaults and keys are in [`data-dictionary.md`](data-dictionary.md).
 
 | # | Table | Purpose | Columns |
 |---|---|---|---|
-| 1 | `users` | Accounts, public profiles, Settings choices | id, username, full_name, email, phone, password_hash, bio, town_id, avatar, new_plants_public, dashboard_reminders, email_reminders, failed_logins, locked_until, created_at |
+| 1 | `users` | Accounts, public profiles, Settings choices | id, username, full_name, email, phone, password_hash, bio, town_id, km_from_town, avatar, new_plants_public, dashboard_reminders, email_reminders, failed_logins, locked_until, created_at |
 | 2 | `towns` | Towns with coordinates, for "3 km" on listing cards and the P10 distance filter | id, name, latitude, longitude |
 | 3 | `remember_tokens` | Secure "Remember me" logins (P02) | id, user_id, selector, token_hash, expires_at |
 | 4 | `collections` | Named groups of plants per member | id, user_id, name, is_public, created_at |
 | 5 | `plant_species` | Reference data: the care guide for each species, loaded from `species.csv` | id, common_name, scientific_name, photo, light, water, humidity, pet_safe, water_interval_days, fertilise_interval_days, notes |
 | 6 | `plants` | Each plant profile | id, user_id, collection_id, species_id, custom_species, nickname, photo, acquired_on, health_status, is_public, created_at |
 | 7 | `plant_photos` | Extra photos for the P05 gallery | id, plant_id, path, created_at |
-| 8 | `health_logs` | The dated plant story; each row is a manual update or a saved AI result | id, plant_id, prediction_id, status, source, note, photo, logged_at |
-| 9 | `care_reminders` | Care tasks: `water` and `fertilise` repeat, `recheck` happens once | id, plant_id, task, interval_days, last_done, next_due |
+| 8 | `health_logs` | The dated plant story: notes, photos, care done, Health Check results and milestones | id, plant_id, prediction_id, type, care_task, status, source, note, photo, logged_at |
+| 9 | `care_reminders` | Care tasks with a time and a repeat rule; `recheck` happens once | id, plant_id, task, remind_time, repeat_type, repeat_days, interval_days, last_done, next_due |
 | 10 | `plant_likes` | Likes on public plants (COM-15) | id, plant_id, user_id, created_at |
 | 11 | `ml_predictions` | Every recognition or diagnosis, saved by the member or not | id, user_id, plant_id, type, predicted_label, confidence, alternatives, image_path, upload_name, upload_size, model_version, created_at |
 | 12 | `disease_guides` | What P08 says about each disease class; matched to a result by `class_label`, no foreign key | id, class_label, crop, cause, symptoms, steps, status |
-| 13 | `exchange_listings` | Plants offered for swap or free | id, user_id, plant_id, species_id, title, description, type, looking_for, town_id, size, plant_condition, photo, share_email, share_phone, status, exchanged_with, exchanged_at, created_at |
+| 13 | `exchange_listings` | Plants offered for swap or free | id, user_id, plant_id, species_id, title, description, type, looking_for, town_id, km_from_town, size, plant_condition, light_level, water_need, photo, share_email, share_phone, status, exchanged_with, exchanged_at, created_at |
 | 14 | `listing_photos` | Extra photos for the P11 gallery, after the listing's own `photo` | id, listing_id, path, created_at |
 | 15 | `listing_interests` | "I'm interested" requests, one row per member and listing | id, listing_id, user_id, message, status, created_at |
 | 16 | `user_ratings` | Trust ratings after a finished exchange | id, rater_id, rated_id, listing_id, score, comment, created_at |
+| 17 | `listing_categories` | The categories a listing is filed under (one or more), for the Exchange filters | listing_id, category |
+| 18 | `care_guides` | Cache of AI care guides, one per species name, so the local LLM writes each guide once | id, species, guide_json, model_used, created_at |
 
 **Pages keep their mock keys.** Queries return `towns.name AS location`, so `location` in `includes/mock-data.php`
 stays as it is. Counts and averages (`plant_count`, `rating_avg`, `interest_count`, `like_count`, `distance_km`) are
 never stored: queries calculate them.
 
 ## Decisions (DES-07, 31 Oct 2026)
+
+*Later changes are under [Stage F close](#stage-f-close-11-nov-2026).*
 
 Accepted from the stage F proposals: `exchange_listings.exchanged_at`, `plant_species.photo`,
 `ml_predictions.alternatives`, the `recheck` reminder task, and `disease_guides` as a table (not a JSON file: Flowchart 4
@@ -69,9 +74,25 @@ joins it, and it is seeded from a CSV like `plant_species`). Seven changes to th
 Still to do in the PDF: these seven changes, the nearly blank pages (21, 23, 24, 26, 27), and the 2NF wording
 ("every non-key column depends on the whole of every candidate key").
 
+## Stage F close (11 Nov 2026)
+
+Building the pages with mock data added fields that the 31 Oct plan did not have. All seven were accepted when stage F
+closed, so the plan above, `data-dictionary.md` and `schema.sql` (CORE-01) include them. The values match the lists in
+`includes/helpers.php` and `includes/reminder-form.php`, which the forms already use.
+
+| # | Change | Why |
+|---|---|---|
+| 1 | `exchange_listings.light_level ENUM('low','medium','bright') NULL` and `water_need ENUM('low','moderate','high') NULL` | The Exchange tab filters by Light and Watering, and P12 asks for them. NULL = the owner chose "Not sure" |
+| 2 | `users.km_from_town TINYINT UNSIGNED NULL` and `exchange_listings.km_from_town TINYINT UNSIGNED NOT NULL DEFAULT 0`, both 0–30 | The slider on P02, P15 and P12: the nearest town plus how far from its centre (0 = in the town). NULL for a member with no town; a listing always has a town, so it always has a value. Shown only on Listing Detail ("Pick-up: about 3 km from Kurunegala"). Distances between people stay town-centre to town-centre (Haversine on `towns`), because a distance has no direction |
+| 3 | New table `listing_categories (listing_id, category)`, PK (listing_id, category), `category ENUM('indoor','outdoor','succulents','air_purifying','flowering','edible','pet_friendly')` | A listing can be in several categories: many-to-many with a fixed list, so a table, not a column. At least one row per listing (the form checks). Read back with `GROUP_CONCAT(category) AS categories` |
+| 4 | `health_logs.type ENUM('note','photo','care','health_check','milestone')`, `health_logs.care_task` (NULL), and `health_logs.status` becomes NULL | The Story draws each kind of entry differently. A care entry ("Watered · 11 Nov") says nothing about health, so its status is NULL |
+| 5 | `care_reminders.task` adds `mist`, `rotate`, `prune`, `repot`; new `remind_time TIME`, `repeat_type ENUM('once','daily','days','interval')`, `repeat_days SET('mon',…,'sun')`; `interval_days` becomes NULL | The Add a reminder popup. UNIQUE (plant_id, task) **stays**: the built UI replaces a plant's earlier reminder for the same task (with Undo), so saving is `INSERT … ON DUPLICATE KEY UPDATE`. A website cannot ring when it is closed; the time orders the Dashboard list and could drive email reminders later |
+| 6 | New table `care_guides (id, species, guide_json, model_used, created_at)`, UQ `species` | The AI care guide on P05. The local LLM writes a guide once per species and the page reads the saved copy. `species` is the normalised name from `normalise_species()`; no foreign key, because a typed `custom_species` can have a guide too |
+| 7 | No change for plant stacks | Stacks are worked out from species + collection when the page loads, so nothing is stored. `plants.nickname` stays NOT NULL |
+
 ## Rules
-- `plants.health_status`, `health_logs.status` and `disease_guides.status` use exactly: `thriving`, `stable`, `needs_attention`, `sick`.
-- Reminders are calculated from `next_due` (`next_due = last_done + interval_days`): no background scheduler is needed for the Dashboard.
+- `plants.health_status`, `health_logs.status` and `disease_guides.status` use exactly: `thriving`, `stable`, `needs_attention`, `sick`. `health_logs.status` is NULL for entries that say nothing about health (care, milestone without a check).
+- Reminders are calculated from `next_due`: no background scheduler is needed for the Dashboard. `next_due = last_done + interval_days` for `daily` (1) and `interval`; the next chosen weekday for `days`; a `once` reminder is deleted when marked done.
 - A plant has `species_id`, or `custom_species`, or neither (unknown species), never both.
 - UNIQUE on `users.username` and `users.email`; indexes on every foreign key, `care_reminders.next_due` and `plants.health_status`; `user_ratings.score` limited to 1–5 (DES-08).
 - Photos are stored as files in `public/uploads/`; the database stores only the path.

@@ -59,9 +59,117 @@ $is_edit = $plant !== null;
 // a new plant goes back to My Garden (it has no profile yet), an edited plant to its profile. It runs after the
 // ownership check above, so sending the form for someone else's plant still answers "not found".
 // Stage B replaces this with the real save, then redirects to plant.php?id= of the saved plant.
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Location: ' . ($is_edit ? url('plant.php?id=' . $plant['id']) : url('garden.php')));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
+    header('Location: ' . url('plant.php?id=' . $plant['id']));
     exit;
+}
+
+// ── Save a new plant, or several (prototype, feature/plant-stacks) ──
+// Adding is kept in the session (mock_add_plants()), so the new plants really show in My Garden. With "How many?"
+// above 1, every plant gets its own row, health and reminders, and My Garden shows them as one stack because they
+// share species and collection. The photo upload waits for stage B (CORE-17): the species' drawing stands in.
+// Stage B: CSRF check, the same checks, then INSERTs in one transaction.
+$add_errors = [];   // field name => message, printed under that field
+$add_posted = null; // the sent values, to fill the form again after an error
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nickname   = preg_replace('/\s+/u', ' ', trim(post_text('nickname')));
+    $species_in = trim(post_text('species'));
+    $quantity   = post_text('quantity');
+    $coll_in    = post_text('collection_id');
+    $health     = post_text('health_status');
+    $is_public  = post_text('is_public') === '0' ? 0 : 1;
+    $acquired   = post_text('acquired_on');
+
+    if ($nickname === '') {
+        $add_errors['nickname'] = 'Give your plant a nickname.';
+    } elseif (mb_strlen($nickname) > 55) {   // 60 in the database, with room for " 20"
+        $add_errors['nickname'] = 'Use 55 characters or fewer.';
+    }
+    if (!ctype_digit($quantity) || (int) $quantity < 1 || (int) $quantity > 20) {
+        $add_errors['quantity'] = 'Use a number from 1 to 20.';
+    }
+    // The collection must be one of the member's own, or none (ownership check)
+    $collection = null;
+    foreach ($mock_collections as $row) {
+        if ($coll_in !== '' && ctype_digit($coll_in) && $row['id'] === (int) $coll_in) {
+            $collection = $row;
+        }
+    }
+    if ($coll_in !== '' && !$collection) {
+        $add_errors['collection_id'] = 'Choose one of your collections.';
+    }
+    if (!in_array($health, ['thriving', 'stable', 'needs_attention', 'sick'], true)) {
+        $health = 'thriving';
+    }
+    $acquired_date = DateTime::createFromFormat('!Y-m-d', $acquired);
+    if (!$acquired_date || $acquired_date->format('Y-m-d') !== $acquired || $acquired > date('Y-m-d')) {
+        $acquired = date('Y-m-d');
+    }
+
+    if (!$add_errors) {
+        // A species from our list gives species_id and both names; a typed name we do not know stays custom
+        // (species_id NULL, custom_species), and such plants are never stacked.
+        $species = null;
+        foreach ($mock_species as $row) {
+            if ($species_in !== '' && (strcasecmp($row['scientific_name'], $species_in) === 0 || strcasecmp($row['common_name'], $species_in) === 0)) {
+                $species = $row;
+            }
+        }
+
+        // The card shows the soonest reminder that is switched on
+        $task = null;
+        $next_due = null;
+        $interval = null;
+        foreach (['water', 'fertilise'] as $reminder_task) {
+            if (post_text($reminder_task . '_enabled') === '1') {
+                $start = post_text($reminder_task . '_start');
+                $start = DateTime::createFromFormat('!Y-m-d', $start) ? $start : date('Y-m-d');
+                if ($next_due === null || $start < $next_due) {
+                    $task     = $reminder_task;
+                    $next_due = $start;
+                    $days     = post_text($reminder_task . '_interval');
+                    $interval = ctype_digit($days) ? max(1, min(365, (int) $days)) : 7;
+                }
+            }
+        }
+
+        $rows = [];
+        for ($number = 1; $number <= (int) $quantity; $number++) {
+            $rows[] = [
+                'user_id'         => $current_user['id'],
+                'collection_id'   => $collection['id'] ?? null,
+                'species_id'      => $species['id'] ?? null,
+                // "Spike", "Spike 2", "Spike 3": every plant has its own nickname (plants.nickname is NOT NULL)
+                'nickname'        => $number === 1 ? $nickname : $nickname . ' ' . $number,
+                'photo'           => $species['photo'] ?? 'mock/sergeant.svg',
+                'acquired_on'     => $acquired,
+                'health_status'   => $health,
+                'is_public'       => $is_public,
+                'scientific_name' => $species['scientific_name'] ?? ($species_in !== '' ? $species_in : 'Unknown species'),
+                'common_name'     => $species['common_name'] ?? ($species_in !== '' ? $species_in : 'Plant'),
+                'collection_name' => $collection['name'] ?? null,
+                'task'            => $task,
+                'interval_days'   => $interval,
+                'next_due'        => $next_due,
+                'last_logged_at'  => date('Y-m-d H:i:s'),
+            ];
+        }
+        mock_add_plants($rows);
+
+        $count = count($rows);
+        $_SESSION['collection_toast'] = $count === 1
+            ? 'Plant added: ' . $nickname
+            : $count . ' ' . mb_strtolower($rows[0]['common_name']) . ' plants added';
+        // Open the collection they joined, so the member sees the new card or stack straight away
+        header('Location: ' . url('garden.php' . ($collection ? '?collection=' . $collection['id'] : '')));
+        exit;
+    }
+    $add_posted = [
+        'nickname' => $nickname, 'species' => $species_in, 'quantity' => $quantity,
+        'collection_id' => $collection['id'] ?? null, 'acquired_on' => $acquired,
+        'health_status' => $health, 'is_public' => $is_public,
+    ];
 }
 
 // ── The values the form starts with ─────────────────────
@@ -106,15 +214,39 @@ if ($is_edit) {
         }
     }
     foreach ($mock_plant_reminders as $reminder) {
-        if ($reminder['plant_id'] === $plant['id']) {
+        // The form has switches for water and fertilise only; reminders for other tasks are set on the Dashboard.
+        // A water reminder on chosen weekdays has no interval_days, so it shows the species' interval instead.
+        if ($reminder['plant_id'] === $plant['id'] && isset($reminder_values[$reminder['task']])) {
             $reminder_values[$reminder['task']] = [
                 'enabled'       => true,
-                'interval_days' => $reminder['interval_days'],
+                'interval_days' => $reminder['interval_days'] ?? $reminder_values[$reminder['task']]['interval_days'],
                 'start'         => $reminder['next_due'],   // "starting" = the next time it is due
             ];
         }
     }
     $reminder_source = 'The current schedule for ' . $plant['nickname'] . '. Change it anytime.';
+}
+
+// ── "Add another" from a plant stack (prototype, feature/plant-stacks) ──
+// plant-form.php?like=64 adds a new plant like plant 64: same species, collection and visibility, and its species'
+// care intervals. The nickname, date, health and photo stay empty or default: they belong to the new plant.
+// Only the member's own plant can be copied; any other id is ignored and the form stays empty.
+$like_id = filter_input(INPUT_GET, 'like', FILTER_VALIDATE_INT);
+if (!$is_edit && $like_id !== null) {
+    foreach ($mock_plants as $row) {
+        if ($row['id'] === $like_id && $row['user_id'] === $current_user['id']) {
+            $values['species']       = $row['scientific_name'];
+            $values['collection_id'] = $row['collection_id'];
+            $values['is_public']     = $row['is_public'];
+            $species = $mock_species[$row['species_id']] ?? null;
+            if ($species) {
+                foreach (array_keys($reminder_values) as $task) {
+                    $reminder_values[$task]['interval_days'] = $species[$task . '_interval_days'];
+                }
+                $reminder_source = 'From the care guide for ' . $species['common_name'] . '. Change them anytime.';
+            }
+        }
+    }
 }
 
 // ── The AI suggestion (add mode only) ───────────────────
@@ -179,7 +311,17 @@ if (!$is_edit && ($from_identify || isset($_GET['ai']))) {
 }
 
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
+
+
 $form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
+
+// After an error, the form shows what the member sent, not the defaults
+$quantity_value = '1';
+if ($add_posted) {
+    $quantity_value = $add_posted['quantity'];
+    unset($add_posted['quantity']);
+    $values = array_merge($values, $add_posted);
+}
 
 $health_options = ['thriving', 'stable', 'needs_attention', 'sick'];
 
@@ -193,7 +335,7 @@ include __DIR__ . '/../includes/header.php';
   <?php if ($is_edit): ?>
     <a class="back-link" href="<?= e($plant_url) ?>"><?= icon('arrow-left') ?> Back to <?= e($plant['nickname']) ?></a>
     <h1 class="form-title"><?= e($page_title) ?></h1>
-    <p class="form-intro">Change the details, photo, collection or care schedule.</p>
+    <p class="form-intro">Change the details, photo, collection or who can see it.</p>
   <?php else: ?>
     <a class="back-link" href="<?= e(url('garden.php')) ?>"><?= icon('arrow-left') ?> Back to My Garden</a>
     <h1 class="form-title"><?= e($page_title) ?></h1>
@@ -211,11 +353,13 @@ include __DIR__ . '/../includes/header.php';
           <?php if ($values['photo']): ?>
             <?php // A photo is already there: show it, with Change photo as another label of the same file input ?>
             <div class="photo-current">
-              <img src="<?= e(photo_url($values['photo'])) ?>" alt="Current photo of <?= e($values['nickname']) ?>">
+              <img src="<?= e(photo_url($values['photo'])) ?>" alt="Current photo of <?= e($values['nickname']) ?>" id="plant-photo-preview">
               <label class="btn btn-secondary btn-sm photo-change" for="plant-photo"><?= icon('camera') ?> Change photo</label>
             </div>
           <?php else: ?>
           <label class="dropzone" for="plant-photo">
+            <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+            <img class="dropzone-preview" id="plant-photo-preview" alt="" hidden>
             <span class="dropzone-icon"><?= icon('image-up') ?></span>
             <span class="dropzone-title">Add a photo of your plant</span>
             <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
@@ -223,7 +367,8 @@ include __DIR__ . '/../includes/header.php';
           </label>
           <?php endif; ?>
           <input class="visually-hidden" type="file" id="plant-photo" name="photo"
-                 accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint">
+                 accept="image/jpeg,image/png" capture="environment" aria-describedby="photo-hint"
+                 data-photo-input data-photo-hint="photo-hint" data-photo-preview="plant-photo-preview">
           <?php if ($ai): ?>
             <p class="field-hint photo-hint" id="photo-hint"><?= icon('image') ?> <?= e($ai['upload_name']) ?> · <?= e(number_format($ai['upload_size'] / 1048576, 1)) ?> MB · uploaded</p>
           <?php else: ?>
@@ -293,7 +438,10 @@ include __DIR__ . '/../includes/header.php';
           <div class="field">
             <label class="field-label" for="nickname">Nickname</label>
             <input class="input" type="text" id="nickname" name="nickname" value="<?= e($values['nickname']) ?>"
-                   placeholder="Monty" maxlength="60" required>
+                   placeholder="Monty" maxlength="55" required<?= isset($add_errors['nickname']) ? ' aria-invalid="true" aria-describedby="nickname-error"' : '' ?>>
+            <?php if (isset($add_errors['nickname'])): ?>
+              <p class="field-error" id="nickname-error"><?= e($add_errors['nickname']) ?></p>
+            <?php endif; ?>
           </div>
 
           <?php // A text box with a list of known species (<datalist>): typing suggests matches, but any name is allowed.
@@ -322,6 +470,21 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
+        <?php // Prototype (feature/plant-stacks): several plants of one kind in one go. Only when adding: editing is
+              // always one plant. Stage B would insert this many plants rows, the nickname numbered "Name 2", "Name 3"…;
+              // in My Garden they then show as one stack card. Stage F: nothing is saved yet. ?>
+        <?php if (!$is_edit): ?>
+          <div class="field field-quantity">
+            <label class="field-label" for="quantity">How many?</label>
+            <input class="input input-quantity" type="number" id="quantity" name="quantity" value="<?= e($quantity_value) ?>" min="1" max="20"
+                   inputmode="numeric" aria-describedby="quantity-hint<?= isset($add_errors['quantity']) ? ' quantity-error' : '' ?>"<?= isset($add_errors['quantity']) ? ' aria-invalid="true"' : '' ?>>
+            <?php if (isset($add_errors['quantity'])): ?>
+              <p class="field-error" id="quantity-error"><?= e($add_errors['quantity']) ?></p>
+            <?php endif; ?>
+            <p class="field-hint" id="quantity-hint">Got several of the same plant? They share one card in My Garden, and each keeps its own health and reminders. More than one get numbers after the nickname: Spike, Spike 2, Spike 3.</p>
+          </div>
+        <?php endif; ?>
+
         <div class="field-row">
           <div class="field">
             <label class="field-label" for="collection">Collection</label>
@@ -333,6 +496,9 @@ include __DIR__ . '/../includes/header.php';
               <?php endforeach; ?>
               <option value=""<?= $values['collection_id'] === null ? ' selected' : '' ?>>No collection</option>
             </select>
+            <?php if (isset($add_errors['collection_id'])): ?>
+              <p class="field-error"><?= e($add_errors['collection_id']) ?></p>
+            <?php endif; ?>
           </div>
 
           <div class="field">
@@ -353,12 +519,10 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </div>
         </fieldset>
-        <?php else: ?>
-          <?php // After the first day, health changes belong in the story, with a date: that is what Log update is for ?>
-          <p class="alert form-alert"><?= icon('info') ?> <span>To change the health status, use <a href="<?= e($plant_url) ?>">Log update</a> on the plant's page, so the change is dated in its story.</span></p>
-        <?php endif; ?>
 
-        <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date ?>
+        <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date. Add plant only:
+              // after that, health and reminders are kept on the plant's page (Add to story, the Reminders card and
+              // its Add a reminder popup), so Edit plant shows only the plant's details (Ranshitha's choice, 11 Nov). ?>
         <?php // The line above a section is on a <div>: a <legend> always sits on its fieldset's border, so a border
               // on the fieldset itself would run through the title ?>
         <div class="form-section" id="reminders">
@@ -370,7 +534,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="reminder-row">
               <label class="toggle">
                 <input type="checkbox" name="<?= e($task) ?>_enabled" value="1"<?= $reminder['enabled'] ? ' checked' : '' ?>>
-                <span class="reminder-task"><?= icon(task_icon($task)) ?> <?= e(task_label($task)) ?> every</span>
+                <span class="reminder-task"><?= task_name($task) ?> every</span>
               </label>
               <span class="reminder-when">
                 <label class="visually-hidden" for="<?= e($task) ?>-interval"><?= e(task_label($task)) ?> every how many days</label>
@@ -384,6 +548,7 @@ include __DIR__ . '/../includes/header.php';
           <?php endforeach; ?>
         </fieldset>
         </div>
+        <?php endif; ?>
 
         <div class="form-section">
         <fieldset class="form-fieldset">
@@ -401,6 +566,7 @@ include __DIR__ . '/../includes/header.php';
         </fieldset>
         </div>
       </section>
+
     </div>
 
     <?php // Sticky save bar (p13, element 7): stays on screen on a long form; Cancel leads back without saving ?>
@@ -418,5 +584,6 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </div>
   </form>
+
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

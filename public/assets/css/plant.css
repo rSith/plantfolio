@@ -1,23 +1,72 @@
 /* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
 /* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
-   Phone: one column, photo first (p23). Desktop: gallery beside the identity, then tabs beside the reminders card. */
+   Layout (2026-11-11): phone — one column: photo, name and actions, care guide, quick facts, reminders, story.
+   Desktop (1024px+) — photo, quick facts and reminders on the left; name with its actions and the care guide on
+   the right, both columns ending at the same line; then the story, full width.
+   Spacing uses only the scale in variables.css: 4, 8, 12, 16, 24, 32, 48, 64. Cards: 24 inside. Cards in a column:
+   16 apart. Major sections: 48 apart (64 on a desktop). Pixel values left in this file are sizes, borders and the
+   timeline's drawing, not spacing. */
 
 .plant-breadcrumb {
   margin-bottom: var(--space-16);
 }
 
-/* ── Top: gallery and identity ──────────────────────── */
+/* ── Page layout ────────────────────────────────────── */
+/* The HTML order is the phone order: gallery, info, aside. On a desktop, grid areas put the aside under the
+   gallery, so the left column is no longer short beside a long right column. */
 
 .plant-top {
   display: grid;
   gap: var(--space-24);
-  margin-bottom: var(--space-32);
+  margin-bottom: var(--space-32);   /* space above the Story */
 }
 
 .plant-gallery,
-.plant-info {
+.plant-info,
+.plant-aside {
   min-width: 0;
 }
+
+/* A flex column, so on a desktop its last card can grow to fill the column (see below) */
+.plant-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+@media (min-width: 1024px) {
+  .plant-top {
+    grid-template-columns: 5fr 7fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "gallery info"
+      "aside   info";
+    gap: var(--space-24) var(--space-48);
+    align-items: stretch;
+  }
+
+  .plant-gallery { grid-area: gallery; }
+  .plant-info    { grid-area: info; }
+  .plant-aside   { grid-area: aside; }
+
+  /* The two columns end at the same line, by layout, not fixed heights. Stretch makes both columns as tall as the
+     taller one; then the last card of each column grows into the space left: Reminders (or the owner card) on
+     the left, the AI care guide on the right. Their content stays at the top. */
+  .plant-aside > :last-child {
+    flex: 1;
+  }
+
+  .plant-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .plant-info .ai-guide {
+    flex: 1;
+  }
+}
+
+/* ── Gallery ────────────────────────────────────────── */
 
 /* 4:3 like every card photo; object-fit crops instead of stretching */
 .plant-photo {
@@ -29,20 +78,46 @@
   background: var(--color-sage);
 }
 
-/* Five equal squares: up to four photos and the Add tile */
+/* Every photo as an 80px square in a strip that scrolls sideways, then the Add tile, which always stays in view */
 .plant-thumbs {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: var(--space-8);
   margin-top: var(--space-8);
 }
 
+/* The padding leaves room for the chosen thumbnail's ring, which the scrolling box would otherwise cut off.
+   scroll-snap stops each swipe on a whole thumbnail. */
+.plant-thumb-strip {
+  display: flex;
+  flex: 1;
+  gap: var(--space-8);
+  min-width: 0;
+  padding: var(--space-4);
+  margin: calc(-1 * var(--space-4));
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+/* A thumbnail is a <button>: the reset removes the browser's grey button look */
 .plant-thumb {
   display: block;
+  flex: 0 0 80px;
+  width: 80px;
   aspect-ratio: 1 / 1;
+  scroll-snap-align: start;
   overflow: hidden;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius-input);
   background: var(--color-sage);
+  cursor: pointer;
+}
+
+/* The photo in the large frame: a ring, so the choice is not shown by colour alone */
+.plant-thumb[aria-pressed="true"] {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: 2px;
 }
 
 .plant-thumb img {
@@ -57,13 +132,14 @@
   transform: scale(1.05);
 }
 
-/* The dashed Add tile, also used at the end of the Photos tab */
+/* The dashed Add tile: the page's one place to add a photo. It opens the Add a photo popup. */
 .plant-thumb-add {
+  flex: 0 0 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-4);
   min-height: 44px;
   border: 1px dashed var(--color-line-strong);
   border-radius: var(--radius-input);
@@ -78,6 +154,8 @@
   border-color: var(--color-leaf);
   color: var(--color-forest);
 }
+
+/* ── Identity, status and actions ───────────────────── */
 
 .plant-name {
   margin-bottom: var(--space-4);
@@ -94,152 +172,388 @@
   color: var(--color-ink);
 }
 
-/* Status badge and key dates on one line, wrapping on a phone */
-.plant-meta {
+/* The name block, with a stack of small buttons beside it (Edit, Health check, List for exchange; visitors: Like).
+   Phone: the buttons wrap onto a row under the name. Tablet and up: on the right, and the stack is exactly as tall
+   as the name block (stretch), its buttons spread from the top of the name to the bottom of "Updated …". */
+.plant-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4) var(--space-12);
-  margin-bottom: var(--space-16);
+  justify-content: space-between;
+  gap: var(--space-12) var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.plant-identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.plant-head-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .plant-head {
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .plant-head-stack {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  /* Same width, text starting at the left like a list of tools. 32px tall (a mouse needs no 44px target), so three
+     of them fit inside the name block's height and stretch spreads them to its top and bottom lines. */
+  .plant-head-stack .btn {
+    justify-content: flex-start;
+    min-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* A visitor has one button: it stays at the top instead of stretching */
+  .plant-head-stack:has(> :only-child) {
+    justify-content: flex-start;
+  }
+}
+
+/* "Updated …" under the species */
+.plant-meta {
+  margin: 0;
   color: var(--color-muted);
   font-size: var(--text-small);
 }
 
-.plant-actions {
+/* ── AI care guide (partials/care-guide.php) ────────── */
+/* Kept in one block so its look is easy to change: a white card with a header, five small cards in a grid and a
+   footer; the sparkle marks AI content, as in the story. */
+
+/* A flex column, so when the card is stretched the extra room goes under the tiles and the footer stays last */
+.ai-guide {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-8);
-  margin-bottom: var(--space-16);
-}
-
-/* ── Care at a glance ───────────────────────────────── */
-
-.care-glance {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-8);
-}
-
-.care-tile {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-12);
-  min-width: 0;
-  padding: var(--space-12);
+  flex-direction: column;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
 }
 
-.care-tile-icon {
+.ai-guide-head {
+  padding: var(--space-24) var(--space-24) var(--space-16);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ai-guide-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-title .icon {
+  color: var(--color-leaf);
+}
+
+.ai-guide-meta {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Five small tiles: one column on a phone, two from a tablet up. Grid rows stretch by default, so the two tiles
+   of a row are always the same height. When the card is stretched to line up with the left column, flex: 1 gives
+   the list the extra height and the rows share it (align-content: stretch), so no empty band appears above the
+   footer (Ranshitha's request, 11 Nov). */
+.ai-guide-list {
+  display: grid;
+  flex: 1;
+  align-content: stretch;
+  gap: var(--space-12);
+  margin: 0;
+  padding: var(--space-24);
+}
+
+/* No border: a soft beige tile on the white card */
+.ai-guide-item {
+  padding: var(--space-24);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+}
+
+/* Icon and title on top, the text below */
+.ai-guide-item dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-item dd {
+  margin: var(--space-8) 0 0;
+  font-size: var(--text-body-sm);
+}
+
+@media (min-width: 768px) {
+  .ai-guide-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Five cards: the last one would sit alone, so it spans both columns */
+  .ai-guide-item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A small sage circle behind each section's icon */
+.ai-guide-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-sage);
   color: var(--color-leaf);
 }
 
-.care-tile-label,
-.care-tile-value {
-  display: block;
+/* The cards sit on cream, so their icon circles turn white to stay visible */
+.ai-guide-item .ai-guide-icon {
+  background: var(--color-white);
 }
 
-.care-tile-label {
+.ai-guide-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-16);
+  padding: var(--space-12) var(--space-24);
+  border-top: 1px solid var(--color-line);
+}
+
+.ai-guide-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
   color: var(--color-muted);
-  font-size: var(--text-label);
+  font-size: var(--text-small);
 }
 
-.care-tile-value {
+/* Generating: a status line, then grey bars where the five texts will appear */
+.ai-guide-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  margin: 0;
+  padding: var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-sage);
+  color: var(--color-forest);
   font-size: var(--text-body-sm);
+}
+
+.ai-guide-status .spinner {
+  flex-shrink: 0;
+  margin-top: var(--space-4);
+  border-color: var(--color-white);
+  border-top-color: var(--color-leaf);
+}
+
+.ai-guide-skeleton {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.ai-guide-skeleton span {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+  animation: ai-guide-pulse 1.4s ease-in-out infinite;
+}
+
+.ai-guide-skeleton span:last-child {
+  width: 60%;
+}
+
+@keyframes ai-guide-pulse {
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-guide-skeleton span {
+    animation: none;
+  }
+}
+
+/* Offline, unreadable answer or no species: what happened and what to do next */
+.ai-guide-problem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-24);
+}
+
+.ai-guide-problem-title {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.ai-guide-problem-text {
+  margin: var(--space-4) 0 var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+/* ── Left-column cards: Quick facts, Reminders, Owner ── */
+
+/* 24 inside, like every card on this page (the shared .panel has 16) */
+.plant-panel {
+  padding: var(--space-24);
+}
+
+.plant-panel > .panel-title {
+  margin-bottom: var(--space-8);
+}
+
+/* Quick facts: the label on the left, the value on the right, one fact per line */
+.quick-facts {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+
+.quick-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-16);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.quick-facts > div:first-child {
+  border-top: 0;
+}
+
+.quick-facts dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-muted);
+}
+
+.quick-facts dd {
+  margin: 0;
   font-weight: var(--weight-medium);
-  line-height: 1.35;
+  text-align: right;
 }
 
-/* The next watering stands out: terracotta tint when due today, red tint when overdue (design system rule) */
-.care-tile-due {
-  border-color: transparent;
-  background: var(--color-terracotta-tint);
+/* The owner card's list of facts (a visitor sees it instead of Reminders) */
+.plant-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-body-sm);
 }
 
-.care-tile-due .care-tile-icon {
-  background: var(--color-white);
-  color: var(--color-terracotta);
+.plant-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
 }
 
-.care-tile-overdue {
-  border-color: transparent;
-  background: var(--color-danger-bg);
+.plant-facts .icon {
+  color: var(--color-muted);
 }
 
-.care-tile-overdue .care-tile-icon {
-  background: var(--color-white);
-  color: var(--color-danger);
+/* Reminders: the Dashboard's care rows (components.css); only the empty message is this page's own */
+.plant-reminders-empty {
+  margin: 0;
 }
 
-/* "Mark watered": a small text button inside the tile */
-.care-tile-action {
-  min-height: 32px;
+/* Owner card (what a visitor sees instead of Reminders) */
+.plant-facts {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
+
+.owner-card .label {
+  margin-bottom: var(--space-12);
+}
+
+.owner-card-member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.owner-card-member > span {
+  display: grid;
+  line-height: 1.4;
+}
+
+.owner-card-btn {
+  width: 100%;
+  margin-top: var(--space-16);
+}
+
+/* ── Story: full width under both columns ───────────── */
+
+.story-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-8) var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.plant-story-title {
+  margin: 0;
+  font-size: var(--text-h2);
+}
+
+/* A <button> that looks like a small link: it opens the Add to story popup */
+.story-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
   padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--color-terracotta-dark);
+  background: none;
+  color: var(--color-leaf);
   font-family: inherit;
   font-size: var(--text-small);
   font-weight: var(--weight-semibold);
-  text-decoration: underline;
   cursor: pointer;
 }
 
-.care-tile-overdue .care-tile-action {
-  color: var(--color-danger);
+.story-add-link:hover {
+  color: var(--color-leaf-dark);
+  text-decoration: underline;
 }
 
-.care-source {
-  margin: var(--space-8) 0 0;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
-@media (min-width: 1024px) {
-  .plant-top {
-    grid-template-columns: 5fr 7fr;
-    gap: var(--space-32);
-    align-items: start;
-  }
-}
-
-/* ── Bottom: tabs and reminders card ────────────────── */
-
-.plant-bottom {
-  display: grid;
-  gap: var(--space-24);
-  align-items: start;
-}
-
-.plant-main {
-  min-width: 0;
-}
-
-.tab-panel {
-  padding-top: var(--space-24);
-}
-
-@media (min-width: 1024px) {
-  .plant-bottom {
-    grid-template-columns: 2fr 1fr;
-    gap: var(--space-32);
-  }
-}
-
-/* ── Story: a timeline ──────────────────────────────── */
-/* A vertical line on the left with a dot for each entry; the newest dot is filled */
-
+/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled */
 .story {
+  max-width: 760px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -292,7 +606,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-12);
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-16) var(--space-24);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
@@ -301,7 +615,7 @@
 .story-body {
   display: grid;
   justify-items: start;
-  gap: var(--space-4);
+  gap: var(--space-8);
   min-width: 0;
 }
 
@@ -313,7 +627,7 @@
 
 .story-ai {
   display: flex;
-  gap: 6px;
+  gap: var(--space-8);
   color: var(--color-muted);
 }
 
@@ -322,200 +636,151 @@
   color: var(--color-leaf);
 }
 
-/* ── Care guide tab ─────────────────────────────────── */
-
-.care-guide {
-  display: grid;
-  margin: 0;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-}
-
-.care-guide > div {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-12) var(--space-16);
-  border-top: 1px solid var(--color-line);
-}
-
-.care-guide > div:first-child {
-  border-top: 0;
-}
-
-.care-guide dt {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
-}
-
-.care-guide dt .icon {
-  color: var(--color-leaf);
-}
-
-.care-guide dd {
-  margin: 0;
-  font-size: var(--text-body-sm);
-}
-
-/* Tablet and up: the label and the value side by side */
-@media (min-width: 768px) {
-  .care-guide > div {
-    grid-template-columns: 180px 1fr;
-    gap: var(--space-16);
-  }
-}
-
-.care-notes {
-  margin: var(--space-16) 0 0;
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-input);
-  background: var(--color-sage);
-  color: var(--color-forest);
-  font-size: var(--text-body-sm);
-}
-
-/* ── Reminders tab ──────────────────────────────────── */
-
-.reminder-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-}
-
-.reminder-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-8) var(--space-12);
-  padding: var(--space-12) var(--space-16);
-  border-top: 1px solid var(--color-line);
-}
-
-.reminder-item:first-child {
-  border-top: 0;
-}
-
-.reminder-text {
-  display: grid;
-  flex: 1;
-  min-width: 160px;
-  font-size: var(--text-body-sm);
-}
-
-/* ── Photos tab ─────────────────────────────────────── */
-
-/* minmax(0, 1fr) keeps the columns equal: a plain 1fr may grow to fit a wide item */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-12);
-}
-
-@media (min-width: 768px) {
-  .photo-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.photo-grid-item {
-  margin: 0;
-}
-
-.photo-grid-item img {
+/* Photo and note entries: the photo under the text, larger than a thumbnail */
+.story-photo {
   display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 160px;
+  height: 160px;
   border-radius: var(--radius-input);
   object-fit: cover;
   background: var(--color-sage);
 }
 
-.photo-grid-item figcaption {
-  margin-top: var(--space-4);
+/* Care: one compact line, no card */
+.story-entry-care {
+  padding-bottom: var(--space-16);
 }
 
-/* align-self: start stops the tile stretching to the row's height (photo plus caption), which, being square,
-   would then make it wider than its column */
-.photo-grid-add {
-  align-self: start;
-  aspect-ratio: 1 / 1;
-  font-size: var(--text-small);
-}
-
-/* ── Reminders card ─────────────────────────────────── */
-
-.side-reminders,
-.plant-facts {
+.story-care {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
   margin: 0;
-  padding: 0;
-  list-style: none;
   font-size: var(--text-body-sm);
 }
 
-.side-reminders li,
-.plant-facts li {
-  display: flex;
+.story-care-task {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-8);
-  padding: var(--space-8) 0;
-}
-
-.side-reminders .icon,
-.plant-facts .icon {
-  color: var(--color-muted);
-}
-
-.side-due {
-  margin-left: auto;
   font-weight: var(--weight-semibold);
-  white-space: nowrap;
 }
 
-.side-due-due {
-  color: var(--color-terracotta);
-}
-
-.side-due-overdue {
-  color: var(--color-danger);
-}
-
-.side-due-upcoming {
-  color: var(--color-muted);
-  font-weight: var(--weight-regular);
-}
-
-.plant-facts {
-  margin-top: var(--space-8);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--color-line);
+.story-care-date,
+.story-care-note {
   color: var(--color-muted);
 }
 
-/* ── Owner card (read-only view) ────────────────────── */
-
-.owner-card .label {
-  margin-bottom: var(--space-12);
+/* Milestone: a small highlighted card in sage */
+.story-milestone {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  border-color: transparent;
+  background: var(--color-sage);
 }
 
-.owner-card-member {
+.story-milestone .story-note {
+  color: var(--color-forest);
+  font-weight: var(--weight-semibold);
+}
+
+.story-milestone-icon {
+  display: inline-flex;
+  color: var(--color-leaf);
+}
+
+/* ── Add a photo popup ──────────────────────────────── */
+
+.photo-form-body {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.photo-form-body .field {
+  margin: 0;
+}
+
+/* The drop area: 4:3 like the gallery; it shows the chosen photo in place of its words */
+.photo-drop {
+  overflow: hidden;
+  padding: 0;
+}
+
+.photo-drop.is-dragging {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+}
+
+.photo-drop-empty {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-16);
+}
+
+.photo-drop-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Add to story popup ─────────────────────────────── */
+
+.story-form-body {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.story-form-body .field {
+  margin: 0;
+}
+
+/* The six quick types as chips: a radio button each, its label drawn as a chip; the chosen one is filled */
+.story-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.story-kind-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.story-kind {
+  cursor: pointer;
+}
+
+.story-kind-input:checked + .story-kind {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+/* On the dark chosen chip the task's own colour would be hard to see, so its icon turns white too */
+.story-kind-input:checked + .story-kind .task {
+  color: inherit;
+}
+
+.story-kind-input:focus-visible + .story-kind {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.story-photo-field {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-12);
 }
 
-.owner-card-member > span {
-  display: grid;
-  line-height: 1.4;
-}
-
-.owner-card-btn {
-  width: 100%;
-  margin-top: var(--space-16);
+.story-photo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
 }

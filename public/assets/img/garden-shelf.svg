@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 210">
+  <!-- Decoration for the My Garden banner (P04): four potted plants on a wooden shelf, a pothos trailing over its edge.
+       Drawn for PlantFolio in the flat style and colours of the mock plant drawings. -->
+
+  <!-- The shelf and its two brackets -->
+  <path d="M58 172v26l18-26z" fill="#8C5E3A"/>
+  <path d="M352 172v26l18-26z" fill="#8C5E3A"/>
+  <rect x="8" y="160" width="404" height="12" rx="3" fill="#A87449"/>
+  <rect x="8" y="168" width="404" height="4" fill="#8C5E3A"/>
+
+  <!-- 1. Snake plant: tall pointed leaves with pale edges -->
+  <g stroke="#D8CF7A" stroke-width="2">
+    <path d="M60 122C52 92 52 62 58 34C64 60 66 92 66 122Z" fill="#3C7C49"/>
+    <path d="M70 122C70 88 74 58 82 30C86 62 80 94 76 122Z" fill="#2F6B3D"/>
+    <path d="M78 122C82 98 92 76 100 62C98 86 88 106 84 122Z" fill="#4A8A55"/>
+    <path d="M56 122C48 104 40 92 34 84C44 90 56 104 62 122Z" fill="#4A8A55"/>
+  </g>
+  <rect x="38" y="118" width="64" height="12" rx="3" fill="#C4633C"/>
+  <path d="M42 130h56l-6 30H48z" fill="#B5552F"/>
+
+  <!-- 2. Succulent: a blue-green rosette in a small pot -->
+  <g fill="#8FB3A6">
+    <ellipse cx="160" cy="114" rx="7" ry="18" transform="rotate(-70 160 130)"/>
+    <ellipse cx="160" cy="114" rx="7" ry="18" transform="rotate(-35 160 130)"/>
+    <ellipse cx="160" cy="114" rx="7" ry="18"/>
+    <ellipse cx="160" cy="114" rx="7" ry="18" transform="rotate(35 160 130)"/>
+    <ellipse cx="160" cy="114" rx="7" ry="18" transform="rotate(70 160 130)"/>
+  </g>
+  <g fill="#A9C7BB">
+    <ellipse cx="160" cy="120" rx="5" ry="11" transform="rotate(-40 160 130)"/>
+    <ellipse cx="160" cy="120" rx="5" ry="11"/>
+    <ellipse cx="160" cy="120" rx="5" ry="11" transform="rotate(40 160 130)"/>
+  </g>
+  <rect x="134" y="130" width="52" height="10" rx="3" fill="#C4633C"/>
+  <path d="M138 140h44l-5 20h-34z" fill="#B5552F"/>
+
+  <!-- 3. Monstera: big round leaves with their splits -->
+  <g stroke="#3C7C49" stroke-width="3" fill="none">
+    <path d="M248 112C244 96 232 84 222 76"/>
+    <path d="M252 112C256 92 266 76 276 64"/>
+    <path d="M250 112V44"/>
+  </g>
+  <circle cx="218" cy="74" r="22" fill="#3C7C49"/>
+  <circle cx="280" cy="62" r="24" fill="#2F6B3D"/>
+  <circle cx="249" cy="38" r="26" fill="#2F6B3D"/>
+  <g stroke="#E4ECDC" stroke-width="3" stroke-linecap="round">
+    <path d="M204 66l8 5M202 80l9-2M230 62l-5 7"/>
+    <path d="M294 52l-8 6M298 68l-9-1M268 46l5 7"/>
+    <path d="M232 26l7 6M230 44l8-2M266 24l-6 7M268 42l-8-1"/>
+  </g>
+  <rect x="216" y="110" width="68" height="12" rx="3" fill="#C4633C"/>
+  <path d="M220 122h60l-6 38h-48z" fill="#B5552F"/>
+
+  <!-- 4. Pothos: heart-shaped leaves, two stems trailing over the edge of the shelf -->
+  <g stroke="#4F7A3E" stroke-width="2" fill="none">
+    <path d="M330 128C318 150 312 176 316 206"/>
+    <path d="M352 128C366 148 376 176 372 208"/>
+  </g>
+  <g fill="#6E9E58">
+    <ellipse cx="318" cy="170" rx="7" ry="5" transform="rotate(-30 318 170)"/>
+    <ellipse cx="314" cy="194" rx="7" ry="5" transform="rotate(20 314 194)"/>
+    <ellipse cx="370" cy="162" rx="7" ry="5" transform="rotate(30 370 162)"/>
+    <ellipse cx="376" cy="190" rx="7" ry="5" transform="rotate(-20 376 190)"/>
+  </g>
+  <g fill="#82B26A">
+    <ellipse cx="322" cy="182" rx="6" ry="4" transform="rotate(40 322 182)"/>
+    <ellipse cx="368" cy="176" rx="6" ry="4" transform="rotate(-40 368 176)"/>
+    <ellipse cx="330" cy="112" rx="9" ry="7" transform="rotate(-30 330 112)"/>
+    <ellipse cx="350" cy="108" rx="9" ry="7" transform="rotate(25 350 108)"/>
+  </g>
+  <ellipse cx="340" cy="100" rx="9" ry="7" fill="#6E9E58"/>
+  <rect x="312" y="126" width="56" height="10" rx="3" fill="#C4633C"/>
+  <path d="M316 136h48l-5 24h-38z" fill="#B5552F"/>
+</svg>

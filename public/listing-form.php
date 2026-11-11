@@ -108,8 +108,12 @@ $values = [
     'size'            => '',
     'plant_condition' => '',
     'location'        => $current_user['location'],   // the member's town, the usual pick-up place
+    'km_from_town'    => $current_user['km_from_town'] ?? 0,   // how far the pick-up place is from it (0–30)
     'share_email'     => 1,
     'share_phone'     => 0,   // my choice: the phone number is shared only when the member ticks it
+    'categories'      => [],  // what the Exchange filters find it under (at least one)
+    'light_level'     => '',  // '' = Not sure
+    'water_need'      => '',
 ];
 $title_suggested = false;
 
@@ -123,14 +127,31 @@ if ($is_edit) {
         'size'            => $listing['size'] ?? '',
         'plant_condition' => $listing['plant_condition'] ?? '',
         'location'        => $listing['location'],
+        'km_from_town'    => $listing['km_from_town'] ?? 0,
         'share_email'     => $listing['share_email'],
         'share_phone'     => $listing['share_phone'],
+        'categories'      => $listing['categories'],
+        'light_level'     => $listing['light_level'] ?? '',
+        'water_need'      => $listing['water_need'] ?? '',
     ];
 } elseif ($plant) {
     // "Title is suggested from the plant name and species, and can be changed" (p19, UX notes)
     $values['title'] = $plant['common_name'] . ' from ' . $plant['nickname'];
     $title_suggested = true;
+    // The species table already knows whether the plant is safe for pets: tick Pet friendly for the owner
+    if (!empty($mock_species[$plant['species_id']]['pet_safe'])) {
+        $values['categories'][] = 'pet_friendly';
+    }
 }
+
+// The town list of the town picker (partials/town-picker.php): every town in the towns table, A–Z
+$town_names = array_keys($mock_towns);
+sort($town_names);
+
+// The options of "3. Help people find it": the same lists as the Exchange filters (helpers.php)
+$category_options = listing_categories();
+$light_options    = light_levels();
+$water_options    = water_needs();
 
 // ── Publish (Post/Redirect/Get) ─────────────────────────
 // The browser checks the fields first (required, maxlength); these checks repeat them, because the browser's checks
@@ -152,8 +173,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'size'            => trim(post_text('size')),
         'plant_condition' => trim(post_text('plant_condition')),
         'location'        => trim(post_text('location')),
+        // A whole number from 0 to 30 (the slider); anything else counts as 0, "in the town"
+        'km_from_town'    => ctype_digit(post_text('km_from_town')) && (int) post_text('km_from_town') <= 30
+                             ? (int) post_text('km_from_town') : 0,
         'share_email'     => post_text('share_email') === '1' ? 1 : 0,
         'share_phone'     => $has_phone && post_text('share_phone') === '1' ? 1 : 0,
+        // Only known category keys are kept; a light or water value that is not on the list counts as "Not sure"
+        'categories'      => array_values(array_unique(array_filter((array) ($_POST['categories'] ?? []),
+                                 fn ($value) => is_string($value) && isset($category_options[$value])))),
+        'light_level'     => isset($light_options[post_text('light_level')]) ? post_text('light_level') : '',
+        'water_need'      => isset($water_options[post_text('water_need')]) ? post_text('water_need') : '',
     ];
 
     // A photo arrived when PHP reports no upload error for it. A hand-made photo[] makes 'error' a list: not a photo.
@@ -177,8 +206,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($values['description']) > $text_limit) {
         $errors['description'] = 'Keep the description to ' . $text_limit . ' characters.';
     }
-    if ($values['location'] === '') {
-        $errors['location'] = 'Add the town where the plant can be picked up.';
+    if (!$values['categories']) {
+        $errors['categories'] = 'Choose at least one category, so people can find your listing.';
+    }
+    if (!isset($mock_towns[$values['location']])) {
+        $errors['location'] = 'Choose the town nearest to where the plant can be picked up.';
     }
     if (!$values['share_email'] && !$values['share_phone']) {
         $errors['share'] = 'Choose at least one way for interested people to contact you.';
@@ -186,8 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         // Stage F: nothing is saved. An edited listing opens its detail page; a new one has no page yet, so the member
-        // goes to their listings in My exchanges.
-        header('Location: ' . ($is_edit ? url('listing.php?id=' . $listing['id']) : url('my-exchanges.php?tab=listings')));
+        // goes back to the Exchange tab of Community, where new listings appear (stage B: theirs, at the top).
+        header('Location: ' . ($is_edit ? url('listing.php?id=' . $listing['id']) : url('community.php?tab=exchange')));
         exit;
     }
 }
@@ -231,7 +263,7 @@ $preview = [
     'rating_count'   => $current_user['rating_count'],
 ];
 
-$back_url    = $is_edit ? url('listing.php?id=' . $listing['id']) : url('exchange.php');
+$back_url    = $is_edit ? url('listing.php?id=' . $listing['id']) : url('community.php?tab=exchange');
 $form_action = url('listing-form.php' . ($is_edit ? '?id=' . $listing['id'] : ''));
 
 $page_title = $is_edit ? 'Edit listing' : 'List a plant';
@@ -240,7 +272,7 @@ $page_css   = 'listing-form.css';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container page">
-  <a class="back-link" href="<?= e($back_url) ?>"><?= icon('arrow-left') ?> <?= $is_edit ? 'Back to the listing' : 'Back to Exchange' ?></a>
+  <a class="back-link" href="<?= e($back_url) ?>"><?= icon('arrow-left') ?> <?= $is_edit ? 'Back to the listing' : 'Back to the exchange' ?></a>
   <h1 class="form-title"><?= $is_edit ? 'Edit listing' : 'List a plant for exchange' ?></h1>
   <p class="form-intro">Share a plant or cuttings with the community. Your contact is only shown to people who are interested.</p>
 
@@ -307,11 +339,13 @@ include __DIR__ . '/../includes/header.php';
                 <span class="field-label" id="photo-label">Photo</span>
                 <?php if ($is_edit && $listing['plant_id'] === null): ?>
                   <div class="photo-current">
-                    <img src="<?= e(photo_url($listing['photo'])) ?>" alt="Current photo of <?= e($listing['title']) ?>">
+                    <img src="<?= e(photo_url($listing['photo'])) ?>" alt="Current photo of <?= e($listing['title']) ?>" id="listing-photo-preview">
                     <label class="btn btn-secondary btn-sm photo-change" for="listing-photo"><?= icon('camera') ?> Change photo</label>
                   </div>
                 <?php else: ?>
                   <label class="dropzone listing-dropzone" for="listing-photo">
+                    <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+                    <img class="dropzone-preview" id="listing-photo-preview" alt="" hidden>
                     <span class="dropzone-icon"><?= icon('image-up') ?></span>
                     <span class="dropzone-title">Add a photo of what you offer</span>
                     <span class="dropzone-text">Drag it here, browse, or use your phone camera</span>
@@ -319,7 +353,8 @@ include __DIR__ . '/../includes/header.php';
                   </label>
                 <?php endif; ?>
                 <input class="visually-hidden" type="file" id="listing-photo" name="photo" accept="image/jpeg,image/png"
-                       capture="environment" aria-labelledby="photo-label"<?= $describe('photo', 'photo-hint') ?>>
+                       capture="environment" aria-labelledby="photo-label"<?= $describe('photo', 'photo-hint') ?>
+                       data-photo-input data-photo-hint="photo-hint" data-photo-preview="listing-photo-preview">
                 <p class="field-hint photo-hint" id="photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
                 <?php if (isset($errors['photo'])): ?>
                   <span class="field-error" id="photo-error"><?= e($errors['photo']) ?></span>
@@ -408,24 +443,61 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </section>
 
-        <?php // 3. Location and contact (p19, elements 4 and 5) ?>
+        <?php // 3. Help people find it (not on p19: Ranshitha's addition, 11 Nov). The same choices as the Exchange filters,
+              // so the owner files the listing where swappers look. Category is required; light and water may be "Not sure". ?>
+        <section class="form-section" aria-labelledby="find-title">
+          <h2 class="form-card-title listing-step" id="find-title">3. Help people find it</h2>
+          <p class="form-section-intro">People filter the exchange by these, so choose what fits your plant.</p>
+
+          <fieldset class="field form-fieldset" aria-describedby="categories-hint<?= isset($errors['categories']) ? ' categories-error' : '' ?>">
+            <legend class="field-label">Category</legend>
+            <span class="field-hint" id="categories-hint">Choose all that fit, at least one.</span>
+            <div class="category-choices">
+              <?php foreach ($category_options as $key => $option): ?>
+                <label class="chip-choice">
+                  <input type="checkbox" name="categories[]" value="<?= e($key) ?>"<?= in_array($key, $values['categories'], true) ? ' checked' : '' ?>>
+                  <span class="chip"><?= icon($option['icon']) ?> <?= e($option['label']) ?></span>
+                </label>
+              <?php endforeach; ?>
+            </div>
+            <?php if (isset($errors['categories'])): ?>
+              <span class="field-error" id="categories-error"><?= e($errors['categories']) ?></span>
+            <?php endif; ?>
+          </fieldset>
+
+          <?php // One choice each, so radio buttons; "Not sure" first and chosen by default: a beginner may not know ?>
+          <?php foreach ([['light_level', 'Light', 'sun', $light_options], ['water_need', 'Watering', 'droplet', $water_options]] as [$field, $legend, $field_icon, $options]): ?>
+            <fieldset class="field form-fieldset">
+              <legend class="field-label"><?= icon($field_icon) ?> <?= e($legend) ?> <span class="field-optional">(optional)</span></legend>
+              <div class="category-choices">
+                <?php foreach (array_merge(['' => 'Not sure'], $options) as $key => $label): ?>
+                  <label class="chip-choice">
+                    <input type="radio" name="<?= e($field) ?>" value="<?= e($key) ?>"<?= $key === $values[$field] ? ' checked' : '' ?>>
+                    <span class="chip"><?= e($label) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </fieldset>
+          <?php endforeach; ?>
+        </section>
+
+        <?php // 4. Location and contact (p19, elements 4 and 5) ?>
         <section class="form-section" aria-labelledby="contact-title">
-          <h2 class="form-card-title listing-step" id="contact-title">3. Location and contact</h2>
+          <h2 class="form-card-title listing-step" id="contact-title">4. Location and contact</h2>
 
           <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="location">Town</label>
-              <div class="input-icon">
-                <?= icon('map-pin') ?>
-                <input class="input" type="text" id="location" name="location" value="<?= e($values['location']) ?>"
-                       autocomplete="address-level2" maxlength="100" required<?= $describe('location', 'location-hint') ?>>
-              </div>
-              <?php if (isset($errors['location'])): ?>
-                <span class="field-error" id="location-error"><?= e($errors['location']) ?></span>
-              <?php endif; ?>
-              <?php // The site never stores an address (DES-07), so this is a promise, not a choice ?>
-              <span class="field-hint" id="location-hint">Only your town is shown, never an address.</span>
-            </div>
+            <?php // The pick-up place: the nearest town, then how far from it. The site never stores an address
+                  // (DES-07), so the hint is a promise, not a choice. Listing Detail shows "Pick-up: about 3 km from …". ?>
+            <?php partial('town-picker', [
+                'town_names' => $town_names,
+                'town'       => $values['location'],
+                'km'         => $values['km_from_town'],
+                'label'      => 'Pick-up: nearest town',
+                'km_label'   => 'How far from the town',
+                'required'   => true,
+                'hint'       => 'Shown on the listing as a town and a rough distance, never an address.',
+                'error'      => $errors['location'] ?? null,
+            ]); ?>
 
             <?php // Contact sharing (p19, element 5): exactly which details an interested member will see ?>
             <fieldset class="field form-fieldset" aria-describedby="share-hint<?= isset($errors['share']) ? ' share-error' : '' ?>">

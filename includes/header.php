@@ -1,14 +1,15 @@
 <?php
 // Page frame, top half: the <head>, the top bar with the navigation, and the opening <main> tag (CORE-06).
 // A page sets $page_title and then includes this file; includes/footer.php closes what is opened here.
-// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs,
+// A page may also set $page_css, the name of one extra stylesheet in assets/css/ that only it needs (and $page_js,
+// one extra script in assets/js/),
 // and $hide_bottom_bar = true to leave out the phone bottom bar: inner pages with their own action bar (p23).
 // Expects $current_user from the page: a users row, or null for a visitor (mock data now, the session in stage B).
 // The stylesheets go through asset_url(), which adds ?v=<last change time>: after a CSS change every browser
 // loads the new file instead of an old copy it kept (Ctrl + F5 is no longer needed).
 
 $is_member       = !empty($current_user);
-// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Explore for others
+// A page whose area depends on its data may set $nav_area itself: plant.php is My Garden for its owner, Community for others
 $area            = $nav_area ?? current_area();
 $show_bottom_bar = $is_member && empty($hide_bottom_bar);   // footer.php prints the phone bar when this is true
 // The top bar's .site-header-member follows $is_member, not $show_bottom_bar: a member's bar holds more buttons, so
@@ -19,15 +20,12 @@ $nav_links = $is_member
     ? [
         ['label' => 'Dashboard', 'href' => 'dashboard.php', 'area' => 'dashboard'],
         ['label' => 'My Garden', 'href' => 'garden.php',    'area' => 'garden'],
-        ['label' => 'Explore',   'href' => 'explore.php',   'area' => 'explore'],
-        ['label' => 'Exchange',  'href' => 'exchange.php',  'area' => 'exchange'],
+        // One link for the plants, the exchange and the people: they share the Community page (community.php)
+        ['label' => 'Community', 'href' => 'community.php', 'area' => 'community'],
     ]
     : [
-        // A visitor's Exchange link shows the newest listings on the Landing page ("Fresh on the exchange"),
-        // as the team asked; from the "See all" link there they reach the full marketplace (exchange.php).
-        ['label' => 'Explore',      'href' => 'explore.php',             'area' => 'explore'],
-        ['label' => 'Exchange',     'href' => 'index.php#fresh',         'area' => null],
-        ['label' => 'How it works', 'href' => 'index.php#how-it-works',  'area' => null],
+        ['label' => 'Community',    'href' => 'community.php',          'area' => 'community'],
+        ['label' => 'How it works', 'href' => 'index.php#how-it-works', 'area' => null],
     ];
 
 // The two AI tools share one menu, "Plant Tools" (members only).
@@ -57,6 +55,12 @@ if ($is_member) {
   <link rel="stylesheet" href="<?= e(asset_url('assets/css/layout.css')) ?>">
   <?php if (!empty($page_css)): ?>
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/' . $page_css)) ?>">
+  <?php endif; ?>
+  <?php // defer: the script waits until the whole page is read, so the elements it looks for exist ?>
+  <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>
+  <?php // A page may add one script of its own, like $page_css: $page_js = 'plant.js' ?>
+  <?php if (!empty($page_js)): ?>
+    <script src="<?= e(asset_url('assets/js/' . $page_js)) ?>" defer></script>
   <?php endif; ?>
 </head>
 <body<?= $show_bottom_bar ? ' class="has-bottom-bar"' : '' ?>>
@@ -93,8 +97,7 @@ if ($is_member) {
 
       <div class="header-actions">
         <?php if ($is_member): ?>
-          <a class="icon-btn" href="<?= e(url('explore.php')) ?>" aria-label="Search"><?= icon('search') ?></a>
-          <a class="btn btn-primary btn-sm header-add" href="<?= e(url('plant-form.php')) ?>" aria-label="Add plant"><?= icon('plus') ?> <span class="header-add-label">Add plant</span></a>
+          <?php // No Search or Add plant buttons here: search is on Community, Add plant on My Garden (and the phone's + menu) ?>
           <a class="icon-btn" href="<?= e(url('my-exchanges.php')) ?>" aria-label="Notifications<?= $bell_count > 0 ? ': ' . e($bell_count) . ' new' : '' ?>">
             <?= icon('bell') ?>
             <?php if ($bell_count > 0): ?><span class="icon-btn-dot"></span><?php endif; ?>

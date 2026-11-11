@@ -45,13 +45,20 @@ p {
   margin: 0 0 var(--space-12);
 }
 
+/* One link style everywhere: green text, underlined only on hover (2026-11-11) */
 a {
   color: var(--color-leaf);
+  text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
   color: var(--color-leaf-dark);
+}
+
+/* :where() adds no specificity, so buttons, menus and cards that set their own text-decoration keep it */
+a:where(:hover) {
+  text-decoration: underline;
 }
 
 img {
@@ -457,6 +464,24 @@ button.menu-item {
 /* Wrap each control in .field with a .field-label; messages go in .field-hint or .field-error */
 
 /* Hidden from sight but still read by screen readers */
+/* A list that scrolls inside its box with no scrollbar drawn: the wheel, a finger and the Tab key still scroll it.
+   The list sets its own max-height. Used by the Dashboard's two boxes. */
+.scroll-quiet {
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* reaching the end of the list does not start scrolling the page */
+  scrollbar-width: none;
+}
+
+/* The same for Safari, which does not know scrollbar-width */
+.scroll-quiet::-webkit-scrollbar {
+  display: none;
+}
+
+/* The hidden attribute always wins: without this, a rule such as .field { display: grid } would show it again */
+[hidden] {
+  display: none !important;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -699,10 +724,17 @@ textarea.input {
   color: var(--color-sage);
 }
 
+/* Dashed, so it reads as "add one", not as a collection; leaf green and forest text, so it stands out on the cream page */
 .chip-add {
   border-style: dashed;
+  border-color: var(--color-leaf);
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-forest);
+}
+
+.chip-add:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
 }
 
 @media (min-width: 768px) {
@@ -856,7 +888,8 @@ textarea.input {
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.dropzone:hover {
+.dropzone:hover,
+.dropzone.is-dragging {   /* app.js: a photo is being dragged over it */
   border-color: var(--color-leaf);
   background: var(--color-sage);
 }
@@ -890,6 +923,33 @@ textarea.input {
 .dropzone-text {
   color: var(--color-muted);
   font-size: var(--text-small);
+}
+
+/* A chosen photo (app.js, data-photo-preview) fills the box like .photo-current below; the words step aside and
+   the button moves to the corner, where it reads as "choose another". :has() needs no extra class from the script. */
+.dropzone:has(.dropzone-preview:not([hidden])) {
+  position: relative;
+  overflow: hidden;
+  border-style: solid;
+}
+
+.dropzone-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dropzone:has(.dropzone-preview:not([hidden])) :is(.dropzone-icon, .dropzone-title, .dropzone-text) {
+  display: none;
+}
+
+.dropzone:has(.dropzone-preview:not([hidden])) .btn {
+  position: absolute;
+  right: var(--space-12);
+  bottom: var(--space-12);
+  box-shadow: var(--shadow-sm);
 }
 
 .photo-hint {
@@ -1083,7 +1143,7 @@ textarea.input {
 .card-media {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--color-sage);
+  background: var(--color-neutral-bg);   /* one calm colour behind every photo, so the health badges stand out */
 }
 
 .card-media img {
@@ -1158,7 +1218,7 @@ textarea.input {
 
 .plant-card:hover,
 .listing-card:hover,
-.member-card:hover {
+.person-card:hover {
   border-color: var(--color-line-strong);
   box-shadow: var(--shadow-card);
   transform: translateY(-2px);
@@ -1214,40 +1274,129 @@ textarea.input {
   white-space: nowrap;
 }
 
-/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left */
+/* A community card has no care hint, so a collection shown there (Public Profile) starts on the left, at the bottom */
 .plant-card-community .plant-card-collection {
-  margin-left: 0;
+  margin: auto 0 0;
+  padding-top: var(--space-8);
+  font-size: var(--text-small);
 }
 
-/* Community plant card (p16): likes at the right end of the badge row, the owner along the bottom */
-.card-media .plant-card-likes {
-  margin-left: auto;   /* to the right, also when it has wrapped onto a line of its own */
-  background: var(--color-white);
-  color: var(--color-ink);
+/* ── Community plant card (Community page, P14 profile) ── */
+
+/* Town under the species, with a pin */
+.plant-card-town {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
 }
 
-/* margin-top: auto keeps the owner rows level across cards whose names wrap differently */
+.plant-card-town .icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+/* "Open to swap" on the left, the likes pushed to the right */
+.plant-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  min-height: 28px;
+}
+
+/* A small tag that is a link: lifted above the card's stretched link (.card-link::after) so it can be clicked.
+   Sage like the other tags (forest text on sage: 8.4:1); a "Free" offer is terracotta-tinted like the Free badge. */
+.plant-card-offer {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 2px var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transition: box-shadow var(--transition-fast);
+}
+
+.plant-card-offer-free {
+  background: var(--color-terracotta-tint);
+  color: var(--color-terracotta-dark);
+}
+
+.plant-card-offer:hover {
+  box-shadow: 0 0 0 2px var(--color-leaf);
+}
+
+.plant-card-offer .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The tag is about 22px tall; this invisible frame makes the tap area 44px tall, the project's minimum */
+.plant-card-offer::before {
+  content: "";
+  position: absolute;
+  inset: -11px -4px;
+}
+
+/* The like count is information, not a button (there is no like feature yet): plain muted text, no pill */
+.plant-card-likes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+.plant-card-likes .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* The owner row at the bottom of the card; margin-top: auto keeps it level across cards whose names wrap differently.
+   The town has its own line above, so the @username has the whole width. */
 .plant-card-owner {
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  min-width: 0;
   margin-top: auto;
   padding-top: var(--space-8);
   font-size: var(--text-small);
 }
 
+/* The @username opens the member's profile: lifted above the card's stretched link, like "Open to swap".
+   Padding makes it 44px tall without making the row taller (negative margins take the height back). */
 .plant-card-username {
+  position: relative;
+  z-index: 1;
   min-width: 0;
-  margin-right: auto;
-  overflow: hidden;
+  margin: -12px 0;
+  padding: 12px 0;
+  overflow-wrap: anywhere;   /* a very long username wraps instead of being cut */
+  color: var(--color-ink);
   font-weight: var(--weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-decoration: none;
 }
 
-.plant-card-town {
-  color: var(--color-muted);
-  white-space: nowrap;
+.plant-card-username:hover {
+  color: var(--color-leaf);
+  text-decoration: underline;
+}
+
+/* Keyboard users see which card they are in, whichever of its links has focus */
+.plant-card-community:has(:focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 /* Next-care hint: terracotta when due today, red when overdue (design system rule) */
@@ -1325,7 +1474,7 @@ textarea.input {
 
 /* Member card (p16): Explore's People tab. The whole card opens the member's Public Profile.
    Phone: avatar beside the text, so a list of members stays short. Tablet and up: upright, centred under the avatar. */
-.member-card {
+.person-card {
   flex-direction: row;
   align-items: center;
   gap: var(--space-16);
@@ -1333,7 +1482,7 @@ textarea.input {
 }
 
 /* min-width: 0 lets a long username shorten with "…" instead of widening the card */
-.member-card-body {
+.person-card-body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1342,18 +1491,18 @@ textarea.input {
   max-width: 100%;
 }
 
-.member-card-body > * {
+.person-card-body > * {
   margin: 0;
 }
 
 /* The profile's 96px avatar would crowd a card a third of the page wide */
-.member-card .avatar-lg {
+.person-card .avatar-lg {
   width: 72px;
   height: 72px;
   font-size: var(--text-h2);
 }
 
-.member-card-username {
+.person-card-username {
   max-width: 100%;
   overflow: hidden;
   color: var(--color-ink);
@@ -1363,12 +1512,12 @@ textarea.input {
   white-space: nowrap;
 }
 
-.member-card-name {
+.person-card-name {
   color: var(--color-muted);
   font-size: var(--text-body-sm);
 }
 
-.member-card-town {
+.person-card-town {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
@@ -1376,13 +1525,13 @@ textarea.input {
   font-size: var(--text-small);
 }
 
-.member-card-town .icon,
-.member-card-match .icon {
+.person-card-town .icon,
+.person-card-match .icon {
   width: 14px;
   height: 14px;
 }
 
-.member-card-stats {
+.person-card-stats {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1390,46 +1539,46 @@ textarea.input {
   font-size: var(--text-small);
 }
 
-.member-card .member-card-match {
+.person-card .person-card-match {
   margin-top: var(--space-4);
 }
 
 @media (min-width: 768px) {
-  .member-card {
+  .person-card {
     flex-direction: column;
     gap: var(--space-12);
     padding: var(--space-24) var(--space-16);
     text-align: center;
   }
 
-  .member-card-body {
+  .person-card-body {
     align-items: center;
   }
 
-  .member-card-stats {
+  .person-card-stats {
     justify-content: center;
   }
 }
 
 /* The compact card of the "Plant lovers matching" row (p16, element 6): avatar on the left, two short lines.
    It comes after the rules above, so at every screen width it wins over the upright layout. */
-.member-card-compact {
+.person-card-compact {
   flex-direction: row;
   gap: var(--space-12);
   padding: var(--space-12) var(--space-16);
   text-align: left;
 }
 
-.member-card-compact .member-card-body {
+.person-card-compact .person-card-body {
   align-items: flex-start;
   gap: 0;
 }
 
-.member-card-compact .member-card-username {
+.person-card-compact .person-card-username {
   font-size: var(--text-body-sm);
 }
 
-.member-card-compact .member-card-stats {
+.person-card-compact .person-card-stats {
   justify-content: flex-start;
   color: var(--color-muted);
 }
@@ -1534,9 +1683,14 @@ textarea.input {
   justify-self: start;
 }
 
-.care-row .btn {
+/* The Mark done form takes the button's place in the grid */
+.care-row-form {
   grid-column: 3;
   grid-row: 1 / span 2;
+  margin: 0;
+}
+
+.care-row .btn {
   min-width: 44px;
 }
 
@@ -1570,7 +1724,7 @@ textarea.input {
     grid-row: 1;
   }
 
-  .care-row .btn {
+  .care-row-form {
     grid-column: 4;
     grid-row: 1;
   }
@@ -1578,6 +1732,182 @@ textarea.input {
   .care-row-btn-label {
     display: inline;
   }
+}
+
+/* Compact care row (the plant's own page): no photo or plant name, so the task is the title; the due tag sits under
+   it and Mark done keeps its words, because the row has room for them at every width */
+.care-row-compact {
+  grid-template-columns: 1fr auto;
+}
+
+.care-row-compact .care-row-text {
+  grid-column: 1;
+}
+
+.care-row-compact .badge {
+  grid-column: 1;
+}
+
+.care-row-compact .care-row-form {
+  grid-column: 2;
+}
+
+.care-row-compact .care-row-btn-label {
+  display: inline;
+}
+
+.care-row-task-title {
+  font-size: var(--text-body-sm);
+}
+
+@media (min-width: 768px) {
+  .care-row-compact {
+    grid-template-columns: 1fr auto;
+  }
+
+  .care-row-compact .badge {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .care-row-compact .care-row-form {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+/* The dashed add button at the bottom of a box (Dashboard, Plant Profile; moved from dashboard.css 2026-11-11), like the dashed Add tiles elsewhere: "+ Add a reminder" in Today's
+   care (a <button> that opens a popup) and "+ Add plant" in Garden at a glance (a link to Add Plant) */
+.dash-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  width: 100%;
+  min-height: 44px;   /* touch target */
+  margin-top: var(--space-12);
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-forest);
+  font-family: inherit;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dash-add-btn:hover {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+  color: var(--color-forest);   /* the link version would otherwise take the darker link colour */
+}
+
+/* ── Choice chips: radio buttons and tick boxes drawn as chips ── */
+/* Moved here from community.css: the Community filters and Create Listing (Category, Light, Watering) use them.
+   The input stays in the page for the keyboard and screen readers; only the chip after it is seen.
+   "+" picks the chip that comes straight after a checked or focused input. */
+.chip-choice {
+  position: relative;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-choice input:checked + .chip {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip-choice input:focus-visible + .chip {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.chip-choice .chip {
+  cursor: pointer;
+}
+
+.chip-choice .chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* A row of choice chips that wraps (Create Listing) */
+.category-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* ── Town and distance: a town list and a slider ───── */
+/* Moved here from community.css: the Community filters (Near + How far) and the town pickers of Sign up, Settings and
+   Create Listing (Nearest town + How far from the town) share them. partials/near-filter.php, partials/town-picker.php. */
+
+.filter-field-label {
+  display: block;
+  margin-bottom: var(--space-4);
+  color: var(--color-ink);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+.filter-range {
+  margin-top: var(--space-12);
+}
+
+/* "How far" on the left, the value ("Within 25 km") on the right */
+.filter-range-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.filter-range-head .filter-field-label {
+  margin: 0;
+}
+
+.filter-range-value {
+  color: var(--color-forest);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* The slider: a native <input type="range"> in leaf green (accent-color paints the filled part and the thumb).
+   44px tall so a finger can grab it; the visible track stays thin. */
+.filter-range-input {
+  display: block;
+  width: 100%;
+  min-height: 32px;   /* plus the scale under it: a 44px+ area to grab */
+  margin: 0;
+  accent-color: var(--color-leaf);
+  cursor: pointer;
+}
+
+.filter-range-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.filter-range-input:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: var(--radius-input);
+}
+
+/* The scale under the slider: 5 km at the start, 50 km in the middle, Any at the end */
+.filter-range-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;   /* just below the slider's 44px tap area, so the focus ring never crosses the words */
+  color: var(--color-muted);
+  font-size: var(--text-label);
 }
 
 /* ── Results bar: count, active filters, sort ───────── */
@@ -1668,6 +1998,11 @@ textarea.input {
 }
 
 .panel-link {
+  display: inline-block;
+  /* A 44px-tall finger target (CLAUDE.md) around a small text link: the padding adds the height and the negative
+     margin takes it back, so the panel's heading row keeps its size */
+  padding-block: var(--space-12);
+  margin-block: calc(-1 * var(--space-12));
   font-weight: var(--weight-medium);
   text-decoration: none;
 }
@@ -1688,38 +2023,9 @@ textarea.input {
   color: var(--color-muted);
 }
 
-/* The last row of a panel, as a link: "Coming up this week · 5 tasks  >" */
-.panel-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 44px;   /* touch target */
-  margin: var(--space-8) calc(var(--space-16) * -1) calc(var(--space-16) * -1);
-  padding: 0 var(--space-16);
-  border-top: 1px solid var(--color-line);
-  border-radius: 0 0 var(--radius-card) var(--radius-card);
-  background: var(--color-cream);
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  text-decoration: none;
-}
-
-.panel-foot:hover {
-  color: var(--color-ink);
-}
-
-.panel-foot strong {
-  color: var(--color-ink);
-}
-
 @media (min-width: 768px) {
   .panel {
     padding: var(--space-24);
-  }
-
-  .panel-foot {
-    margin: var(--space-8) calc(var(--space-24) * -1) calc(var(--space-24) * -1);
-    padding: 0 var(--space-24);
   }
 }
 
@@ -1832,7 +2138,7 @@ textarea.input {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: 44px;   /* touch target (CLAUDE.md) */
   padding: var(--space-4) var(--space-16);
   border-radius: calc(var(--radius-input) - var(--space-4));
   color: var(--color-neutral-text);
@@ -2010,8 +2316,32 @@ textarea.input {
 }
 
 /* The usual green outline would not show on the dark toast */
-.toast-action:focus-visible {
+.toast-action:focus-visible,
+.toast-close:focus-visible {
   outline-color: var(--color-sage);
+}
+
+/* × at the end of a toast: closes the message, nothing else */
+.toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-input);
+  color: var(--color-white);
+  opacity: 0.8;
+}
+
+.toast-close:hover {
+  color: var(--color-white);
+  opacity: 1;
+}
+
+.toast > .icon {
+  flex-shrink: 0;
+  color: var(--color-sage);
 }
 
 /* Where toasts sit on a real page: fixed to the bottom of the screen, centred */
@@ -2061,4 +2391,332 @@ textarea.input {
 .alert-danger {
   background: var(--color-danger-bg);
   color: var(--color-danger);
+}
+
+/* ── Task name (task_name() in helpers.php) ─────────── */
+/* "Water" with its icon, both in the task's colour; the text around it keeps its own colour.
+   Plain inline text (not flex), so it shares the baseline of the words next to it; .icon lines itself up. */
+
+.task {
+  font-weight: var(--weight-medium);
+  white-space: nowrap;   /* the icon never wraps away from its word */
+}
+
+.task-water { color: var(--task-water); }
+.task-fertilise { color: var(--task-fertilise); }
+.task-recheck { color: var(--task-recheck); }
+.task-mist { color: var(--task-mist); }
+.task-rotate { color: var(--task-rotate); }
+.task-prune { color: var(--task-prune); }
+.task-repot { color: var(--task-repot); }
+
+/* ── Modal (popup, MOD-01) ──────────────────────────── */
+/* A native <dialog>. showModal() (app.js) shows it above a dimmed page, keeps Tab inside it and closes it on Esc.
+   No padding on the box itself: its head and body fill it, so a click that lands on the <dialog> is a click on
+   the dimmed area around it, which app.js treats as "close". */
+
+.modal {
+  width: min(520px, calc(100% - var(--space-32)));
+  max-height: calc(100% - var(--space-48));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-toast);
+}
+
+/* A wider popup for a form with a grid of choices */
+.modal-wide {
+  width: min(640px, calc(100% - var(--space-32)));
+}
+
+/* Open: the head stays put and only the body scrolls when the list is long */
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The fallback value is there because older browsers do not pass custom properties on to ::backdrop */
+.modal::backdrop {
+  background: var(--color-scrim, rgba(43, 43, 40, 0.45));
+}
+
+.modal-head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16) var(--space-12) var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: var(--space-8) var(--space-16) var(--space-24);
+}
+
+/* A popup that is one form: the <form> takes the place of the box, so its head and foot stay put too */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;   /* lets the body shrink and scroll instead of pushing the foot out of the box */
+}
+
+/* Cancel and the main button, at the bottom right */
+.modal-foot {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border-top: 1px solid var(--color-line);
+}
+
+@media (min-width: 768px) {
+  .modal-body {
+    padding-right: var(--space-24);
+    padding-left: var(--space-24);
+  }
+
+  .modal-foot {
+    padding-right: var(--space-24);
+    padding-left: var(--space-24);
+  }
+}
+
+/* ── Add a reminder popup (partials/reminder-dialog.php) ── */
+/* Used by the Dashboard and the Plant Profile. Moved here from dashboard.css on 2026-11-11. */
+
+/* The three numbered steps of the popup. A <fieldset> groups each step's fields for screen readers. */
+/* Spacing goes on the margin, not the padding: a <legend> sits above a fieldset's padding, which would open a
+   gap between each step's title and its fields */
+.reminder-step {
+  min-width: 0;
+  margin: var(--space-16) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.reminder-step-title {
+  margin-bottom: var(--space-8);
+  padding: 0;
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+/* 1. Plant cards: as many columns as fit, never narrower than 96px */
+.plant-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-8);
+}
+
+.plant-pick {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--space-8);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.plant-pick:hover {
+  border-color: var(--color-leaf);
+}
+
+/* :has() styles the card from the state of the hidden radio button inside it */
+.plant-pick:has(input:checked) {
+  border-color: var(--color-forest);
+  background: var(--color-sage);
+  box-shadow: inset 0 0 0 1px var(--color-forest);
+}
+
+.plant-pick:has(input:focus-visible) {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: 2px;
+}
+
+/* The last card: a dashed "+ Add plant" link, like the other dashed Add tiles */
+.plant-pick-add {
+  align-content: center;
+  border-style: dashed;
+  border-color: var(--color-line-strong);
+  color: var(--color-forest);
+  text-decoration: none;
+}
+
+.plant-pick-add:hover {
+  background: var(--color-sage);
+  color: var(--color-forest);
+}
+
+.plant-pick-add-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-input);
+  background: var(--color-cream);
+  color: var(--color-leaf);
+}
+
+.plant-pick-photo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--color-sage);
+}
+
+.plant-pick-name {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+}
+
+.plant-pick-meta {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  line-height: 1.3;
+}
+
+/* 2. The care task dropdown: looks like the other inputs, opens a menu like the header's Plant Tools */
+.task-picker-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.task-picker[open] .task-picker-summary {
+  border-color: var(--color-leaf);
+}
+
+.task-picker[open] .menu-chevron {
+  transform: rotate(180deg);
+}
+
+.task-picker-empty {
+  color: var(--color-muted);
+}
+
+/* As wide as the box above it */
+.task-picker-panel {
+  right: 0;
+  top: calc(100% + var(--space-4));
+}
+
+.task-picker-option {
+  cursor: pointer;
+}
+
+/* The chosen task: the same sage as a hovered item */
+.task-picker-option:has(input:checked) {
+  background: var(--color-sage);
+}
+
+.task-picker-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: -2px;
+}
+
+/* .menu-item paints every icon leaf green; here each icon keeps its task's colour */
+.task-picker-option .task .icon {
+  color: inherit;
+}
+
+/* 3. The big alarm-style time beside the first day */
+/* Phone: the time on its own line, so the big digits fit. Tablet and up: time and first day side by side.
+   minmax(0, 1fr): a date input has a wide natural size and would otherwise push its column wider. */
+.alarm-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--space-12);
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .alarm-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.alarm-time {
+  height: 56px;
+  color: var(--color-forest);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-semibold);
+}
+
+.alarm-row .input {
+  min-width: 0;
+}
+
+.alarm-row .input:not(.alarm-time) {
+  height: 56px;
+}
+
+/* The round day buttons: grey when off, forest green when on */
+.weekdays {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.weekday {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  max-width: 44px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.weekday:hover {
+  border-color: var(--color-leaf);
+}
+
+.weekday:has(input:checked) {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.weekday:has(input:focus-visible) {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: 2px;
+}
+
+.interval-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-body-sm);
+}
+
+.interval-input {
+  width: 96px;
 }

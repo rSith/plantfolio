@@ -3,31 +3,84 @@
 
 /* ── Header ─────────────────────────────────────────── */
 
+/* A sage banner like the Dashboard's (dashboard.css .dash-head), but with a shelf of potted plants on the right
+   instead of leaves. overflow: hidden crops the trailing pothos at the banner's bottom edge. */
 .garden-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-16) var(--space-24);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--space-16);
   margin-bottom: var(--space-24);
+  padding: var(--space-24);
+  border-radius: var(--radius-card);
+  background: var(--color-sage);
+}
+
+/* The text stays above the drawing */
+.garden-head-text {
+  position: relative;
+  z-index: 1;
+}
+
+.garden-head-text {
+  max-width: 60%;
 }
 
 .garden-title {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
 .garden-summary {
-  margin: 0;
-  color: var(--color-muted);
-}
-
-.garden-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-8);
+  margin: 0;
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
 }
 
-/* ── Collection tabs ────────────────────────────────── */
+.garden-summary .icon {
+  color: var(--color-leaf);
+}
+
+/* Phone: small, in the bottom right corner, clear of the title */
+.garden-head-art {
+  position: absolute;
+  right: calc(var(--space-4) * -1);
+  bottom: 0;
+  width: auto;
+  max-width: none;   /* the base img rule would shrink it; the banner's overflow crops it instead */
+  height: 72px;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .garden-head {
+    padding: var(--space-32) var(--space-48);
+  }
+
+  /* Tablet and up: the shelf stands on the bottom edge, and the plants grow up beside the text */
+  .garden-head-art {
+    top: auto;
+    right: var(--space-24);
+    bottom: -14px;   /* the brackets and the trailing pothos run off the edge */
+    height: 92%;
+  }
+}
+
+/* ── Collection row: tabs, "+ New collection", Add plant ── */
+
+/* The chips take the room left over; Add plant keeps its size at the right end */
+.garden-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8) var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.garden-add {
+  flex-shrink: 0;
+}
 
 /* One line of chips. On a phone the line is wider than the screen, so it scrolls sideways on its own
    instead of making the whole page scroll. The padding leaves room for the focus outline.
@@ -37,8 +90,10 @@
   position: relative;
   display: flex;
   gap: var(--space-8);
-  margin: 0 calc(var(--space-16) * -1) var(--space-16);
-  padding: var(--space-4) var(--space-16);
+  flex: 1;
+  min-width: 0;   /* lets the row shrink, so it scrolls instead of pushing Add plant off the screen */
+  margin-left: calc(var(--space-16) * -1);   /* phone: the chips scroll out from the screen edge */
+  padding: var(--space-4) 0 var(--space-4) var(--space-16);
   overflow-x: auto;
   scrollbar-width: none;   /* the chips cut off at the edge already show there is more */
 }
@@ -56,9 +111,7 @@
 @media (min-width: 768px) {
   .collection-tabs {
     flex-wrap: wrap;
-    margin-right: 0;
     margin-left: 0;
-    padding-right: 0;
     padding-left: 0;
     overflow: visible;
   }
@@ -151,15 +204,65 @@
   }
 }
 
-/* "2 plants match · Clear filters" */
-.garden-results {
+/* ── The plant box ──────────────────────────────────── */
+/* One white box for the open tab: a header (name, count, the collection's actions) and a body that scrolls on its
+   own. The box has a fixed height, so switching tabs never makes the page jump; about two rows of cards show at once,
+   and the top of the next row peeks out as a hint that there is more. */
+
+.garden-box {
+  display: flex;
+  flex-direction: column;
+  height: 560px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  overflow: hidden;   /* keeps the scrolling body inside the rounded corners */
+}
+
+.garden-box-head {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;   /* the header keeps its height; only the body gives way */
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.garden-box-heading {
+  min-width: 0;
+}
+
+/* Poppins, not Lora: this is a label for the box, the page's real heading is "My Garden" above */
+.garden-box-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+  line-height: 1.3;
+}
+
+.garden-box-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4) var(--space-16);
-  margin: calc(var(--space-8) * -1) 0 var(--space-16);
+  gap: 0 var(--space-4);
+  margin: 0;
   color: var(--color-muted);
-  font-size: var(--text-body-sm);
+  font-size: var(--text-small);
+}
+
+.garden-box-meta .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* "· 3 match  × Clear filters" after the count while a search or status filter is on */
+.garden-results {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-8);
 }
 
 .garden-results a {
@@ -170,23 +273,191 @@
   font-weight: var(--weight-medium);
 }
 
+.garden-box-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-right: calc(var(--space-8) * -1);   /* the ghost buttons' own padding lines their text up with the edge */
+}
+
+/* flex: 1 + min-height: 0 let the body take the rest of the box and scroll inside it instead of growing the box.
+   The bottom padding leaves room for the fade below, so the last row is never hidden under it. */
+.garden-box-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-12) var(--space-12) var(--space-32);
+}
+
+/* The keyboard focus ring sits inside the box: outside it, the box's overflow: hidden would cut it off */
+.garden-box-body:focus-visible {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: -2px;
+}
+
+/* The fade: a strip that sticks to the bottom of the scrolling body and turns the cards white towards the edge,
+   so it is clear the list goes on below. pointer-events: none lets clicks pass through it to the cards. */
+.garden-box-body::after {
+  content: "";
+  position: sticky;
+  bottom: calc(var(--space-32) * -1);
+  display: block;
+  height: var(--space-32);
+  margin-top: calc(var(--space-32) * -1);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--color-white));
+  pointer-events: none;
+}
+
+/* An empty box (new member, empty collection, no matches): the message sits in the middle */
+.garden-box-body:has(> .empty-state) {
+  display: grid;
+  place-items: center;
+}
+
+@media (min-width: 768px) {
+  .garden-box {
+    height: 600px;
+  }
+
+  .garden-box-head {
+    padding: var(--space-12) var(--space-24);
+  }
+
+  .garden-box-body {
+    padding: var(--space-16) var(--space-16) var(--space-32);
+  }
+}
+
+@media (min-width: 1024px) {
+  .garden-box {
+    height: 640px;
+  }
+
+  .garden-box-body {
+    padding: var(--space-24) var(--space-24) var(--space-32);
+  }
+}
+
 /* ── Plant grid ─────────────────────────────────────── */
+/* Phone: two small cards per row. Tablet: three. Desktop: four. */
 
 .plant-grid {
   display: grid;
-  gap: var(--space-16);
+  grid-template-columns: repeat(2, minmax(0, 1fr));   /* minmax(0, …): a long name cannot widen its column */
+  gap: var(--space-12);
 }
 
 @media (min-width: 768px) {
   .plant-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-16);
   }
 }
 
 @media (min-width: 1024px) {
   .plant-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--gutter);
+  }
+}
+
+/* Phone only: the small card. Photo, health, name and next care stay; the scientific name and the collection go,
+   because half a phone is too narrow for them (the collection is in the tab anyway). Only My Garden is affected:
+   Explore and the Public Profile use the same card at its normal size. */
+@media (max-width: 767.98px) {
+  .plant-grid .card-body {
+    gap: 0;
+    padding: var(--space-8) var(--space-12) var(--space-12);
+  }
+
+  .plant-grid .plant-card-name {
+    font-size: var(--text-body);
+    line-height: 1.3;
+    overflow-wrap: anywhere;   /* a long nickname breaks instead of sticking out of the card */
+  }
+
+  .plant-grid .scientific-name,
+  .plant-grid .plant-card-collection {
+    display: none;
+  }
+
+  .plant-grid .plant-card-meta {
+    margin-top: var(--space-4);
+  }
+
+  /* The health word moves to the bottom of the photo: at the top it would run under the ⋯ button */
+  .plant-grid .card-media-badges {
+    top: auto;
+    right: var(--space-8);
+    bottom: var(--space-8);
+    left: var(--space-8);
+  }
+
+  .plant-grid .card-media-badges .badge {
+    padding: 0 var(--space-8);
+    font-size: 0.75rem;   /* 12px, the smallest size the type scale allows */
+  }
+
+  /* The ⋯ menu is taller and wider than a small card. A card normally clips everything to its rounded corners
+     (overflow: hidden), which would cut the open menu off. Here the card lets it out, and the photo gets the rounded
+     top corners itself instead. */
+  .plant-grid .card {
+    overflow: visible;
+  }
+
+  .plant-grid .card-media,
+  .plant-grid .card-media > img {
+    border-radius: calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px) 0 0;   /* 1px less: inside the border */
+  }
+
+  /* The open menu lies over the neighbouring card. On a right-hand card it opens to the left (the normal way); on a
+     left-hand card it opens to the right, so it never sticks out of the box. 200px fits both on a 375px phone. */
+  .plant-grid .menu-panel {
+    min-width: 200px;
+  }
+
+  /* "of .card": count cards only, because a stack's popup (<dialog>) also sits in the grid */
+  .plant-grid > :nth-child(odd of .card) .menu-panel {
+    right: auto;
+    left: 0;
+  }
+}
+
+/* An open ⋯ menu lies above the other cards. Every card's menu button has z-index: 1, and a later card would be drawn
+   over an earlier card's open menu; lifting the open one fixes that. */
+.plant-grid .plant-menu[open] {
+  z-index: 5;
+}
+
+/* No sideways scrolling inside the box, even if something is a few pixels too wide */
+.garden-box-body {
+  overflow-x: hidden;
+}
+
+/* An empty box has nothing to fade */
+.garden-box-body:has(> .empty-state)::after {
+  display: none;
+}
+
+/* List view inside the box: the box already has the border and corners. The header row stays visible while the
+   rows scroll under it (position: sticky), from tablet up where the table has a header row. */
+.garden-box .garden-table {
+  border: 0;
+  border-radius: 0;
+}
+
+@media (min-width: 768px) {
+  .garden-box .garden-table th {
+    position: sticky;
+    top: calc(var(--space-16) * -1);   /* the body's top padding: the header sticks to the box's real top edge */
+    z-index: 2;
+    background: var(--color-white);
+  }
+}
+
+@media (min-width: 1024px) {
+  .garden-box .garden-table th {
+    top: calc(var(--space-24) * -1);
   }
 }
 
@@ -203,6 +474,7 @@
 }
 
 .view-toggle-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -211,6 +483,14 @@
   border-radius: calc(var(--radius-input) - 3px);
   color: var(--color-muted);
   transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* The buttons look 36px but take taps from 44px: an invisible layer 4px bigger on every side (CLAUDE.md touch
+   targets), so the toggle keeps the height of the Sort box beside it */
+.view-toggle-btn::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
 }
 
 .view-toggle-btn:hover {
@@ -366,4 +646,319 @@
   .garden-table .cell-photo {
     padding-right: 0;
   }
+}
+
+/* ── New collection popup ───────────────────────────── */
+/* Public and Private side by side, wrapping onto two lines on a narrow phone */
+.collection-visibility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-24);
+}
+
+/* "Add plants": one row per plant (checkbox, photo, name, where it is). The popup body scrolls when the list is long. */
+.collection-plants {
+  margin-top: var(--space-16);
+}
+
+.collection-plants .field-hint {
+  margin: var(--space-4) 0 var(--space-8);
+}
+
+.collection-pick-list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  list-style: none;
+}
+
+.collection-pick-list li + li {
+  border-top: 1px solid var(--color-line);
+}
+
+.collection-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+}
+
+.collection-pick:hover {
+  background: var(--color-cream);
+}
+
+.collection-pick:has(input:checked) {
+  background: var(--color-sage);
+}
+
+.collection-pick input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-leaf);
+}
+
+.collection-pick .thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+/* min-width: 0 lets a long name wrap instead of pushing the row wider than the popup */
+.collection-pick-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.collection-pick-meta,
+.collection-pick-where {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.collection-pick-where {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Already in a collection: still readable (the reason must be read), but clearly not a choice */
+.collection-pick.is-taken {
+  cursor: not-allowed;
+}
+
+.collection-pick.is-taken:hover {
+  background: none;
+}
+
+.collection-pick.is-taken img,
+.collection-pick.is-taken .collection-pick-text {
+  opacity: 0.55;
+}
+
+/* ── Collection actions in the box header ───────────── */
+
+/* Choose plants and Delete collection: two plain text buttons in the same forest green, so only the big "Add plant"
+   looks like a main action. Pointing at one draws no coloured box: the words turn bold instead (Ranshitha's choice).
+   Delete is still safe without red here, because it always asks first in a popup that names the collection. */
+.collection-action {
+  min-height: 44px;
+  color: var(--color-forest);
+  font-weight: var(--weight-medium);
+}
+
+.collection-action:hover,
+.collection-action:active {
+  background: transparent;
+  color: var(--color-forest);
+}
+
+/* Bold on hover. 600 is the boldest Poppins weight the page loads (header.php), so it is the "bold" here. */
+.collection-action:hover .hover-bold {
+  font-weight: var(--weight-semibold);
+}
+
+/* Bold letters are wider, so the button would grow and push its neighbour on hover. A hidden bold copy of the label
+   (data-label, drawn by ::after with no height) keeps the button as wide as the bold text from the start. */
+.hover-bold {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.hover-bold::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: var(--weight-semibold);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Shown in the Add plants popup when every plant already has a collection */
+.collection-none-free {
+  display: flex;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-input);
+  background: var(--color-sage);
+  font-size: var(--text-body-sm);
+}
+
+.collection-none-free .icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Plant stack (prototype) ────────────────────────── */
+/* Several plants of one species in one collection, shown as one card. Two thin card edges peek out behind it, like a
+   pile of cards, so it reads as "more than one" before the ×3 is even read. They are box-shadows: a white one the
+   size of the card, then a line-coloured one 1px bigger, which draws the edge. */
+.plant-stack {
+  box-shadow:
+    5px 5px 0 -1px var(--color-white), 5px 5px 0 0 var(--color-line),
+    10px 10px 0 -1px var(--color-white), 10px 10px 0 0 var(--color-line);
+  margin: 0 10px 10px 0;   /* room for the edges, so they do not touch the next card */
+}
+
+.plant-stack:hover {
+  box-shadow:
+    5px 5px 0 -1px var(--color-white), 5px 5px 0 0 var(--color-line-strong),
+    10px 10px 0 -1px var(--color-white), 10px 10px 0 0 var(--color-line-strong),
+    var(--shadow-card);
+}
+
+/* "×3" in the top right corner of the photo, where a single plant has its ⋯ menu */
+.card-media .plant-stack-count {
+  right: var(--space-12);
+  left: auto;
+  background: var(--color-forest);
+  color: var(--color-white);
+  font-weight: var(--weight-semibold);
+}
+
+/* The card's name is a <button> here (it opens the popup): make it look exactly like the link on other cards */
+.plant-stack-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The popup's list: one simple row per plant (number, photo, nickname, chevron). Each row is a box that lifts a
+   little when the pointer is on it, so it is clear the row can be opened. */
+.stack-rows {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack-row {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  background: var(--color-white);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* "Popup lightly": a soft shadow and a 1px lift on hover, and while the row is open */
+.stack-row:hover,
+.stack-row[open] {
+  border-color: var(--color-line-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* No movement for people who asked their system for less motion; the shadow alone still shows it */
+@media (prefers-reduced-motion: reduce) {
+  .stack-row:hover,
+  .stack-row[open] {
+    transform: none;
+  }
+}
+
+/* The row itself is the <summary> (the part of a <details> that is always shown and opens it when tapped) */
+.stack-row-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-input);
+  list-style: none;   /* hides the browser's ▸ triangle */
+  cursor: pointer;
+}
+
+.stack-row-summary::-webkit-details-marker {
+  display: none;   /* the same triangle in Safari */
+}
+
+.stack-row-summary:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+}
+
+/* 01. 02. 03.: tabular figures, so every number takes the same width and the photos line up */
+.stack-row-number {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+}
+
+.stack-row .thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.stack-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+
+/* The corner chevron: V while closed, turned upside down (^) while open */
+.stack-row-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-muted);
+  transition: transform var(--transition-fast);
+}
+
+.stack-row[open] .stack-row-chevron {
+  color: var(--color-forest);
+  transform: rotate(180deg);
+}
+
+/* The four actions under an open row: the same quiet text buttons as in the collection box header */
+.stack-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+  padding: 0 var(--space-8) var(--space-8);
+  border-top: 1px solid var(--color-line);
+}
+
+/* Phone: smaller edges for the small cards; the ×3 tag is smaller like the health word */
+@media (max-width: 767.98px) {
+  .plant-stack {
+    box-shadow:
+      3px 3px 0 -1px var(--color-white), 3px 3px 0 0 var(--color-line),
+      6px 6px 0 -1px var(--color-white), 6px 6px 0 0 var(--color-line);
+    margin: 0 6px 6px 0;
+  }
+
+  .plant-grid .card-media .plant-stack-count {
+    top: var(--space-8);
+    right: var(--space-8);
+    padding: 0 var(--space-8);
+    font-size: 0.75rem;
+  }
+}
+
+/* Delete among the quiet text buttons: the same style, but red, because it deletes */
+.collection-action-danger,
+.collection-action-danger:hover,
+.collection-action-danger:active {
+  color: var(--color-danger);
+}
+
+/* "Joins the Snake plant stack" under a plant in Choose plants: a small forest-green line, so the member knows
+   before pressing Add that the plant will become part of a stack card */
+.collection-pick-note {
+  color: var(--color-forest);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
 }

@@ -6,6 +6,10 @@
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
 
+// The town list of the town picker (partials/town-picker.php): every town in the towns table, A–Z
+$town_names = array_keys($mock_towns);
+sort($town_names);
+
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
     header('Location: ' . url('login.php'));
@@ -34,6 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // post_text() (helpers.php) accepts only one piece of valid text: a hand-made form[]=x counts as "not given"
     $form = post_text('form');
 
+    // Delete account, after the member confirmed it in the popup (S6). Stage F deletes nothing and says so in a toast.
+    // Stage B: delete the users row (its plants, listings and photos go with it), destroy the session, go to index.php.
+    if ($form === 'delete_account') {
+        header('Location: ' . url('settings.php?deleted=preview#delete'));
+        exit;
+    }
+
     if (array_key_exists($form, $saved_messages)) {
         if ($form === 'password') {
             // The same rules the browser checks, checked again here: the browser's checks can be switched off.
@@ -61,6 +72,9 @@ $saved = get_text('saved');
 if (!array_key_exists($saved, $saved_messages)) {
     $saved = '';
 }
+
+// Back from Delete account in the preview: the toast at the bottom says nothing was deleted
+$delete_previewed = get_text('deleted') === 'preview';
 
 /** The green "saved" message for one card, or nothing. role="status" makes a screen reader announce it. */
 function saved_message($forms, $saved, $saved_messages)
@@ -111,13 +125,17 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="settings-photo">
             <?php partial('avatar', ['member' => $current_user, 'size' => 'lg']); ?>
+            <?php // app.js shows a newly chosen photo here; settings.css then hides the avatar above ?>
+            <img class="avatar avatar-lg settings-avatar-preview" id="avatar-preview" alt="" hidden>
             <?php // The label opens the hidden file input, like the photo area on the plant form ?>
             <label class="btn btn-secondary btn-sm" for="avatar-file"><?= icon('upload') ?> Change photo</label>
-            <input class="visually-hidden" type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png">
+            <input class="visually-hidden" type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png"
+                   aria-describedby="avatar-hint" data-photo-input data-photo-hint="avatar-hint" data-photo-preview="avatar-preview">
             <?php // Remove only appears when there is a photo to remove; without one the initials are shown ?>
             <?php if ($current_user['avatar']): ?>
               <button type="submit" class="btn btn-ghost btn-sm" name="remove_avatar" value="1">Remove</button>
             <?php endif; ?>
+            <p class="field-hint photo-hint settings-photo-hint" id="avatar-hint">JPG or PNG, up to 5 MB.</p>
           </div>
 
           <div class="field-row">
@@ -148,14 +166,16 @@ include __DIR__ . '/../includes/header.php';
             <span class="field-hint bio-count" id="bio-count"><?= e(mb_strlen($current_user['bio'] ?? '')) ?> / <?= e($bio_limit) ?></span>
           </div>
 
-          <div class="field">
-            <label class="field-label" for="location">Town</label>
-            <div class="input-icon">
-              <?= icon('map-pin') ?>
-              <input class="input" type="text" id="location" name="location" value="<?= e($current_user['location']) ?>"
-                     autocomplete="address-level2" maxlength="100">
-            </div>
-          </div>
+          <?php // The member's place: the nearest town (shown on the profile), then how far from it (kept private: it is
+                // only the starting value for the pick-up distance on Create Listing) ?>
+          <?php partial('town-picker', [
+              'town_names' => $town_names,
+              'town'       => $current_user['location'],
+              'km'         => $current_user['km_from_town'] ?? 0,
+              'label'      => 'Nearest town',
+              'required'   => true,
+              'hint'       => 'Your profile shows the town only. The distance is used as the starting pick-up distance when you list a plant.',
+          ]); ?>
 
           <button class="btn btn-primary settings-save" type="submit">Save profile</button>
         </form>
@@ -253,10 +273,42 @@ include __DIR__ . '/../includes/header.php';
       <section class="settings-card settings-card-danger" id="delete" aria-labelledby="delete-title">
         <h2 class="settings-card-title" id="delete-title">Delete account</h2>
         <p class="settings-card-intro">Removes your plants, listings and ratings for good.</p>
-        <?php // Stage F: does nothing yet. Week 5 opens the confirmation; stage B deletes the account and its files. ?>
-        <button type="button" class="btn btn-danger btn-sm"><?= icon('trash-2') ?> Delete account</button>
+        <?php // Opens the confirmation popup below (app.js, data-dialog) ?>
+        <button type="button" class="btn btn-danger btn-sm" data-dialog="delete-account" aria-haspopup="dialog"><?= icon('trash-2') ?> Delete account</button>
       </section>
     </div>
   </div>
+
+  <?php // Delete account: destructive, so it is confirmed in a popup that names what goes (S6), like Delete plant on My Garden ?>
+  <dialog class="modal" id="delete-account" aria-labelledby="delete-account-title">
+    <form class="modal-form" method="post" action="<?= e(url('settings.php')) ?>">
+      <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
+      <input type="hidden" name="form" value="delete_account">
+
+      <div class="modal-head">
+        <h2 class="modal-title" id="delete-account-title">Delete your account, @<?= e($current_user['username']) ?>?</h2>
+        <button class="icon-btn" formmethod="dialog" aria-label="Close"><?= icon('x') ?></button>
+      </div>
+      <div class="modal-body">
+        <p>Your plants, stories, listings and ratings are deleted too. This can’t be undone.</p>
+      </div>
+      <div class="modal-foot">
+        <?php // Cancel has the focus, so pressing Enter by habit never deletes ?>
+        <button class="btn btn-secondary" formmethod="dialog" autofocus>Cancel</button>
+        <button class="btn btn-danger" type="submit"><?= icon('trash-2') ?> Delete account</button>
+      </div>
+    </form>
+  </dialog>
+
+  <?php if ($delete_previewed): ?>
+    <?php // Without JavaScript the × is a link that loads Settings again, without the toast ?>
+    <div class="toast-region">
+      <div class="toast" role="status">
+        <?= icon('info') ?>
+        <span class="toast-message">Preview: nothing was deleted. Deleting accounts arrives with the database.</span>
+        <a class="toast-close" href="<?= e(url('settings.php#delete')) ?>" data-toast-close aria-label="Close message"><?= icon('x') ?></a>
+      </div>
+    </div>
+  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

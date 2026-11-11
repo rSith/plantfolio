@@ -60,7 +60,7 @@ include __DIR__ . '/../includes/header.php';
 
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="<?= e(url('register.php')) ?>">Start your garden, it's free</a>
-        <a class="btn btn-secondary btn-lg" href="<?= e(url('explore.php')) ?>">Explore plants</a>
+        <a class="btn btn-secondary btn-lg" href="<?= e(url('community.php?tab=plants')) ?>">Explore plants</a>
       </div>
 
       <div class="hero-proof">
@@ -173,7 +173,7 @@ include __DIR__ . '/../includes/header.php';
         <p class="label">Fresh on the exchange</p>
         <h2 id="fresh-title">Plants looking for a new home</h2>
       </div>
-      <a class="tool-link" href="<?= e(url('exchange.php')) ?>">See all <?= e($mock_site_stats['open_listing_count']) ?> listings <?= icon('arrow-right') ?></a>
+      <a class="tool-link" href="<?= e(url('community.php?tab=exchange')) ?>">See all <?= e($mock_site_stats['open_listing_count']) ?> listings <?= icon('arrow-right') ?></a>
     </div>
     <div class="fresh-grid">
       <?php foreach ($fresh_listings as $listing): ?>

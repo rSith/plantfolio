@@ -28,7 +28,8 @@ $is_preview = !empty($preview);
     <p class="listing-card-place">
       <?= icon('map-pin') ?>
       <?= e($listing['location']) ?>
-      <?php if ($listing['distance_km'] !== null): ?>· <?= e($listing['distance_km']) ?> km<?php endif; ?>
+      <?php // 0 km: the same town as the one measured from (town centres), so "in town" says it better than "0 km" ?>
+      <?php if ($listing['distance_km'] !== null): ?>· <?= $listing['distance_km'] === 0 ? 'in town' : e($listing['distance_km']) . ' km' ?><?php endif; ?>
       · <?= e(time_ago($listing['created_at'])) ?>
     </p>
     <p class="listing-card-wants"><strong>Looking for:</strong> <?= e($listing['looking_for']) ?></p>

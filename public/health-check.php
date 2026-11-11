@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . url('plant.php?id=' . $plant['id']));
             exit;
         }
-        // "Remind me to re-check in 7 days". Stage B: a care_reminders row (a proposed task 'recheck', DES-07).
+        // "Remind me to re-check in 7 days". Stage B: a care_reminders row (task recheck, DES-07).
         header('Location: ' . query_url('health-check.php', ['prediction' => $result['id'], 'plant' => $plant['id'], 'reminder' => 1]));
         exit;
     }
@@ -141,13 +141,16 @@ include __DIR__ . '/../includes/header.php';
           <input type="hidden" name="action" value="check">
           <h2 class="visually-hidden">Your photo</h2>
           <label class="dropzone" for="tool-photo">
+            <?php // app.js shows the chosen photo here (data-photo-preview); components.css then hides the words ?>
+            <img class="dropzone-preview" id="tool-photo-preview" alt="" hidden>
             <span class="dropzone-icon"><?= icon('image-up') ?></span>
             <span class="dropzone-title">Add a photo of an affected leaf</span>
             <span class="dropzone-text">One leaf, close up and sharp, in daylight</span>
             <span class="btn btn-secondary btn-sm"><?= icon('camera') ?> Choose photo</span>
           </label>
           <input class="visually-hidden" type="file" id="tool-photo" name="photo" accept="image/jpeg,image/png" required
-                 aria-describedby="tool-photo-hint<?= $photo_error ? ' tool-photo-error' : '' ?>"<?= $photo_error ? ' aria-invalid="true"' : '' ?>>
+                 aria-describedby="tool-photo-hint<?= $photo_error ? ' tool-photo-error' : '' ?>"<?= $photo_error ? ' aria-invalid="true"' : '' ?>
+                 data-photo-input data-photo-hint="tool-photo-hint" data-photo-preview="tool-photo-preview">
           <p class="field-hint photo-hint" id="tool-photo-hint"><?= icon('info') ?> JPG or PNG, up to 5 MB.</p>
           <?php if ($photo_error): ?>
             <p class="field-error" id="tool-photo-error" role="alert"><?= e($photo_error) ?></p>
@@ -172,19 +175,20 @@ include __DIR__ . '/../includes/header.php';
         <section class="form-card tool-photo<?= $is_analysing ? ' is-analysing' : '' ?>" aria-labelledby="photo-title">
           <h2 class="visually-hidden" id="photo-title">Your photo</h2>
           <div class="tool-photo-frame">
-            <img src="<?= e(photo_url($photo['image_path'])) ?>" alt="Your photo of the leaf, <?= e($photo['upload_name']) ?>">
+            <img src="<?= e(photo_url($photo['image_path'])) ?>" alt="Your photo of the leaf, <?= e($photo['upload_name']) ?>" id="tool-photo-current">
             <?php if ($is_analysing): ?><span class="tool-photo-scan" aria-hidden="true"></span><?php endif; ?>
           </div>
           <?php // One file field; "Check this photo" appears once a photo is chosen (tools.css, :has(), no JavaScript) ?>
           <form class="tool-photo-foot tool-photo-foot-stacked" method="post" action="<?= e(url('health-check.php')) ?>" enctype="multipart/form-data">
             <input type="hidden" name="action" value="check">
             <input type="hidden" name="plant" value="<?= e($plant['id'] ?? 'none') ?>">
-            <span class="tool-photo-name">Uploaded <?= e(date('j M, H:i', strtotime($photo['created_at']))) ?> · <?= e($photo['upload_name']) ?></span>
+            <span class="tool-photo-name" id="tool-photo-name">Uploaded <?= e(date('j M, H:i', strtotime($photo['created_at']))) ?> · <?= e($photo['upload_name']) ?></span>
             <?php if ($is_analysing): ?>
               <button type="button" class="btn btn-secondary btn-sm" disabled><?= icon('refresh-cw') ?> Check another photo</button>
             <?php else: ?>
               <label class="btn btn-secondary btn-sm" for="another-photo"><?= icon('refresh-cw') ?> Check another photo</label>
-              <input class="visually-hidden" type="file" id="another-photo" name="photo" accept="image/jpeg,image/png" required>
+              <input class="visually-hidden" type="file" id="another-photo" name="photo" accept="image/jpeg,image/png" required
+                     data-photo-input data-photo-hint="tool-photo-name" data-photo-preview="tool-photo-current">
               <button class="btn btn-primary btn-sm tool-photo-send" type="submit"><?= icon('activity') ?> Check this photo</button>
             <?php endif; ?>
           </form>
