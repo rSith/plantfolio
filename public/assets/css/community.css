@@ -397,47 +397,82 @@
   }
 }
 
-/* ── Plant cards on a phone: two columns, square photos, a tighter card ── */
-/* Twice as many plants fit on the screen. Cards in one row stay the same height: grid items stretch to the row,
-   and the owner row is pushed to the bottom of each card (margin-top: auto in components.css). */
+/* ── Plant and listing cards on a phone: two columns, square photos, a tighter card ── */
+/* .community-grid-compact is on the Plants and Exchange grids. Twice as many cards fit on the screen. Cards in one row
+   stay the same height: grid items stretch to the row, and each card's owner row is pushed to its bottom
+   (margin-top: auto in components.css). Person cards keep one column: they are short already. */
 @media (max-width: 767.98px) {
-  .community-grid-plants {
+  .community-grid-compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-12);
   }
 }
 
 @media (max-width: 479.98px) {
-  .community-grid-plants {
+  .community-grid-compact {
     gap: var(--space-8);
   }
 
-  .community-grid-plants .card-media {
+  .community-grid-compact .card-media {
     aspect-ratio: 1 / 1;
   }
 
-  .community-grid-plants .card-media-badges {
+  .community-grid-compact .card-media-badges,
+  .community-grid-compact .card-media .badge {
     top: var(--space-8);
     left: var(--space-8);
   }
 
-  .community-grid-plants .card-body {
+  .community-grid-compact .card-body {
     padding: var(--space-8) var(--space-12) var(--space-12);
   }
 
-  .community-grid-plants .plant-card-name {
+  .community-grid-compact .plant-card-name {
     font-size: var(--text-body);
   }
 
-  .community-grid-plants .plant-card-owner .avatar {
-    display: none;   /* the @username needs the whole width of a half-screen card */
+  /* The @username needs the whole width of a half-screen card */
+  .community-grid-compact .plant-card-owner .avatar,
+  .community-grid-compact .listing-card-owner .avatar {
+    display: none;
   }
-}
 
-@media (min-width: 1024px) {
-  .community-grid,
-  .people-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Listing cards: smaller badges and text, and "Looking for" cut to two lines (the full text is on the listing) */
+  .community-grid-compact .card-media .badge {
+    padding: 2px var(--space-8);
+    font-size: var(--text-label);
+  }
+
+  .community-grid-compact .card-media .listing-card-interest {
+    top: auto;
+    left: auto;
+    right: var(--space-8);
+    bottom: var(--space-8);
+  }
+
+  .community-grid-compact .listing-card-title {
+    font-size: var(--text-body-sm);
+  }
+
+  .community-grid-compact .listing-card-place {
+    font-size: var(--text-label);
+  }
+
+  .community-grid-compact .listing-card-wants {
+    display: -webkit-box;
+    margin-bottom: var(--space-8);
+    padding: var(--space-4) var(--space-8);
+    overflow: hidden;
+    font-size: var(--text-label);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .community-grid-compact .listing-card-owner {
+    flex-wrap: wrap;
+    gap: 0 var(--space-8);
+    padding-top: var(--space-8);
   }
 }
 

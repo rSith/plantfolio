@@ -595,7 +595,7 @@ include __DIR__ . '/../includes/header.php';
         <section class="popular-plants" aria-labelledby="popular-title">
           <h2 class="community-section-title" id="popular-title">Popular plants</h2>
           <p class="popular-text">The most-liked public plants in the community.</p>
-          <div class="community-grid community-grid-plants">
+          <div class="community-grid community-grid-compact">
             <?php foreach ($popular_plants as $plant): ?>
               <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
             <?php endforeach; ?>
@@ -605,14 +605,14 @@ include __DIR__ . '/../includes/header.php';
     <?php else: ?>
       <?php // data-grid: where "Load more" appends the next cards. $shown_rows holds this page's cards (12 per page). ?>
       <?php if ($tab === 'plants'): ?>
-        <div class="community-grid community-grid-plants" data-grid>
+        <div class="community-grid community-grid-compact" data-grid>
           <?php foreach ($shown_rows as $plant): ?>
             <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
           <?php endforeach; ?>
         </div>
       <?php elseif ($tab === 'exchange'): ?>
         <?php // Contact details are never on a card: only Listing Detail shows them, after "I'm interested" ?>
-        <div class="community-grid" data-grid>
+        <div class="community-grid community-grid-compact" data-grid>
           <?php foreach ($shown_rows as $listing): ?>
             <?php partial('listing-card', ['listing' => $listing]); ?>
           <?php endforeach; ?>
