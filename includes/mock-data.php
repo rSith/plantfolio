@@ -23,7 +23,7 @@ $current_user = [
     'phone'      => '+94 77 000 1234',       // p18 and p19: shared only with people interested in a listing
     'bio'        => 'Balcony gardener growing aroids and far too many pothos. Always happy to swap cuttings.',
     'location'   => 'Kurunegala',
-    'km_from_town' => 3,   // proposed users.km_from_town: Nimali lives about 3 km from Kurunegala's centre (invented)
+    'km_from_town' => 3,   // users.km_from_town: Nimali lives about 3 km from Kurunegala's centre (invented)
     'avatar'     => null,                    // no photo: pages show the initials "NP" instead
     'created_at' => '2025-03-14 09:00:00',   // "Member since Mar 2025"
 
@@ -389,7 +389,7 @@ $mock_listings = [
 ];
 
 // What each listing is filed under, so swappers can find it with the Exchange filters (Create Listing asks for these).
-// Proposed for DES-07 (11 Nov): exchange_listings.light_level ENUM('low','medium','bright') NULL,
+// Accepted 11 Nov 2026 (database/README.md, stage F close): exchange_listings.light_level ENUM('low','medium','bright') NULL,
 // exchange_listings.water_need ENUM('low','moderate','high') NULL, and a table listing_categories (listing_id, category),
 // because one listing can be in several categories; stage B reads them back with GROUP_CONCAT as `categories`.
 // All values are invented, chosen to match each plant (aloe and peace lily are not pet safe; echeveria is).
@@ -836,7 +836,7 @@ $mock_plant_reminders = [
 ];
 
 // The plant story — rows of `health_logs` (wireframe p12, element 6). Pages sort them newest first.
-// Proposed columns (2026-11-11, not in schema.sql yet): type — 'note', 'photo', 'care', 'health_check' or 'milestone',
+// Columns accepted 11 Nov 2026 (stage F close): type — 'note', 'photo', 'care', 'health_check' or 'milestone',
 // which decides how the Story draws the entry; care_task — for a care entry, the task done (water, fertilise, prune,
 // repot); status may be NULL (a care entry says nothing about health). An entry written by an AI tool
 // has source 'ml' and is joined with its ml_predictions row: prediction_type, predicted_label, confidence.
@@ -1208,7 +1208,7 @@ $mock_disease_guide = [
     ],
 ];
 
-// AI care guides — rows of the proposed `care_guides` table (AI care guide, new feature 2026-11-11), keyed by species,
+// AI care guides — rows of the `care_guides` table (accepted 11 Nov 2026) (AI care guide, new feature 2026-11-11), keyed by species,
 // the normalised name normalise_species() makes (includes/care-guide.php). guide_json is a JSON string, as the
 // database stores it, so the page decodes it like it will in stage B. Written by me in the style the prompt asks for;
 // stage B fills the table from the local LLM (Ollama) instead. Pilea and Philodendron have no row on purpose, so

@@ -368,7 +368,7 @@ function task_name($task)
 }
 
 /**
- * What a listing can be filed under, so swappers find it (Exchange filters, Create Listing; proposed DES-07 table
+ * What a listing can be filed under, so swappers find it (Exchange filters, Create Listing; table accepted 11 Nov 2026
  * listing_categories). Key => [words, icon]. A listing has one or more; the owner ticks them on the listing form.
  */
 function listing_categories()
@@ -384,13 +384,13 @@ function listing_categories()
     ];
 }
 
-/** The light a plant needs: proposed exchange_listings.light_level (NULL = the owner is not sure). */
+/** The light a plant needs: exchange_listings.light_level (NULL = the owner is not sure). */
 function light_levels()
 {
     return ['low' => 'Low light', 'medium' => 'Medium light', 'bright' => 'Bright light'];
 }
 
-/** How much water a plant needs: proposed exchange_listings.water_need (NULL = the owner is not sure). */
+/** How much water a plant needs: exchange_listings.water_need (NULL = the owner is not sure). */
 function water_needs()
 {
     return ['low' => 'Low', 'moderate' => 'Moderate', 'high' => 'High'];

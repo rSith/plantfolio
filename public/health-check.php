@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . url('plant.php?id=' . $plant['id']));
             exit;
         }
-        // "Remind me to re-check in 7 days". Stage B: a care_reminders row (a proposed task 'recheck', DES-07).
+        // "Remind me to re-check in 7 days". Stage B: a care_reminders row (task recheck, DES-07).
         header('Location: ' . query_url('health-check.php', ['prediction' => $result['id'], 'plant' => $plant['id'], 'reminder' => 1]));
         exit;
     }

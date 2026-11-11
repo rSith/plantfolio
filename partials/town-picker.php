@@ -1,7 +1,7 @@
 <?php
 // Where someone is, entered on a form: their nearest town from the towns list, then how far from that town's centre
 // (a slider, 0 to 30 km; 0 = in the town). Sign up and Settings (the member's own place, users.town_id and the
-// proposed users.km_from_town) and Create Listing (the pick-up place, exchange_listings.town_id and km_from_town).
+// users.km_from_town) and Create Listing (the pick-up place, exchange_listings.town_id and km_from_town).
 // Never an address: a town and a rough distance are all the site keeps (privacy rule).
 // Expects $town_names (A–Z), $town (the chosen town, '' for none) and $km (0–30, or null when not given), and
 // optionally: $label ('Nearest town'), $required (false: the list starts on "Choose a town"), $hint, $error,
