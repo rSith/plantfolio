@@ -396,6 +396,26 @@ function water_needs()
     return ['low' => 'Low', 'moderate' => 'Moderate', 'high' => 'High'];
 }
 
+/**
+ * Straight-line distance in whole km between two towns of $towns (rows with latitude and longitude, keyed by name),
+ * or null when either town is not in the list. The Haversine formula: the distance between two points on a sphere,
+ * here the Earth (radius 6371 km). Stage B does the same sum inside the SQL query, with the towns table.
+ */
+function town_distance_km(array $towns, $from, $to)
+{
+    if (!isset($towns[$from], $towns[$to])) {
+        return null;
+    }
+    $lat1 = deg2rad($towns[$from]['latitude']);
+    $lat2 = deg2rad($towns[$to]['latitude']);
+    $dlat = $lat2 - $lat1;
+    $dlon = deg2rad($towns[$to]['longitude'] - $towns[$from]['longitude']);
+
+    $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
+
+    return (int) round(6371 * 2 * atan2(sqrt($a), sqrt(1 - $a)));
+}
+
 /** The words and icon for an exchange_listings.type value (swap, free or either). */
 function listing_type($type)
 {

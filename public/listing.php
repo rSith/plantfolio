@@ -240,7 +240,7 @@ include __DIR__ . '/../includes/header.php';
         <h1 class="listing-title"><?= e($listing['title']) ?></h1>
         <p class="listing-place">
           <?= icon('map-pin') ?>
-          <span><?= e($listing['location']) ?><?php if ($show_distance): ?> · about <?= e($listing['distance_km']) ?> km from you<?php endif; ?></span>
+          <span><?= e($listing['location']) ?><?php if ($show_distance): ?> · <?= $listing['distance_km'] === 0 ? 'in your town' : 'about ' . e($listing['distance_km']) . ' km from you' ?><?php endif; ?></span>
         </p>
         <div class="listing-wants">
           <p class="label">Looking for</p>

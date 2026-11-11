@@ -152,6 +152,32 @@ if (form) {
   });
 }
 
+// ── The distance slider's words ─────────────────────────
+// While the slider moves ("input" event), its <output> and the words a screen reader hears follow it: "Within 40 km",
+// and at the far end "Any distance". The results change when it is let go ("change" event, handled above).
+document.addEventListener('input', (event) => {
+  const range = event.target;
+  if (range.type !== 'range') {
+    return;
+  }
+  const words = range.value === range.max ? 'Any distance' : 'Within ' + range.value + ' km';
+  range.setAttribute('aria-valuetext', words);
+  const output = range.closest('.filter-range').querySelector('[data-range-output]');
+  if (output) {
+    output.textContent = words;
+  }
+});
+
+// In the phone panel nothing is fetched until "Show", so choosing a town switches the slider on straight away
+document.addEventListener('change', (event) => {
+  if (event.target.name === 'near') {
+    const range = document.getElementById('filter-distance');
+    if (range) {
+      range.disabled = event.target.value === '';
+    }
+  }
+});
+
 // ── 2. "Show 7 plants" on the phone panel's button ──────
 // After each change in the panel the server counts the results for the new choices (the same page, fetched),
 // and the button says how many it will show. A short wait first, so ticking three boxes asks once, not three times.

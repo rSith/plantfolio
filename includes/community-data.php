@@ -7,11 +7,12 @@
 // default filters, for the counts on the other two tabs.
 
 /** The filters each tab starts with: what a tab shows before anyone changes a filter. */
-function community_default_filters($tab, $has_town = false)
+function community_default_filters($tab, $home_town = '')
 {
     $defaults = [
         'plants'   => ['species' => [], 'location' => ''],
-        'exchange' => ['type' => '', 'distance' => $has_town ? '25' : 'any',
+        // A member measures from their own town at first; a visitor from none ('')
+        'exchange' => ['type' => '', 'near' => $home_town, 'distance' => '25',
                        'category' => [], 'light' => [], 'water' => [], 'species' => []],
         'people'   => ['location' => '', 'rating' => ''],
     ];
@@ -65,8 +66,9 @@ function community_plants(array $public_plants, $term, array $filters, $skip_spe
 
 /**
  * Open listings matching the search and the Exchange filters (type, distance, categories, light, water, species ids).
- * A listing of type 'either' (swap or free) belongs under both Swap and Free. distance_km is null for a visitor,
- * who has no town to measure from, so the distance filter lets every listing through for them.
+ * A listing of type 'either' (swap or free) belongs under both Swap and Free. distance_km is measured from the chosen
+ * "Near" town; it is null when no town is chosen, and then the distance filter lets every listing through.
+ * distance '100' (the slider's far end) means any distance.
  * Inside one group a listing needs ANY ticked option (Indoor OR Outdoor); across groups it needs them ALL
  * (a category AND a light level). A listing whose owner was not sure of the light never matches a light filter.
  * $skip names one filter to ignore: the sidebar counts that group's options from those rows, so ticking
@@ -98,7 +100,7 @@ function community_listings(array $listings, $term, array $filters, $skip = null
         if ($filters['type'] !== '' && !in_array($listing['type'], [$filters['type'], 'either'], true)) {
             return false;
         }
-        if ($filters['distance'] !== 'any' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $filters['distance']) {
+        if ($filters['distance'] !== '100' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $filters['distance']) {
             return false;
         }
         if ($skip !== 'species' && $filters['species'] && !in_array($listing['species_id'], $filters['species'], true)) {

@@ -409,12 +409,35 @@ foreach ($mock_listings as $index => $listing) {
     $mock_listings[$index] += ['categories' => $categories, 'light_level' => $light, 'water_need' => $water];
 }
 
-// A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
-// when nobody is logged in. Every page that shows listings (Landing, Exchange, Public Profile) then hides the distance.
-if (!$current_user) {
-    foreach ($mock_listings as $index => $listing) {
-        $mock_listings[$index]['distance_km'] = null;
-    }
+// Towns with coordinates: rows of the `towns` table accepted in DES-07 (id, name, latitude, longitude), keyed by name.
+// Sri Lanka's main cities (every district capital and a few large towns) plus the listings' own smaller towns
+// (Kuliyapitiya, Pannala, Wariyapola). Coordinates are the town centres, rounded to 4 decimals. The Exchange tab's "Near"
+// list shows them A–Z. Stage B: SELECT id, name, latitude, longitude FROM towns ORDER BY name.
+$mock_towns = [];
+foreach ([
+    ['Ampara', 7.2975, 81.6820], ['Anuradhapura', 8.3114, 80.4037], ['Badulla', 6.9934, 81.0550],
+    ['Batticaloa', 7.7310, 81.6747], ['Chilaw', 7.5758, 79.7953], ['Colombo', 6.9271, 79.8612],
+    ['Dambulla', 7.8742, 80.6511], ['Galle', 6.0535, 80.2210], ['Gampaha', 7.0840, 80.0098],
+    ['Hambantota', 6.1241, 81.1185], ['Jaffna', 9.6615, 80.0255], ['Kalutara', 6.5854, 79.9607],
+    ['Kandy', 7.2906, 80.6337], ['Kegalle', 7.2513, 80.3464], ['Kilinochchi', 9.3803, 80.3770],
+    ['Kuliyapitiya', 7.4688, 80.0401], ['Kurunegala', 7.4863, 80.3647], ['Mannar', 8.9810, 79.9044],
+    ['Matale', 7.4675, 80.6234], ['Matara', 5.9549, 80.5550], ['Monaragala', 6.8728, 81.3507],
+    ['Mullaitivu', 9.2671, 80.8142], ['Negombo', 7.2008, 79.8737], ['Nuwara Eliya', 6.9497, 80.7891],
+    ['Pannala', 7.3297, 80.0181], ['Polonnaruwa', 7.9403, 81.0188], ['Puttalam', 8.0362, 79.8283],
+    ['Ratnapura', 6.6828, 80.3992], ['Trincomalee', 8.5874, 81.2152], ['Vavuniya', 8.7514, 80.4971],
+    ['Wariyapola', 7.6280, 80.2400],
+] as $id => [$name, $latitude, $longitude]) {
+    $mock_towns[$name] = ['id' => $id + 1, 'name' => $name, 'latitude' => $latitude, 'longitude' => $longitude];
+}
+
+// distance_km: how far each listing's town is from the viewer's town, in a straight line between the town centres
+// (town_distance_km() in helpers.php; stage B works it out in the query with the same Haversine formula). Two listings
+// in the viewer's own town are 0 km away, and the cards say "in town". A visitor has no town: NULL, and the pages hide
+// the distance. (Until 11 Nov these were typed numbers from p17; the Community page now measures from any town.)
+foreach ($mock_listings as $index => $listing) {
+    $mock_listings[$index]['distance_km'] = $current_user
+        ? town_distance_km($mock_towns, $current_user['location'], $listing['location'])
+        : null;
 }
 
 // ── Listing Detail (P11, COM-08) ────────────────────────

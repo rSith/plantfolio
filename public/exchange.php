@@ -5,6 +5,10 @@
 
 $params        = $_GET;
 $params['tab'] = 'exchange';
+// The old distance list had "any"; the slider's far end (100) means the same now
+if (($params['distance'] ?? '') === 'any') {
+    $params['distance'] = '100';
+}
 
 // A relative address: the browser resolves it against this page, so it works on XAMPP and on the Vercel preview
 header('Location: community.php?' . http_build_query($params), true, 301);

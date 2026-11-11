@@ -731,3 +731,66 @@
     transition: none;
   }
 }
+
+/* ── Distance: Near town and the slider ─────────────── */
+
+.filter-field-label {
+  display: block;
+  margin-bottom: var(--space-4);
+  color: var(--color-ink);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+
+.filter-range {
+  margin-top: var(--space-12);
+}
+
+/* "How far" on the left, the value ("Within 25 km") on the right */
+.filter-range-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.filter-range-head .filter-field-label {
+  margin: 0;
+}
+
+.filter-range-value {
+  color: var(--color-forest);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* The slider: a native <input type="range"> in leaf green (accent-color paints the filled part and the thumb).
+   44px tall so a finger can grab it; the visible track stays thin. */
+.filter-range-input {
+  display: block;
+  width: 100%;
+  min-height: 32px;   /* plus the scale under it: a 44px+ area to grab */
+  margin: 0;
+  accent-color: var(--color-leaf);
+  cursor: pointer;
+}
+
+.filter-range-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.filter-range-input:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: var(--radius-input);
+}
+
+/* The scale under the slider: 5 km at the start, 50 km in the middle, Any at the end */
+.filter-range-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;   /* just below the slider's 44px tap area, so the focus ring never crosses the words */
+  color: var(--color-muted);
+  font-size: var(--text-label);
+}
