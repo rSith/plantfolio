@@ -363,13 +363,15 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="filter-group">
             <?php if ($has_town): ?>
-              <label class="label" for="filter-distance">Distance</label>
+              <?php // "Near Kurunegala · 25 km" (p17) split in two: the town in the label, the km in the select, so the
+                    // choice still fits the 240px sidebar ?>
+              <label class="label" for="filter-distance">Distance · near <?= e($viewer_town) ?></label>
               <div class="input-icon">
                 <?= icon('map-pin') ?>
                 <select class="input" id="filter-distance" name="distance" form="community-form">
                   <?php foreach ($distance_choices as $choice): ?>
                     <option value="<?= e($choice) ?>"<?= $choice === $filters['distance'] ? ' selected' : '' ?>>
-                      <?= e($choice === 'any' ? 'Any distance' : 'Near ' . $viewer_town . ' · ' . $choice . ' km') ?>
+                      <?= e($choice === 'any' ? 'Any distance' : 'Within ' . $choice . ' km') ?>
                     </option>
                   <?php endforeach; ?>
                 </select>

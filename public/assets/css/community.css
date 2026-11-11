@@ -305,7 +305,7 @@
 @media (min-width: 900px) {
   .community-body {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);   /* 240: the widest distance, "Near Kurunegala · 50 km", fits */
+    grid-template-columns: 240px minmax(0, 1fr);   /* 240: "Thai Constellation monstera" and its count fit on one line */
     align-items: start;
     gap: var(--space-32);
   }
