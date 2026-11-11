@@ -323,7 +323,7 @@ if ($count === 0) {
 
     $texts = [
         'plants'   => 'Try another word or fewer filters. Until then, here are some popular plants.',
-        'exchange' => 'Try another word, type or species. New listings appear as soon as members post them.',
+        'exchange' => 'Try another word or fewer filters. New listings appear as soon as members post them.',
         'people'   => 'Check the spelling, or try part of a name, a town or an @username.',
     ];
     $text = $actions ? $texts[$tab] : 'Check back soon: the community grows every day.';
