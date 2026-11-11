@@ -268,6 +268,25 @@ foreach ($plants as $plant) {
     }
 }
 
+// Notes for Choose plants in the open collection: a free plant whose species is already in this collection will
+// stack with it once added. "Joins the Snake plant stack" when there is a stack already, "Stacks with Monty" when
+// there is one plant of that species. Plants of a species typed by hand never stack, so they get no note.
+$pick_notes = [];
+if ($open_collection) {
+    $in_collection = array_filter($mock_plants, fn ($plant) => $plant['collection_id'] === $open_collection['id']);
+    foreach ($mock_plants as $free) {
+        if ($free['collection_id'] !== null || $free['species_id'] === null) {
+            continue;
+        }
+        $same = array_values(array_filter($in_collection, fn ($plant) => $plant['species_id'] === $free['species_id']));
+        if (count($same) >= 2) {
+            $pick_notes[$free['id']] = 'Joins the ' . $free['common_name'] . ' stack';
+        } elseif (count($same) === 1) {
+            $pick_notes[$free['id']] = 'Stacks with ' . $same[0]['nickname'];
+        }
+    }
+}
+
 $has_plants  = $current_user['plant_count'] > 0;
 $plant_count = $current_user['plant_count'];
 $coll_count  = $current_user['collection_count'];
@@ -579,7 +598,7 @@ include __DIR__ . '/../includes/header.php';
               <?php if (!$has_free): ?>
                 <p class="collection-none-free"><?= icon('info') ?> All your plants are already in a collection. Delete a collection to free its plants, or add a new plant.</p>
               <?php endif; ?>
-              <?php partial('plant-picker', ['plants' => $pick_plants, 'checked' => $add_plants_values, 'id' => 'add-plants-list']); ?>
+              <?php partial('plant-picker', ['plants' => $pick_plants, 'checked' => $add_plants_values, 'id' => 'add-plants-list', 'notes' => $pick_notes]); ?>
             <?php endif; ?>
             <?php if ($add_plants_error !== ''): ?>
               <p class="field-error" role="alert"><?= e($add_plants_error) ?></p>

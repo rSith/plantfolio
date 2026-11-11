@@ -4,6 +4,8 @@
 // Expects $plants — the member's plants rows (see $mock_plants), already in the order to show.
 // Expects $checked — the plant ids to tick again when the form comes back with an error.
 // Expects $id — a prefix for this list's ids, because both popups are on the same page and an id must be unique.
+// Optional $notes — plant id => a short note shown under that plant, e.g. "Joins the Snake plant stack", so the
+// member sees before pressing Add that the plant will become part of a stack card.
 // A plant can be in one collection only (plants.collection_id), so a plant that has one is disabled and says where it is.
 ?>
 <p class="field-hint" id="<?= e($id) ?>-hint">A plant can be in one collection only. Plants that already have one can't be picked.</p>
@@ -19,6 +21,9 @@
         <span class="collection-pick-text">
           <strong><?= e($plant['nickname']) ?></strong>
           <span class="collection-pick-meta"><?= e($plant['common_name']) ?></span>
+          <?php if (!$taken && isset($notes[$plant['id']])): ?>
+            <span class="collection-pick-note"><?= e($notes[$plant['id']]) ?></span>
+          <?php endif; ?>
         </span>
         <span class="collection-pick-where">
           <?php if ($taken): ?>

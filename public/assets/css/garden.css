@@ -945,3 +945,11 @@
 .collection-action-danger:active {
   color: var(--color-danger);
 }
+
+/* "Joins the Snake plant stack" under a plant in Choose plants: a small forest-green line, so the member knows
+   before pressing Add that the plant will become part of a stack card */
+.collection-pick-note {
+  color: var(--color-forest);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}

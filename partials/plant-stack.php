@@ -108,7 +108,13 @@ $count = count($plants);
         <?php if (!$free_plants): ?>
           <p class="collection-none-free"><?= icon('info') ?> Every <?= e(mb_strtolower($first['common_name'])) ?> you have is already in a collection. Add a new one with Add plant.</p>
         <?php else: ?>
-          <?php partial('plant-picker', ['plants' => $free_plants, 'checked' => [], 'id' => $id . '-picker']); ?>
+          <?php // Every plant offered here is of this species, so each one joins this stack ?>
+          <?php partial('plant-picker', [
+              'plants'  => $free_plants,
+              'checked' => [],
+              'id'      => $id . '-picker',
+              'notes'   => array_fill_keys(array_column($free_plants, 'id'), 'Joins the ' . $first['common_name'] . ' stack'),
+          ]); ?>
         <?php endif; ?>
       </fieldset>
     </div>
