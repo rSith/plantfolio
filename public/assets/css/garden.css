@@ -474,6 +474,7 @@
 }
 
 .view-toggle-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -482,6 +483,14 @@
   border-radius: calc(var(--radius-input) - 3px);
   color: var(--color-muted);
   transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* The buttons look 36px but take taps from 44px: an invisible layer 4px bigger on every side (CLAUDE.md touch
+   targets), so the toggle keeps the height of the Sort box beside it */
+.view-toggle-btn::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
 }
 
 .view-toggle-btn:hover {

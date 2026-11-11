@@ -223,9 +223,17 @@
 }
 
 .interest-who a {
+  position: relative;
   color: var(--color-ink);
   font-weight: var(--weight-semibold);
   text-decoration: none;
+}
+
+/* A 44px-tall finger target (CLAUDE.md) around the short name line: an invisible layer, so nothing moves */
+.interest-who a::before {
+  content: "";
+  position: absolute;
+  inset: -12px 0;
 }
 
 .interest-who a:hover {

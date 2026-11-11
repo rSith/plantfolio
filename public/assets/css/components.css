@@ -1998,6 +1998,11 @@ textarea.input {
 }
 
 .panel-link {
+  display: inline-block;
+  /* A 44px-tall finger target (CLAUDE.md) around a small text link: the padding adds the height and the negative
+     margin takes it back, so the panel's heading row keeps its size */
+  padding-block: var(--space-12);
+  margin-block: calc(-1 * var(--space-12));
   font-weight: var(--weight-medium);
   text-decoration: none;
 }
@@ -2133,7 +2138,7 @@ textarea.input {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: 44px;   /* touch target (CLAUDE.md) */
   padding: var(--space-4) var(--space-16);
   border-radius: calc(var(--radius-input) - var(--space-4));
   color: var(--color-neutral-text);
