@@ -15,9 +15,9 @@ development, so teach as you build.
 
 | | |
 |---|---|
-| **Done (week 0)** | Project proposal · 25-page UX & wireframe document · clickable Figma prototype · repo skeleton |
-| **Current stage** | **F — Frontend first with mock data**, weeks 1–7 (5 Oct – 22 Nov 2026) |
-| **Next stages** | B — wire to PHP + MySQL (wk 8–10) · M — ML service (wk 11–14) · D — test, report, submit (wk 15–16) |
+| **Done** | Week 0: proposal · UX & wireframe document · Figma prototype · repo skeleton. **Stage F (closed 11 Nov 2026):** all pages UI built with mock data, QA pass done, schema changes from stage F accepted into `database/` |
+| **Current stage** | **B — wire to PHP + MySQL**, starting with CORE-01 `schema.sql` (18 tables, see [`database/README.md`](database/README.md)) |
+| **Next stages** | M — ML service (time-boxed) · D — test, report, submit |
 | **Build order** | [`docs/ROADMAP.md`](docs/ROADMAP.md) — follow it week by week |
 | **Task definitions** | PlantFolio Task Sheet (IDs like `CORE-14`, `COM-07`, `ML-12`) |
 
@@ -282,7 +282,7 @@ the PlantFolio folder.
 
 ## Testing
 
-- **Stage F:** compare each page with its wireframe page and the Figma prototype; check 375, 768 and
+- **Stage F:** the wireframes are a guide, not a spec (decided 23 Oct 2026): compare data and features with them, not exact layout; check 375, 768 and
   1024+ px in DevTools; no horizontal scroll; no console errors; keyboard focus visible.
 - **Stage B onward:** run the Test Plan cases for the task (TC-001 … TC-058), then try wrong inputs:
   empty forms, wrong password, oversized or wrong-type files, `<script>` in text fields, `' OR '1'='1` in
