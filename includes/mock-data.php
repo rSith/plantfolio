@@ -387,6 +387,28 @@ $mock_listings = [
      'size' => '3 cuttings, about 15 cm', 'plant_condition' => 'Healthy, rooted in water', 'share_email' => 1, 'share_phone' => 1],
 ];
 
+// What each listing is filed under, so swappers can find it with the Exchange filters (Create Listing asks for these).
+// Proposed for DES-07 (11 Nov): exchange_listings.light_level ENUM('low','medium','bright') NULL,
+// exchange_listings.water_need ENUM('low','moderate','high') NULL, and a table listing_categories (listing_id, category),
+// because one listing can be in several categories; stage B reads them back with GROUP_CONCAT as `categories`.
+// All values are invented, chosen to match each plant (aloe and peace lily are not pet safe; echeveria is).
+$listing_traits = [
+    7  => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Pothos 'Golden'
+    8  => [['indoor', 'succulents'],                  'bright', 'low'],        // Aloe vera pups
+    12 => [['indoor', 'air_purifying'],               'medium', 'moderate'],   // Monstera cutting
+    9  => [['indoor', 'air_purifying'],               'low',    'low'],        // Snake plant 'Laurentii'
+    13 => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Heartleaf philodendron
+    10 => [['outdoor', 'edible'],                     'bright', 'high'],       // Tomato seedlings
+    6  => [['indoor', 'flowering', 'air_purifying'], 'low',    'high'],       // Peace lily
+    11 => [['succulents', 'outdoor', 'pet_friendly'], 'bright', 'low'],        // Echeveria cuttings
+    14 => [['indoor', 'air_purifying'],               'low',    'low'],        // Snake plant pups (closed)
+    5  => [['indoor', 'air_purifying'],               'low',    'moderate'],   // Marble Queen (closed)
+];
+foreach ($mock_listings as $index => $listing) {
+    [$categories, $light, $water] = $listing_traits[$listing['id']] ?? [[], null, null];
+    $mock_listings[$index] += ['categories' => $categories, 'light_level' => $light, 'water_need' => $water];
+}
+
 // A visitor has no town, so there is nothing to measure a distance from: stage B's query returns NULL for distance_km
 // when nobody is logged in. Every page that shows listings (Landing, Exchange, Public Profile) then hides the distance.
 if (!$current_user) {

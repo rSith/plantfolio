@@ -61,6 +61,14 @@ function allowed_text($name, array $allowed, $default = '')
     return in_array($value, $allowed, true) ? $value : $default;
 }
 
+/** Ticked boxes from the address (category[]=indoor&category[]=outdoor): only the allowed values, each once. */
+function allowed_list($name, array $allowed)
+{
+    $values = array_filter((array) ($_GET[$name] ?? []), fn ($value) => is_string($value) && in_array($value, $allowed, true));
+
+    return array_values(array_unique($values));
+}
+
 // Only the open tab's filters are read; the other tabs use their defaults (for their counts).
 $filters = community_default_filters($tab, $has_town);
 if ($tab === 'plants') {
@@ -72,6 +80,9 @@ if ($tab === 'plants') {
     $filters = [
         'type'     => allowed_text('type', ['swap', 'free']),
         'distance' => $has_town ? allowed_text('distance', $distance_choices, '25') : 'any',
+        'category' => allowed_list('category', array_keys(listing_categories())),
+        'light'    => allowed_list('light', array_keys(light_levels())),
+        'water'    => allowed_list('water', array_keys(water_needs())),
         'species'  => $species_ids,
     ];
 } else {
@@ -166,7 +177,30 @@ $species_list = [];
 if ($tab === 'plants') {
     $species_list = community_species_list(community_plants($mock_public_plants, $term, $filters, true), $species_ids, $mock_species);
 } elseif ($tab === 'exchange') {
-    $species_list = community_species_list(community_listings($mock_listings, $term, $filters, true), $species_ids, $mock_species);
+    $species_list = community_species_list(community_listings($mock_listings, $term, $filters, 'species'), $species_ids, $mock_species);
+}
+
+// ── The Exchange sidebar's Category, Light and Watering ticks, each with its count ──
+// Each group is counted with every filter except its own (the $skip argument), like the species above.
+$check_groups = [];
+if ($tab === 'exchange') {
+    $groups = [
+        'category' => ['field' => 'categories',  'options' => listing_categories()],
+        'light'    => ['field' => 'light_level', 'options' => light_levels()],
+        'water'    => ['field' => 'water_need',  'options' => water_needs()],
+    ];
+    foreach ($groups as $name => $group) {
+        $option_counts = community_option_counts(community_listings($mock_listings, $term, $filters, $name), $group['field'], $group['options']);
+        foreach ($group['options'] as $value => $option) {
+            $check_groups[$name][] = [
+                'value'   => $value,
+                'name'    => is_array($option) ? $option['label'] : $option,
+                'icon'    => is_array($option) ? $option['icon'] : null,
+                'count'   => $option_counts[$value],
+                'checked' => in_array($value, $filters[$name], true),
+            ];
+        }
+    }
 }
 // The first five are shown, the rest fold under "+ N more", which opens by itself when one of them is ticked
 $species_shown = array_slice($species_list, 0, 5);
@@ -190,6 +224,17 @@ if (($filters['type'] ?? '') !== '') {
 if ($tab === 'exchange' && $state['distance'] !== '') {
     $distance_label   = $filters['distance'] === 'any' ? 'Any distance' : 'Within ' . $filters['distance'] . ' km';
     $active_filters[] = ['label' => $distance_label, 'href' => $page_url(['distance' => ''])];
+}
+foreach ($check_groups as $name => $items) {
+    foreach ($items as $item) {
+        if ($item['checked']) {
+            $label = $name === 'water' ? $item['name'] . ' watering' : $item['name'];   // "Low watering", not just "Low"
+            $active_filters[] = [
+                'label' => $label,
+                'href'  => $page_url([$name => array_values(array_diff($filters[$name], [$item['value']]))]),
+            ];
+        }
+    }
 }
 if (($filters['location'] ?? '') !== '') {
     $active_filters[] = ['label' => $filters['location'], 'href' => $page_url(['location' => ''])];
@@ -372,13 +417,15 @@ include __DIR__ . '/../includes/header.php';
       <a class="icon-btn filters-close" href="#" data-drawer-close aria-label="Close filters"><?= icon('x') ?></a>
     </div>
 
-    <?php // The species counts change with every filter, so the whole body is swapped (focus is put back by community.js) ?>
+    <?php // The counts change with every filter, so the whole body is swapped (focus and folded groups are kept by community.js).
+          // Each group is a <details>: its title folds it open and shut without JavaScript; all start open. ?>
     <div class="filters-body" data-swap="filters">
-      <?php if ($tab === 'plants' || $tab === 'exchange'): ?>
-        <?php if ($tab === 'exchange'): ?>
-          <?php // Type: one choice, radio buttons drawn as chips. A "Swap or free" listing counts as both. ?>
+      <?php if ($tab === 'exchange'): ?>
+        <?php // Type: one choice, radio buttons drawn as chips. A "Swap or free" listing counts as both. ?>
+        <details class="filter-section" data-section="type" open>
+          <summary class="filter-section-head"><?= icon('repeat') ?> <span>Type</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
           <fieldset class="filter-group">
-            <legend class="label">Type</legend>
+            <legend class="visually-hidden">Listing type</legend>
             <div class="filter-chips">
               <?php foreach ($type_options as $value => $label): ?>
                 <label class="chip-choice">
@@ -388,63 +435,67 @@ include __DIR__ . '/../includes/header.php';
               <?php endforeach; ?>
             </div>
           </fieldset>
+        </details>
 
+        <details class="filter-section" data-section="distance" open>
+          <summary class="filter-section-head"><?= icon('map-pin') ?> <span>Distance<?= $has_town ? ' from ' . e($viewer_town) : '' ?></span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
           <div class="filter-group">
             <?php if ($has_town): ?>
-              <?php // "Near Kurunegala · 25 km" (p17) split in two: the town in the label, the km in the select, so the
-                    // choice still fits the 240px sidebar ?>
-              <label class="label" for="filter-distance">Distance · near <?= e($viewer_town) ?></label>
-              <div class="input-icon">
-                <?= icon('map-pin') ?>
-                <select class="input" id="filter-distance" name="distance" form="community-form">
-                  <?php foreach ($distance_choices as $choice): ?>
-                    <option value="<?= e($choice) ?>"<?= $choice === $filters['distance'] ? ' selected' : '' ?>>
-                      <?= e($choice === 'any' ? 'Any distance' : 'Within ' . $choice . ' km') ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
+              <label class="visually-hidden" for="filter-distance">Distance from <?= e($viewer_town) ?></label>
+              <select class="input" id="filter-distance" name="distance" form="community-form">
+                <?php foreach ($distance_choices as $choice): ?>
+                  <option value="<?= e($choice) ?>"<?= $choice === $filters['distance'] ? ' selected' : '' ?>>
+                    <?= e($choice === 'any' ? 'Any distance' : 'Within ' . $choice . ' km') ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
             <?php else: ?>
-              <p class="label">Distance</p>
               <p class="filter-note">
                 <a href="<?= e(url('login.php')) ?>">Log in</a> to see how far away each plant is, measured from the town on your profile.
               </p>
             <?php endif; ?>
           </div>
-        <?php endif; ?>
+        </details>
 
-        <?php // Species: tick any number. The name species[] makes PHP collect every ticked box into one array. ?>
-        <fieldset class="filter-group">
-          <legend class="label">Species</legend>
-          <?php if (!$species_list): ?>
-            <p class="filter-note">No species match this search.</p>
-          <?php endif; ?>
-          <?php foreach ([$species_shown, $species_more] as $part => $items): ?>
-            <?php if ($part === 1 && $items): ?>
-              <details class="filter-more"<?= $more_open ? ' open' : '' ?>>
-                <summary>+ <?= e(count($items)) ?> more</summary>
+        <?php // Category, Light and Watering: what owners file their listing under on Create Listing. Tick any number. ?>
+        <?php foreach (['category' => ['Category', 'layout-grid'], 'light' => ['Light', 'sun'], 'water' => ['Watering', 'droplet']] as $name => [$title, $section_icon]): ?>
+          <details class="filter-section" data-section="<?= e($name) ?>" open>
+            <summary class="filter-section-head"><?= icon($section_icon) ?> <span><?= e($title) ?></span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
+            <fieldset class="filter-group">
+              <legend class="visually-hidden"><?= e($title) ?></legend>
+              <?php partial('filter-checks', ['name' => $name, 'items' => $check_groups[$name]]); ?>
+            </fieldset>
+          </details>
+        <?php endforeach; ?>
+      <?php endif; ?>
+
+      <?php if ($tab === 'plants' || $tab === 'exchange'): ?>
+        <details class="filter-section" data-section="species" open>
+          <summary class="filter-section-head"><?= icon('leaf') ?> <span>Species</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
+          <fieldset class="filter-group">
+            <legend class="visually-hidden">Species</legend>
+            <?php if (!$species_list): ?>
+              <p class="filter-note">No species match this search.</p>
             <?php endif; ?>
-            <?php foreach ($items as $item): ?>
-              <label class="check filter-check">
-                <input type="checkbox" name="species[]" value="<?= e($item['id']) ?>" form="community-form"<?= $item['checked'] ? ' checked' : '' ?>>
-                <span class="filter-check-name"><?= e($item['name']) ?></span>
-                <span class="filter-check-count"><?= e($item['count']) ?></span>
-              </label>
-            <?php endforeach; ?>
-            <?php if ($part === 1 && $items): ?>
+            <?php partial('filter-checks', ['name' => 'species', 'items' => $species_shown]); ?>
+            <?php // The most common five are shown; "+ N more" opens the rest, by itself when one of them is ticked ?>
+            <?php if ($species_more): ?>
+              <details class="filter-more"<?= $more_open ? ' open' : '' ?>>
+                <summary>+ <?= e(count($species_more)) ?> more</summary>
+                <?php partial('filter-checks', ['name' => 'species', 'items' => $species_more]); ?>
               </details>
             <?php endif; ?>
-          <?php endforeach; ?>
-        </fieldset>
+          </fieldset>
+        </details>
       <?php endif; ?>
 
       <?php // Plants has no Health filter and no "Available for exchange" switch (Ranshitha, 11 Nov): health is the owner's
             // business, and plants on offer have their own tab, Exchange. ?>
       <?php if ($tab === 'plants' || $tab === 'people'): ?>
-        <div class="filter-group">
-          <label class="label" for="filter-location">Location</label>
-          <div class="input-icon">
-            <?= icon('map-pin') ?>
+        <details class="filter-section" data-section="location" open>
+          <summary class="filter-section-head"><?= icon('map-pin') ?> <span>Location</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
+          <div class="filter-group">
+            <label class="visually-hidden" for="filter-location">Location</label>
             <select class="input" id="filter-location" name="location" form="community-form">
               <option value="">All locations</option>
               <?php foreach ($tab === 'plants' ? $plant_towns : $people_towns as $town): ?>
@@ -452,21 +503,24 @@ include __DIR__ . '/../includes/header.php';
               <?php endforeach; ?>
             </select>
           </div>
-        </div>
+        </details>
       <?php endif; ?>
 
       <?php if ($tab === 'people'): ?>
-        <fieldset class="filter-group">
-          <legend class="label">Minimum rating</legend>
-          <div class="filter-chips">
-            <?php foreach ($rating_options as $value => $label): ?>
-              <label class="chip-choice">
-                <input type="radio" name="rating" value="<?= e($value) ?>" form="community-form"<?= $value === $filters['rating'] ? ' checked' : '' ?>>
-                <span class="chip"><?php if ($value !== ''): ?><?= icon('star') ?><?php endif; ?> <?= e($label) ?></span>
-              </label>
-            <?php endforeach; ?>
-          </div>
-        </fieldset>
+        <details class="filter-section" data-section="rating" open>
+          <summary class="filter-section-head"><?= icon('star') ?> <span>Minimum rating</span> <span class="filter-section-chevron"><?= icon('chevron-down') ?></span></summary>
+          <fieldset class="filter-group">
+            <legend class="visually-hidden">Minimum rating</legend>
+            <div class="filter-chips">
+              <?php foreach ($rating_options as $value => $label): ?>
+                <label class="chip-choice">
+                  <input type="radio" name="rating" value="<?= e($value) ?>" form="community-form"<?= $value === $filters['rating'] ? ' checked' : '' ?>>
+                  <span class="chip"><?php if ($value !== ''): ?><?= icon('star') ?><?php endif; ?> <?= e($label) ?></span>
+                </label>
+              <?php endforeach; ?>
+            </div>
+          </fieldset>
+        </details>
       <?php endif; ?>
     </div>
 

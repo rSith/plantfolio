@@ -367,6 +367,35 @@ function task_name($task)
     return '<span class="task task-' . e($task) . '">' . icon(task_icon($task)) . ' ' . e(task_label($task)) . '</span>';
 }
 
+/**
+ * What a listing can be filed under, so swappers find it (Exchange filters, Create Listing; proposed DES-07 table
+ * listing_categories). Key => [words, icon]. A listing has one or more; the owner ticks them on the listing form.
+ */
+function listing_categories()
+{
+    return [
+        'indoor'        => ['label' => 'Indoor plants',      'icon' => 'house'],
+        'outdoor'       => ['label' => 'Outdoor plants',     'icon' => 'trees'],
+        'succulents'    => ['label' => 'Succulents & cacti', 'icon' => 'sprout'],
+        'air_purifying' => ['label' => 'Air purifying',      'icon' => 'wind'],
+        'flowering'     => ['label' => 'Flowering',          'icon' => 'flower-2'],
+        'edible'        => ['label' => 'Herbs & edibles',    'icon' => 'carrot'],
+        'pet_friendly'  => ['label' => 'Pet friendly',       'icon' => 'paw-print'],
+    ];
+}
+
+/** The light a plant needs: proposed exchange_listings.light_level (NULL = the owner is not sure). */
+function light_levels()
+{
+    return ['low' => 'Low light', 'medium' => 'Medium light', 'bright' => 'Bright light'];
+}
+
+/** How much water a plant needs: proposed exchange_listings.water_need (NULL = the owner is not sure). */
+function water_needs()
+{
+    return ['low' => 'Low', 'moderate' => 'Moderate', 'high' => 'High'];
+}
+
 /** The words and icon for an exchange_listings.type value (swap, free or either). */
 function listing_type($type)
 {

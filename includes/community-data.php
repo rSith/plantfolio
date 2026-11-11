@@ -11,7 +11,8 @@ function community_default_filters($tab, $has_town = false)
 {
     $defaults = [
         'plants'   => ['species' => [], 'location' => ''],
-        'exchange' => ['type' => '', 'distance' => $has_town ? '25' : 'any', 'species' => []],
+        'exchange' => ['type' => '', 'distance' => $has_town ? '25' : 'any',
+                       'category' => [], 'light' => [], 'water' => [], 'species' => []],
         'people'   => ['location' => '', 'rating' => ''],
     ];
 
@@ -63,9 +64,13 @@ function community_plants(array $public_plants, $term, array $filters, $skip_spe
 // ── Exchange tab ─────────────────────────────────────────
 
 /**
- * Open listings matching the search and the Exchange filters (type, distance, species ids).
+ * Open listings matching the search and the Exchange filters (type, distance, categories, light, water, species ids).
  * A listing of type 'either' (swap or free) belongs under both Swap and Free. distance_km is null for a visitor,
  * who has no town to measure from, so the distance filter lets every listing through for them.
+ * Inside one group a listing needs ANY ticked option (Indoor OR Outdoor); across groups it needs them ALL
+ * (a category AND a light level). A listing whose owner was not sure of the light never matches a light filter.
+ * $skip names one filter to ignore: the sidebar counts that group's options from those rows, so ticking
+ * "Indoor" does not set "Outdoor" to 0.
  *
  * Stage B:
  *   SELECT exchange_listings.*, plant_species.common_name, plant_species.scientific_name,
@@ -77,10 +82,12 @@ function community_plants(array $public_plants, $term, array $filters, $skip_spe
  *     AND (exchange_listings.title LIKE ? OR exchange_listings.looking_for LIKE ? OR plant_species.common_name LIKE ?
  *          OR users.username LIKE ?)
  *     AND exchange_listings.type IN (?, 'either') AND distance_km <= ? AND exchange_listings.species_id IN (?, ?)
+ *     AND exchange_listings.light_level IN (?, ?) AND exchange_listings.water_need IN (?, ?)
+ *     AND EXISTS (SELECT 1 FROM listing_categories c WHERE c.listing_id = exchange_listings.id AND c.category IN (?, ?))
  */
-function community_listings(array $listings, $term, array $filters, $skip_species = false)
+function community_listings(array $listings, $term, array $filters, $skip = null)
 {
-    return array_filter($listings, function ($listing) use ($term, $filters, $skip_species) {
+    return array_filter($listings, function ($listing) use ($term, $filters, $skip) {
         if ($listing['status'] !== 'open') {
             return false;   // exchanged and closed listings are never shown (p17, UX notes)
         }
@@ -94,11 +101,38 @@ function community_listings(array $listings, $term, array $filters, $skip_specie
         if ($filters['distance'] !== 'any' && $listing['distance_km'] !== null && $listing['distance_km'] > (int) $filters['distance']) {
             return false;
         }
-        if (!$skip_species && $filters['species'] && !in_array($listing['species_id'], $filters['species'], true)) {
+        if ($skip !== 'species' && $filters['species'] && !in_array($listing['species_id'], $filters['species'], true)) {
+            return false;
+        }
+        if ($skip !== 'category' && $filters['category'] && !array_intersect($listing['categories'], $filters['category'])) {
+            return false;
+        }
+        if ($skip !== 'light' && $filters['light'] && !in_array($listing['light_level'], $filters['light'], true)) {
+            return false;
+        }
+        if ($skip !== 'water' && $filters['water'] && !in_array($listing['water_need'], $filters['water'], true)) {
             return false;
         }
         return true;
     });
+}
+
+/**
+ * How many of $rows have each option of one listing field, for the counts beside the sidebar's ticks: "Indoor (5)".
+ * $field is 'categories' (a list per row) or a single-value column ('light_level', 'water_need').
+ * Stage B: SELECT category, COUNT(*) … GROUP BY category, with the same WHERE minus that group's own condition.
+ */
+function community_option_counts(array $rows, $field, array $options)
+{
+    $counts = array_fill_keys(array_keys($options), 0);
+    foreach ($rows as $row) {
+        foreach ((array) $row[$field] as $value) {
+            if (isset($counts[$value])) {
+                $counts[$value]++;
+            }
+        }
+    }
+    return $counts;
 }
 
 // ── People tab ───────────────────────────────────────────

@@ -70,12 +70,19 @@ async function loadResults(address, { push = true } = {}) {
     if (!fresh) {
       return;
     }
-    // "+ N more" stays open if the member had opened it
+    // "+ N more" stays open if the member had opened it, and a filter group they folded stays folded
     const moreWasOpen = part.querySelector('.filter-more[open]') !== null;
+    const folded = Array.from(part.querySelectorAll('.filter-section:not([open])')).map((section) => section.dataset.section);
     part.innerHTML = fresh.innerHTML;
     if (moreWasOpen && part.querySelector('.filter-more')) {
       part.querySelector('.filter-more').open = true;
     }
+    folded.forEach((name) => {
+      const section = part.querySelector('.filter-section[data-section="' + name + '"]');
+      if (section) {
+        section.open = false;
+      }
+    });
   });
 
   // The search box too, for Back and Forward (it is not inside a swapped part)
