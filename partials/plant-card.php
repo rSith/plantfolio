@@ -7,21 +7,26 @@
 // username, full_name, avatar and location (see $mock_public_plants).
 // Optional $show_owner = false (with $community): the collection instead of the owner. The Public Profile (P14) uses it,
 // because every card there has the same owner, already named at the top of the page. Reminders still stay hidden.
+// Optional $simple = true: no health badge and no care hint, so a single plant looks like a stack card
+// (partials/plant-stack.php). My Garden's grid uses it; the list view there still shows health and care.
 
 $community  = !empty($community);
+$simple     = !empty($simple);
 $show_owner = $community && ($show_owner ?? true);
-$due        = $community ? null : care_hint($plant);   // null when the plant has no reminder yet
+$due        = ($community || $simple) ? null : care_hint($plant);   // null when the plant has no reminder yet
 ?>
 <article class="card plant-card<?= $community ? ' plant-card-community' : '' ?>">
   <div class="card-media">
     <img src="<?= e(photo_url($plant['photo'])) ?>" alt="Photo of <?= e($plant['nickname']) ?>" loading="lazy">
     <?php // One row for the badges on the photo: on a narrow card the likes drop below the health word, never over it ?>
-    <div class="card-media-badges">
-      <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
-      <?php if ($community): ?>
-        <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
-      <?php endif; ?>
-    </div>
+    <?php if (!$simple): ?>
+      <div class="card-media-badges">
+        <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
+        <?php if ($community): ?>
+          <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
     <?php if (!empty($menu)): ?>
       <?php partial('plant-menu', ['plant' => $plant]); ?>
     <?php endif; ?>

@@ -1,6 +1,6 @@
 <?php
-// My Garden (P04, wireframe p11): every plant the member owns, grouped into collections, with its health and
-// next care on each card (CORE-14 and CORE-15, UI half). With no plants it shows state S1 instead (CORE-25).
+// My Garden (P04, wireframe p11): every plant the member owns, grouped into collections. Grid cards stay simple
+// (photo, name, species, collection); the list view shows each plant's health and next care (CORE-14 and CORE-15, UI half). With no plants it shows state S1 instead (CORE-25).
 // Members only. Reads the plants and collections from mock data and filters them in PHP.
 
 require_once __DIR__ . '/../includes/helpers.php';
@@ -442,7 +442,7 @@ include __DIR__ . '/../includes/header.php';
       <div class="plant-grid">
         <?php foreach ($grid_items as $number => $item): ?>
           <?php if (count($item['plants']) === 1): ?>
-            <?php partial('plant-card', ['plant' => $item['plants'][0], 'menu' => true]); ?>
+            <?php partial('plant-card', ['plant' => $item['plants'][0], 'menu' => true, 'simple' => true]); ?>
           <?php else: ?>
             <?php // Choose plants in the stack popup offers this species' plants that are in no collection yet ?>
             <?php $species_id = $item['plants'][0]['species_id']; ?>
