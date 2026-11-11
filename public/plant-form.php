@@ -10,7 +10,6 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/mock-data.php';
-require_once __DIR__ . '/../includes/reminder-form.php';   // Add a reminder popup (edit only)
 
 // Stage F stand-in for require_login(): a visitor (?guest) is sent to Log in, exactly as stage B will do.
 if (!$current_user) {
@@ -60,25 +59,10 @@ $is_edit = $plant !== null;
 // a new plant goes back to My Garden (it has no profile yet), an edited plant to its profile. It runs after the
 // ownership check above, so sending the form for someone else's plant still answers "not found".
 // Stage B replaces this with the real save, then redirects to plant.php?id= of the saved plant.
-// Add a reminder popup (edit only, the Dashboard's popup for this plant): checked and kept by reminder_form_save()
-// in includes/reminder-form.php; the main form's Save never sends these fields (the popup is outside it).
-$reminder_form   = $is_edit ? reminder_defaults($plant['id']) : null;
-$reminder_errors = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit && post_text('form') === 'reminder') {
-    [$reminder_form, $reminder_errors] = reminder_form_save([$plant['id'] => $plant]);
-    if (!$reminder_errors) {
-        header('Location: ' . url('plant-form.php?id=' . $plant['id']) . '#reminders');
-        exit;
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit && post_text('form') === 'undo_reminder') {
-    reminder_undo();
-    header('Location: ' . url('plant-form.php?id=' . $plant['id']) . '#reminders');
-    exit;
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_edit) {
     header('Location: ' . url('plant.php?id=' . $plant['id']));
     exit;
 }
-$toast = $is_edit ? reminder_toast_take() : null;
 
 // ── Save a new plant, or several (prototype, feature/plant-stacks) ──
 // Adding is kept in the session (mock_add_plants()), so the new plants really show in My Garden. With "How many?"
@@ -328,12 +312,6 @@ if (!$is_edit && ($from_identify || isset($_GET['ai']))) {
 
 $plant_url   = $is_edit ? url('plant.php?id=' . $plant['id']) : null;
 
-// The plant's other reminders (mist, rotate, prune, repot, re-check), added with the popup: listed under the two
-// switches, which only cover watering and feeding
-$other_reminders = $is_edit
-    ? array_values(array_filter($mock_plant_reminders, fn ($row) => $row['plant_id'] === $plant['id'] && !isset($reminder_values[$row['task']])))
-    : [];
-
 
 $form_action = url('plant-form.php' . ($is_edit ? '?id=' . $plant['id'] : ''));
 
@@ -357,7 +335,7 @@ include __DIR__ . '/../includes/header.php';
   <?php if ($is_edit): ?>
     <a class="back-link" href="<?= e($plant_url) ?>"><?= icon('arrow-left') ?> Back to <?= e($plant['nickname']) ?></a>
     <h1 class="form-title"><?= e($page_title) ?></h1>
-    <p class="form-intro">Change the details, photo, collection or care schedule.</p>
+    <p class="form-intro">Change the details, photo, collection or who can see it.</p>
   <?php else: ?>
     <a class="back-link" href="<?= e(url('garden.php')) ?>"><?= icon('arrow-left') ?> Back to My Garden</a>
     <h1 class="form-title"><?= e($page_title) ?></h1>
@@ -538,13 +516,10 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
           </div>
         </fieldset>
-        <?php else: ?>
-          <?php // After the first day, health changes belong in the story, with a date: the Add to story popup on the
-                // plant's page (&story=1 opens it at once) ?>
-          <p class="alert form-alert"><?= icon('info') ?> <span>Use <a href="<?= e(url('plant.php?id=' . $plant['id'] . '&story=1')) ?>">Add to <?= e($plant['nickname']) ?>’s story</a> on the plant’s page to record updates. They will appear in its Story.</span></p>
-        <?php endif; ?>
 
-        <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date ?>
+        <?php // Care reminders (p13, element 6): a switch per task, how often, and from which date. Add plant only:
+              // after that, health and reminders are kept on the plant's page (Add to story, the Reminders card and
+              // its Add a reminder popup), so Edit plant shows only the plant's details (Ranshitha's choice, 11 Nov). ?>
         <?php // The line above a section is on a <div>: a <legend> always sits on its fieldset's border, so a border
               // on the fieldset itself would run through the title ?>
         <div class="form-section" id="reminders">
@@ -568,16 +543,9 @@ include __DIR__ . '/../includes/header.php';
               </span>
             </div>
           <?php endforeach; ?>
-
-          <?php if ($is_edit): ?>
-            <?php foreach ($other_reminders as $reminder): ?>
-              <p class="reminder-other"><?= task_name($reminder['task']) ?> · <?= e(schedule_words($reminder)) ?></p>
-            <?php endforeach; ?>
-            <?php // Opens the Dashboard's Add a reminder popup, for this plant (app.js) ?>
-            <button type="button" class="btn btn-secondary btn-sm reminder-add" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</button>
-          <?php endif; ?>
         </fieldset>
         </div>
+        <?php endif; ?>
 
         <div class="form-section">
         <fieldset class="form-fieldset">
@@ -614,18 +582,5 @@ include __DIR__ . '/../includes/header.php';
     </div>
   </form>
 
-  <?php if ($is_edit): ?>
-    <?php // Outside the main form: a form may not sit inside another ?>
-    <?php partial('reminder-dialog', [
-        'action' => url('plant-form.php?id=' . $plant['id']),
-        'values' => $reminder_form,
-        'errors' => $reminder_errors,
-        'plants' => null,
-        'plant'  => $plant,
-    ]); ?>
-    <?php if ($toast): ?>
-      <?php partial('reminder-toast', ['toast' => $toast, 'action' => url('plant-form.php?id=' . $plant['id'])]); ?>
-    <?php endif; ?>
-  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

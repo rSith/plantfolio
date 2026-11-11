@@ -236,8 +236,8 @@ include __DIR__ . '/../includes/header.php';
         <section class="panel plant-panel" aria-labelledby="reminders-title">
           <div class="panel-head">
             <h2 class="panel-title" id="reminders-title">Reminders</h2>
-            <?php // Opens the Add a reminder popup (app.js); without JavaScript the link leads to the reminders on Edit plant ?>
-            <a class="panel-link" href="<?= e(url('plant-form.php?id=' . $plant['id'] . '#reminders')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
+            <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
+            <a class="panel-link" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
           </div>
           <?php // Done ✓ (CORE-23, UI half): story.js adds a "Watered" line to the Story and moves the date forward
                 // without a reload. Stage F changes the page only; stage B saves both (like the Dashboard's Mark done). ?>
@@ -384,6 +384,7 @@ include __DIR__ . '/../includes/header.php';
         'errors' => $reminder_errors,
         'plants' => null,
         'plant'  => $plant,
+        'open'   => get_text('reminder') === '1',
     ]); ?>
     <?php if ($toast): ?>
       <?php partial('reminder-toast', ['toast' => $toast, 'action' => $page_url]); ?>

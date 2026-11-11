@@ -2189,7 +2189,7 @@ textarea.input {
 }
 
 /* ── Add a reminder popup (partials/reminder-dialog.php) ── */
-/* Used by the Dashboard, the Plant Profile and Edit plant. Moved here from dashboard.css on 2026-11-11. */
+/* Used by the Dashboard and the Plant Profile. Moved here from dashboard.css on 2026-11-11. */
 
 /* The three numbered steps of the popup. A <fieldset> groups each step's fields for screen readers. */
 /* Spacing goes on the margin, not the padding: a <legend> sits above a fieldset's padding, which would open a

@@ -7,13 +7,14 @@
 //   $values  — the field values (reminder_defaults(), or what was sent after an error)
 //   $errors  — field name => message
 //   $plants  — the member's plants to choose from (Dashboard), or null when the page is about one plant
-//   $plant   — that one plant (Plant Profile, Edit plant), or null on the Dashboard
+//   $plant   — that one plant (Plant Profile), or null on the Dashboard
+//   $open    — optional: true opens it when the page loads (plant.php?id=…&reminder=1, the link without JavaScript)
 // Opened by any button with data-dialog="add-reminder" (app.js).
 
 $weekdays = reminder_weekdays();
 $step     = $plant ? 0 : 1;   // with one plant, "Which plant?" is not asked, so the steps start at 1 with the care
 ?>
-<dialog class="modal modal-wide" id="add-reminder" aria-labelledby="add-reminder-title"<?= $errors ? ' data-open-on-load' : '' ?>>
+<dialog class="modal modal-wide" id="add-reminder" aria-labelledby="add-reminder-title"<?= $errors || !empty($open) ? ' data-open-on-load' : '' ?>>
   <form class="modal-form" method="post" action="<?= e($action) ?>">
     <?php // Stage B: a hidden CSRF token goes here, in every POST form ?>
     <input type="hidden" name="form" value="reminder">

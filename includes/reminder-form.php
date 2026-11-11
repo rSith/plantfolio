@@ -1,6 +1,6 @@
 <?php
 // Add a reminder (CORE-22, UI half): the popup's choices, its server-side checks, saving, and the toast with Undo.
-// Shared by the Dashboard (any of the member's plants), the Plant Profile and Edit plant (that one plant).
+// Shared by the Dashboard (any of the member's plants) and the Plant Profile (that one plant).
 // Moved here from dashboard.php on 2026-11-11 so the three pages use one copy. The popup itself is
 // partials/reminder-dialog.php, the toast partials/reminder-toast.php.
 // Stage F keeps the reminder in the session (mock_add_reminder()), so it shows on every page at once.

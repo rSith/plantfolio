@@ -51,18 +51,6 @@
   margin: 0;
 }
 
-/* ── Care reminders: other tasks and the Add a reminder button (edit only) ── */
-
-/* A reminder made with the popup for a task the two switches do not cover (mist, prune …) */
-.reminder-other {
-  margin: var(--space-8) 0 0;
-  font-size: var(--text-body-sm);
-}
-
-.reminder-add {
-  margin-top: var(--space-12);
-}
-
 /* ── Current health ─────────────────────────────────── */
 
 /* Four choices: two by two on a phone ("Needs attention" does not fit in a quarter of 375px), one row from tablet */
