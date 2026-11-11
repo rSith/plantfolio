@@ -25,6 +25,140 @@
   }
 }
 
+/* Edit only: the story card comes after Plant details in the HTML (the phone order). On a desktop it moves into
+   the left column under the photo, where there was empty space: named areas put it there. */
+@media (min-width: 1024px) {
+  .plant-form-grid:has(.story-update) {
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "side  main"
+      "story main";
+  }
+
+  /* Only on the Edit page: the Add page has no named areas, and an unknown area name would break its grid */
+  .plant-form-grid:has(.story-update) > .plant-form-side { grid-area: side; }
+  .plant-form-grid:has(.story-update) > .plant-form-main { grid-area: main; }
+  .plant-form-grid:has(.story-update) > .story-update    { grid-area: story; }
+}
+
+/* ── Add to the story (edit only) ───────────────────── */
+
+.story-update {
+  display: grid;
+  gap: var(--space-16);
+  min-width: 0;
+}
+
+.story-update .field,
+.story-update .form-card-title {
+  margin: 0;
+}
+
+/* The six quick types as chips: a radio button each, its label drawn as a chip; the chosen one is filled */
+.story-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.story-kind-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.story-kind {
+  cursor: pointer;
+}
+
+.story-kind-input:checked + .story-kind {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.story-kind-input:focus-visible + .story-kind {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.story-photo-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.story-photo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+}
+
+.story-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.story-update-message {
+  margin: 0;
+}
+
+/* The three newest entries, each with Edit and Delete */
+.story-recent-title {
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-line);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+.story-recent {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-recent li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-8);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-line);
+  font-size: var(--text-body-sm);
+}
+
+.story-recent li:first-child {
+  border-top: 0;
+}
+
+.story-recent-text {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.story-recent-meta {
+  color: var(--color-muted);
+}
+
+.story-recent-actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.story-recent-delete {
+  color: var(--color-danger);
+}
+
+.story-recent-empty {
+  margin: 0;
+}
+
 /* ── AI suggestion card ─────────────────────────────── */
 
 .ai-title {
