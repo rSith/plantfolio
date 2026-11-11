@@ -397,6 +397,13 @@
   }
 }
 
+@media (min-width: 1024px) {
+  .community-grid,
+  .people-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* ── Plant and listing cards on a phone: two columns, square photos, a tighter card ── */
 /* .community-grid-compact is on the Plants and Exchange grids. Twice as many cards fit on the screen. Cards in one row
    stay the same height: grid items stretch to the row, and each card's owner row is pushed to its bottom
@@ -661,4 +668,89 @@
   margin: 0;
   color: var(--color-muted);
   font-size: var(--text-small);
+}
+
+/* ── Filter groups that fold (all three tabs) ───────── */
+/* Each group: an icon, its title and a chevron on one line, a thin line between groups. The <summary> is the title;
+   the browser opens and shuts the group without JavaScript, and the chevron turns to show which way. */
+.filter-section {
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.filter-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.filter-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  color: var(--color-forest);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  list-style: none;
+  cursor: pointer;
+}
+
+.filter-section-head::-webkit-details-marker {
+  display: none;
+}
+
+.filter-section-head > .icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.filter-section-chevron {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--color-muted);
+  transition: transform var(--transition-fast);
+}
+
+.filter-section-chevron .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Open: the chevron points up (⌃), as in the design */
+.filter-section[open] > .filter-section-head .filter-section-chevron {
+  transform: rotate(180deg);
+}
+
+.filter-section-head:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: var(--radius-input);
+}
+
+.filter-section .filter-group {
+  margin: var(--space-4) 0 0;
+}
+
+/* An option's own icon (Indoor plants, Outdoor plants …), muted so the name reads first */
+.filter-check-icon {
+  display: inline-flex;
+  color: var(--color-leaf);
+}
+
+.filter-check-icon .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* An option with nothing to show right now: still there (its count says 0), but quieter */
+.filter-check-empty .filter-check-name,
+.filter-check-empty .filter-check-icon {
+  color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-section-chevron {
+    transition: none;
+  }
 }
