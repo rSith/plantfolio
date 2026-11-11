@@ -1252,8 +1252,14 @@ textarea.input {
 }
 
 /* Community plant card (p16): likes at the right end of the badge row, the owner along the bottom */
+/* Likes (and the Community card's Swap/Free badge) to the right, also when they wrap onto a line of their own */
+.plant-card-social {
+  display: flex;
+  gap: var(--space-4);
+  margin-left: auto;
+}
+
 .card-media .plant-card-likes {
-  margin-left: auto;   /* to the right, also when it has wrapped onto a line of its own */
   background: var(--color-white);
   color: var(--color-ink);
 }
@@ -1263,6 +1269,8 @@ textarea.input {
    Two classes, to win over .card-media-badges .badge, which sets position: static (z-index needs a position). */
 .card-media-badges .plant-card-offer {
   position: relative;
+  top: auto;    /* .card-media .badge places a badge with top and left; this one is placed by the row */
+  left: auto;
   z-index: 1;
   text-decoration: none;
   transition: box-shadow var(--transition-fast);

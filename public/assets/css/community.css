@@ -1,0 +1,517 @@
+/* Community page only (community.php: P09 Explore + P10 Exchange merged, COM-01 to COM-03, COM-07). Loaded through $page_css. */
+/* Made from explore.css and exchange.css, so the look of the old pages carries over.
+   Mobile-first: one card column on a phone, two on a tablet, three on a desktop (p23).
+   900px is this page's own breakpoint (the Community spec): from there the filters are a column beside the results;
+   below it they hide behind a "Filters" button that slides a panel in from the left. */
+
+/* ── Top band: title, actions, search, tabs ─────────── */
+
+/* White, so the search reads as the start of the page; the results sit on the cream background below it */
+.community-top {
+  padding-top: var(--space-24);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-white);
+}
+
+.community-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16) var(--space-24);
+  margin-bottom: var(--space-16);
+}
+
+.community-title {
+  margin-bottom: var(--space-4);
+}
+
+.community-lead {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.community-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* The box takes all the room the Search button leaves */
+.community-search {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.community-search-box {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The three tabs drawn like the design system's segmented control (p16, element 2), each 44px tall.
+   On a narrow phone the bar scrolls sideways on its own instead of squeezing the words or widening the page. */
+.community-tabs {
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  gap: var(--space-4);
+  margin: var(--space-16) 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  border-radius: var(--radius-input);
+  background: var(--color-neutral-bg);
+  scrollbar-width: none;
+}
+
+.community-tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  padding: var(--space-4) var(--space-16);
+  border-radius: calc(var(--radius-input) - var(--space-4));
+  color: var(--color-neutral-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.community-tab:hover {
+  color: var(--color-ink);
+}
+
+.community-tab[aria-current="page"] {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .community-top {
+    padding-top: var(--space-32);
+  }
+}
+
+/* ── Filters: shared pieces (p16, element 3) ────────── */
+
+/* The "Filters" button that opens the panel, with how many filters are on in a small leaf-green circle */
+.filters-open .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-toggle-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf);
+  color: var(--color-white);
+  font-size: var(--text-label);
+}
+
+/* 44px tall, the height of its "Clear all" link, with or without the link, so on a desktop "Filters" sits on the
+   same line as the results count */
+.filter-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  margin-bottom: var(--space-8);
+}
+
+.filter-title {
+  margin: 0 auto 0 0;   /* pushes "Clear all" and × to the right */
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+/* A <fieldset> comes with a border, padding and a minimum width; none of them suit a sidebar */
+.filter-group {
+  min-width: 0;
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  border: 0;
+}
+
+.filter-group > .label,
+.filter-group > legend {
+  display: block;
+  margin-bottom: var(--space-8);
+  padding: 0;
+}
+
+.filter-note {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* One species per line: the box, the name, and its count pushed to the right */
+.filter-check {
+  display: flex;
+  width: 100%;
+  font-size: var(--text-body-sm);
+}
+
+.filter-check-name {
+  flex: 1;
+}
+
+.filter-check-count {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* "+ 3 more" opens the rest of the species list in place */
+.filter-more > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-leaf);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  list-style: none;
+  cursor: pointer;
+}
+
+.filter-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-more[open] > summary {
+  display: none;   /* once open, the list itself is the answer; nothing to close */
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.filter-chips .chip .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Health, Type and Rating chips are radio buttons. The radio stays in the page for the keyboard and screen readers;
+   only the chip after it is seen. "+" picks the chip that comes straight after a checked or focused radio. */
+.chip-choice {
+  position: relative;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-choice input:checked + .chip {
+  border-color: var(--color-forest);
+  background: var(--color-forest);
+  color: var(--color-white);
+}
+
+.chip-choice input:focus-visible + .chip {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.filter-apply {
+  width: 100%;
+}
+
+/* ── Filters below 900px: a panel that slides in from the left ── */
+/* Hidden off-screen (and from the keyboard, by visibility) until community.js adds .is-open, or, without JavaScript,
+   until the address ends in #community-filters (:target). Its head and Apply button stay put; the middle scrolls. */
+
+@media (max-width: 899.98px) {
+  .community-filters {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 150;   /* above the top bar (50) and the phone's bottom bar; below the skip link (200) */
+    display: flex;
+    flex-direction: column;
+    width: min(360px, 88vw);
+    background: var(--color-white);
+    box-shadow: var(--shadow-toast);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 240ms ease, visibility 0s linear 240ms;
+  }
+
+  .community-filters.is-open,
+  .community-filters:target {
+    transform: none;
+    visibility: visible;
+    transition: transform 240ms ease;
+  }
+
+  .community-filters:focus {
+    outline: none;   /* it only takes focus so the keyboard starts inside it; the panel itself is the sign */
+  }
+
+  .community-filters .filter-head {
+    flex-shrink: 0;
+    margin: 0;
+    padding: var(--space-8) var(--space-8) var(--space-8) var(--space-16);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .filters-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;   /* scrolling the list never scrolls the page behind it */
+    padding: var(--space-16);
+  }
+
+  .filters-foot {
+    flex-shrink: 0;
+    padding: var(--space-12) var(--space-16) calc(var(--space-12) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-line);
+  }
+
+  .filters-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    background: var(--color-scrim, rgba(43, 43, 40, 0.45));
+  }
+
+  /* The page behind the open panel does not scroll (community.js adds the class) */
+  .filters-locked {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .community-filters,
+  .community-filters.is-open {
+    transition: none;
+  }
+}
+
+/* ── 900px and up: the filters are a column beside the results ── */
+/* minmax(0, 1fr) lets the results column shrink below its content's width instead of pushing the page wider */
+
+@media (min-width: 900px) {
+  .community-body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);   /* 240: the widest distance, "Near Kurunegala · 50 km", fits */
+    align-items: start;
+    gap: var(--space-32);
+  }
+
+  .filters-open,
+  .filters-close,
+  .filters-scrim {
+    display: none;
+  }
+
+  .filter-check {
+    min-height: 32px;
+  }
+
+  .filters-foot {
+    margin-top: var(--space-8);
+  }
+}
+
+/* ── Results ────────────────────────────────────────── */
+/* The results bar (count, active filter chips, Clear all, sort) is in components.css */
+
+/* On a phone "Filters", the count and the sort only fit on one row without the word "Sort:". It is hidden the way
+   .visually-hidden hides text, so screen readers still hear "Sort: Most liked". */
+@media (max-width: 479.98px) {
+  .sort-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* "Plant lovers matching …" and "Popular plants": Poppins like the result count, as on p16 */
+.community-section-title {
+  margin: 0;
+  overflow-wrap: anywhere;   /* the search word is printed here, and it can be one very long word */
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+}
+
+/* Plant and listing cards: 1 column on a phone, 2 from 768px, 3 from 1024px */
+.community-grid,
+.people-grid {
+  display: grid;
+  gap: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .community-grid,
+  .people-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .community-grid,
+  .people-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ── Plant lovers matching the search (p16, element 6) ─ */
+
+.people-row {
+  margin-bottom: var(--space-24);
+}
+
+.people-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-12);
+  min-height: 44px;
+}
+
+/* The whole line is the touch target, not just the words */
+.people-row-head .panel-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* Phone: one strip that scrolls sideways, each card snapping into place. Only the strip scrolls, never the page.
+   Every card is 240px wide, narrower than the smallest phone, so part of the next card peeks in and invites a swipe. */
+.people-row-list {
+  display: grid;
+  grid-auto-columns: 240px;
+  grid-auto-flow: column;
+  gap: var(--space-12);
+  margin: 0 calc(var(--space-16) * -1);
+  padding: var(--space-4) var(--space-16) var(--space-8);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding: 0 var(--space-16);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.people-row-list > * {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .people-row-list {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--space-4) 0 0;
+    overflow: visible;
+  }
+}
+
+/* ── No results: popular plants instead of a blank page ─ */
+
+.popular-plants {
+  margin-top: var(--space-32);
+}
+
+.popular-text {
+  margin: var(--space-4) 0 var(--space-16);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* ── How the exchange works (p17, element 2) ────────── */
+/* Phone: two by two. Tablet and up: the four steps in one row, an arrow between them on a desktop. */
+
+.exchange-steps {
+  margin-bottom: var(--space-24);
+}
+
+.exchange-steps-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+
+.exchange-steps-title {
+  margin: 0;
+}
+
+.exchange-steps-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exchange-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 56px;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  line-height: 1.35;
+}
+
+.exchange-step-number {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-sage);
+  color: var(--color-forest);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+
+@media (min-width: 768px) {
+  .exchange-steps-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+}
+
+/* The › between two steps sits in the gap, drawn by CSS so screen readers do not read it out */
+@media (min-width: 1024px) {
+  .exchange-steps-list {
+    gap: var(--space-24);
+  }
+
+  .exchange-step + .exchange-step::before {
+    content: "›";
+    position: absolute;
+    left: calc(var(--space-24) / -2);
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-muted);
+    font-size: var(--text-h3);
+  }
+}

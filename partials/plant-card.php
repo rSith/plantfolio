@@ -26,13 +26,16 @@ $offer      = ($community && !empty($plant['listing_id'])) ? ($plant['listing_ty
       <div class="card-media-badges">
         <?php partial('status-badge', ['status' => $plant['health_status']]); ?>
         <?php if ($community): ?>
-          <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
-          <?php if ($offer): ?>
-            <?php // A link of its own above the card's stretched link (z-index in components.css), so it opens the listing ?>
-            <a class="badge badge-type-<?= e($offer) ?> plant-card-offer" href="<?= e(url('listing.php?id=' . $plant['listing_id'])) ?>">
-              <?= icon(listing_type($offer)['icon']) ?> <?= e(listing_type($offer)['label']) ?><span class="visually-hidden">: open the exchange listing for <?= e($plant['nickname']) ?></span>
-            </a>
-          <?php endif; ?>
+          <?php // Likes and the Swap/Free badge stay together on the right, also when they wrap below the health word ?>
+          <span class="plant-card-social">
+            <span class="badge plant-card-likes"><?= icon('heart') ?> <?= e($plant['like_count']) ?><span class="visually-hidden"> <?= $plant['like_count'] === 1 ? 'like' : 'likes' ?></span></span>
+            <?php if ($offer): ?>
+              <?php // A link of its own above the card's stretched link (z-index in components.css), so it opens the listing ?>
+              <a class="badge badge-type-<?= e($offer) ?> plant-card-offer" href="<?= e(url('listing.php?id=' . $plant['listing_id'])) ?>">
+                <?= icon(listing_type($offer)['icon']) ?> <?= e(listing_type($offer)['label']) ?><span class="visually-hidden">: open the exchange listing for <?= e($plant['nickname']) ?></span>
+              </a>
+            <?php endif; ?>
+          </span>
         <?php endif; ?>
       </div>
     <?php endif; ?>
