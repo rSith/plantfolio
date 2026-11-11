@@ -34,14 +34,6 @@ foreach ((array) ($_GET['species'] ?? []) as $value) {
 }
 $species_ids = array_values(array_unique($species_ids));
 
-// "Available for exchange" on the Plants tab: the plants on offer are the Exchange tab's listings, so the switch
-// takes the visitor there, keeping the search and the ticked species (the two tabs share species ids).
-// 302, not 301: this address is a choice made in a form, not a page that has moved.
-if ($tab === 'plants' && get_text('exchange') === '1') {
-    header('Location: ' . query_url('community.php', ['tab' => 'exchange', 'q' => $q, 'species' => $species_ids]), true, 302);
-    exit;
-}
-
 // Distance is measured from the town on the member's profile, never from GPS (p17, UX notes). A visitor has no town:
 // distance_km is null for them, so the distance filter and the Nearest sort are left out.
 $viewer_town = $current_user['location'] ?? '';
@@ -75,6 +67,7 @@ if ($tab === 'plants') {
         'species'  => $species_ids,
         'health'   => allowed_text('health', $health_options),
         'location' => allowed_text('location', $plant_towns),
+        'exchange' => allowed_text('exchange', ['1']),   // only plants that an open listing offers
     ];
 } elseif ($tab === 'exchange') {
     $filters = [
@@ -208,7 +201,18 @@ if (($filters['location'] ?? '') !== '') {
 if (($filters['rating'] ?? '') !== '') {
     $active_filters[] = ['label' => 'Rated ' . $rating_options[$filters['rating']], 'href' => $page_url(['rating' => ''])];
 }
-$active_count = count($active_filters);
+if (($filters['exchange'] ?? '') === '1') {
+    $active_filters[] = ['label' => 'Available for exchange', 'href' => $page_url(['exchange' => ''])];
+}
+$active_count = count($active_filters);   // the filters only: the number on the Filters button
+
+// The chips above the results: the search word first ("monstera" ×), then the filters.
+// "Clear all" there clears the word and the filters; the sidebar's "Clear all" clears the filters only.
+$chips = $active_filters;
+if ($q !== '') {
+    array_unshift($chips, ['label' => "\u{201C}" . $q . "\u{201D}", 'href' => $page_url(['q' => '']), 'remove' => 'remove this search']);
+}
+$clear_chips_url = $page_url(array_merge($cleared, ['q' => '']));
 
 // ── The results line and the empty states ───────────────
 
@@ -273,6 +277,22 @@ if ($count === 0) {
     }
 }
 
+// ── 12 per page, with "Load more" ───────────────────────
+// ?page=3 shows the first 36, not only the third twelve: without JavaScript "Load more" is a plain link to the next
+// page number, and the reader still sees everything above it. community.js fetches that same address and appends only
+// the new cards. page= is not kept in the filter, sort and tab links, so any new choice starts again at the top.
+// Stage B: LIMIT ? OFFSET ? on each tab's query, plus the COUNT(*) that "Showing 12 of 19" needs.
+$per_page    = 12;
+$rows        = ['plants' => $plants, 'exchange' => $listings, 'people' => $people][$tab];
+$last_page   = max(1, (int) ceil($count / $per_page));
+$page_text   = get_text('page');
+$page_number = ctype_digit($page_text) ? min(max(1, (int) $page_text), $last_page) : 1;
+$shown_rows  = array_slice($rows, 0, $page_number * $per_page);
+$has_more    = count($shown_rows) < $count;
+$next_url    = $page_url(['page' => $page_number + 1]);
+$item_words  = ['plants' => ['plant', 'plants'], 'exchange' => ['listing', 'listings'], 'people' => ['person', 'people']][$tab];
+$showing     = 'Showing ' . count($shown_rows) . ' of ' . count_words($count, $item_words[0], $item_words[1]);
+
 // "Plant lovers matching …" above the plant results (p16, element 6): only for a search, three at most
 $people_row = ($tab === 'plants' && $term !== '') ? array_slice($people, 0, 3) : [];
 
@@ -316,7 +336,7 @@ include __DIR__ . '/../includes/header.php';
 
     <?php // The tabs come before the search box, because the open tab decides what the search looks through.
           // Links, not buttons (and not role="tab"): each tab has its own address, so Back and shared links work. ?>
-    <nav class="community-tabs" aria-label="Community sections">
+    <nav class="community-tabs" aria-label="Community sections" data-swap="tabs">
       <?php foreach ($tabs as $name => $label): ?>
         <a class="community-tab" href="<?= e($tab_url($name)) ?>"<?= $name === $tab ? ' aria-current="page"' : '' ?>>
           <?= e($label) ?> <span class="chip-count"><?= e($counts[$name]) ?></span>
@@ -350,13 +370,17 @@ include __DIR__ . '/../includes/header.php';
   <aside class="community-filters" id="community-filters" aria-labelledby="filters-title" tabindex="-1">
     <div class="filter-head">
       <h2 class="filter-title" id="filters-title">Filters</h2>
-      <?php if ($active_count > 0): ?>
-        <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
-      <?php endif; ?>
+      <?php // data-swap="…": a part that community.js replaces with the same part of the new page after a filter changes ?>
+      <span class="filter-head-clear" data-swap="filters-clear">
+        <?php if ($active_count > 0): ?>
+          <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
+        <?php endif; ?>
+      </span>
       <a class="icon-btn filters-close" href="#" data-drawer-close aria-label="Close filters"><?= icon('x') ?></a>
     </div>
 
-    <div class="filters-body">
+    <?php // The species counts change with every filter, so the whole body is swapped (focus is put back by community.js) ?>
+    <div class="filters-body" data-swap="filters">
       <?php if ($tab === 'plants' || $tab === 'exchange'): ?>
         <?php if ($tab === 'exchange'): ?>
           <?php // Type: one choice, radio buttons drawn as chips. A "Swap or free" listing counts as both. ?>
@@ -452,14 +476,12 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
 
       <?php if ($tab === 'plants'): ?>
-        <?php // The plants on offer are the Exchange tab's listings: switching this on goes there (see the top of the file).
-              // community.js sends the form as soon as it changes; without JavaScript, Apply does. ?>
+        <?php // Only the plants that an open exchange listing offers, shown right here on the Plants tab ?>
         <div class="filter-group">
           <label class="toggle">
-            <input type="checkbox" name="exchange" value="1" form="community-form" data-submit-on-change>
+            <input type="checkbox" name="exchange" value="1" form="community-form"<?= $filters['exchange'] === '1' ? ' checked' : '' ?>>
             Available for exchange
           </label>
-          <p class="filter-note">Opens the Exchange tab.</p>
         </div>
       <?php endif; ?>
 
@@ -478,8 +500,10 @@ include __DIR__ . '/../includes/header.php';
       <?php endif; ?>
     </div>
 
+    <?php // From 900px with JavaScript every change applies at once, so this button is hidden there (community.css).
+          // In the phone panel community.js turns its words into the live count: "Show 7 plants". ?>
     <div class="filters-foot">
-      <button type="submit" form="community-form" class="btn btn-primary filter-apply">Apply filters</button>
+      <button type="submit" form="community-form" class="btn btn-primary filter-apply" data-apply data-noun-one="<?= e($item_words[0]) ?>" data-noun-many="<?= e($item_words[1]) ?>">Apply filters</button>
     </div>
   </aside>
   <?php // The dimmed page behind the open panel on a phone; a tap on it closes the panel ?>
@@ -509,24 +533,31 @@ include __DIR__ . '/../includes/header.php';
     <div class="results-bar">
       <a class="btn btn-secondary filters-open" href="#community-filters" data-drawer-open aria-controls="community-filters" aria-expanded="false">
         <?= icon('sliders-horizontal') ?> Filters
-        <?php if ($active_count > 0): ?>
-          <span class="filter-toggle-count"><?= e($active_count) ?><span class="visually-hidden"> active</span></span>
-        <?php endif; ?>
+        <span data-swap="filters-badge">
+          <?php if ($active_count > 0): ?>
+            <span class="filter-toggle-count"><?= e($active_count) ?><span class="visually-hidden"> active</span></span>
+          <?php endif; ?>
+        </span>
       </a>
 
-      <h2 class="results-count"><?= e($results_text) ?></h2>
+      <?php // aria-live: when community.js changes the number, screen readers read the new one out ("7 plants").
+            // On the span, not the heading, so the heading stays a heading. ?>
+      <h2 class="results-count"><span data-swap="count" aria-live="polite"><?= e($results_text) ?></span></h2>
 
-      <?php foreach ($active_filters as $filter): ?>
-        <a class="chip filter-chip" href="<?= e($filter['href']) ?>">
-          <?= e($filter['label']) ?> <?= icon('x') ?><span class="visually-hidden">: remove this filter</span>
-        </a>
-      <?php endforeach; ?>
-      <?php if ($active_count > 1): ?>
-        <a class="results-clear" href="<?= e($clear_filters_url) ?>">Clear all</a>
-      <?php endif; ?>
+      <?php // display: contents (community.css): the chips still flow in the bar's row, as if this box were not there ?>
+      <div class="results-chips" data-swap="chips">
+        <?php foreach ($chips as $chip): ?>
+          <a class="chip filter-chip" href="<?= e($chip['href']) ?>">
+            <?= e($chip['label']) ?> <?= icon('x') ?><span class="visually-hidden">: <?= e($chip['remove'] ?? 'remove this filter') ?></span>
+          </a>
+        <?php endforeach; ?>
+        <?php if (count($chips) > 1): ?>
+          <a class="results-clear" href="<?= e($clear_chips_url) ?>">Clear all</a>
+        <?php endif; ?>
+      </div>
 
       <?php // A <details> dropdown of links: it opens without JavaScript, and each sort has its own address ?>
-      <details class="menu sort-menu">
+      <details class="menu sort-menu" data-swap="sort">
         <summary class="btn btn-secondary"><span class="sort-word">Sort:</span> <?= e($sort_options[$sort]) ?> <?= icon('chevron-down') ?></summary>
         <div class="menu-panel menu-panel-right">
           <?php foreach ($sort_options as $value => $label): ?>
@@ -536,6 +567,8 @@ include __DIR__ . '/../includes/header.php';
       </details>
     </div>
 
+    <?php // Everything below the results bar: swapped as one part when a filter changes ?>
+    <div class="community-main" data-swap="main">
     <?php if ($people_row): ?>
       <?php // Plant lovers matching the search (p16, element 6). On a phone the cards scroll sideways in their own strip. ?>
       <section class="people-row" aria-labelledby="people-row-title">
@@ -569,26 +602,40 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </section>
       <?php endif; ?>
-    <?php elseif ($tab === 'plants'): ?>
-      <div class="community-grid community-grid-plants">
-        <?php foreach ($plants as $plant): ?>
-          <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
-        <?php endforeach; ?>
-      </div>
-    <?php elseif ($tab === 'exchange'): ?>
-      <?php // Contact details are never on a card: only Listing Detail shows them, after "I'm interested" ?>
-      <div class="community-grid">
-        <?php foreach ($listings as $listing): ?>
-          <?php partial('listing-card', ['listing' => $listing]); ?>
-        <?php endforeach; ?>
-      </div>
     <?php else: ?>
-      <div class="people-grid">
-        <?php foreach ($people as $member): ?>
-          <?php partial('person-card', ['member' => $member]); ?>
-        <?php endforeach; ?>
-      </div>
+      <?php // data-grid: where "Load more" appends the next cards. $shown_rows holds this page's cards (12 per page). ?>
+      <?php if ($tab === 'plants'): ?>
+        <div class="community-grid community-grid-plants" data-grid>
+          <?php foreach ($shown_rows as $plant): ?>
+            <?php partial('plant-card', ['plant' => $plant, 'community' => true]); ?>
+          <?php endforeach; ?>
+        </div>
+      <?php elseif ($tab === 'exchange'): ?>
+        <?php // Contact details are never on a card: only Listing Detail shows them, after "I'm interested" ?>
+        <div class="community-grid" data-grid>
+          <?php foreach ($shown_rows as $listing): ?>
+            <?php partial('listing-card', ['listing' => $listing]); ?>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="people-grid" data-grid>
+          <?php foreach ($shown_rows as $member): ?>
+            <?php partial('person-card', ['member' => $member]); ?>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
+      <?php // "Showing 12 of 19 plants" and Load more: a real link to ?page=2, which community.js turns into a fetch ?>
+      <?php if ($count > $per_page): ?>
+        <div class="load-more">
+          <p class="load-more-text" data-showing aria-live="polite"><?= e($showing) ?></p>
+          <?php if ($has_more): ?>
+            <a class="btn btn-secondary load-more-btn" href="<?= e($next_url) ?>" data-load-more>Load more</a>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
     <?php endif; ?>
+    </div>
   </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
