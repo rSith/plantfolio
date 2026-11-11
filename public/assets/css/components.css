@@ -45,13 +45,20 @@ p {
   margin: 0 0 var(--space-12);
 }
 
+/* One link style everywhere: green text, underlined only on hover (2026-11-11) */
 a {
   color: var(--color-leaf);
+  text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
   color: var(--color-leaf-dark);
+}
+
+/* :where() adds no specificity, so buttons, menus and cards that set their own text-decoration keep it */
+a:where(:hover) {
+  text-decoration: underline;
 }
 
 img {

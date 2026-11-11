@@ -1,8 +1,8 @@
 /* Plant Profile only (P05, wireframe p12, CORE-18). Loaded by plant.php through $page_css. */
 /* Both styles: the plant's name and story are warm (Lora, photos), care and reminders are functional panels.
-   Layout (2026-11-11): phone — one column: photo, name and actions, care guide, quick facts, reminders, story.
-   Desktop (1024px+) — photo, quick facts and reminders on the left; name, actions and care guide on the right;
-   the story full width underneath.
+   Layout (2026-11-11): phone — one column: photo, name, care guide, quick facts, reminders, action bar, story.
+   Desktop (1024px+) — photo, quick facts and reminders on the left; name and care guide on the right, both columns
+   ending at the same line; then the action bar and the story, full width.
    Spacing uses only the scale in variables.css: 4, 8, 12, 16, 24, 32, 48, 64. Cards: 24 inside. Cards in a column:
    16 apart. Major sections: 48 apart (64 on a desktop). Pixel values left in this file are sizes, borders and the
    timeline's drawing, not spacing. */
@@ -18,7 +18,7 @@
 .plant-top {
   display: grid;
   gap: var(--space-24);
-  margin-bottom: var(--space-48);
+  margin-bottom: var(--space-32);   /* space above the action bar */
 }
 
 .plant-gallery,
@@ -27,10 +27,11 @@
   min-width: 0;
 }
 
+/* A flex column, so on a desktop its last card can grow to fill the column (see below) */
 .plant-aside {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-16);
-  align-content: start;
 }
 
 @media (min-width: 1024px) {
@@ -41,13 +42,28 @@
       "gallery info"
       "aside   info";
     gap: var(--space-24) var(--space-48);
-    align-items: start;
-    margin-bottom: var(--space-64);
+    align-items: stretch;
   }
 
   .plant-gallery { grid-area: gallery; }
   .plant-info    { grid-area: info; }
   .plant-aside   { grid-area: aside; }
+
+  /* The two columns end at the same line, by layout, not fixed heights. Stretch makes both columns as tall as the
+     taller one; then the last card of each column grows into the space left: Reminders (or the owner card) on
+     the left, the AI care guide on the right. Their content stays at the top. */
+  .plant-aside > :last-child {
+    flex: 1;
+  }
+
+  .plant-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .plant-info .ai-guide {
+    flex: 1;
+  }
 }
 
 /* ── Gallery ────────────────────────────────────────── */
@@ -151,20 +167,28 @@
   font-size: var(--text-small);
 }
 
+/* ── Action bar ─────────────────────────────────────── */
+/* Full width under the two columns and above the Story: a thin line, then the buttons, left-aligned */
+
+.plant-action-bar {
+  margin-bottom: var(--space-48);   /* space before "Story" */
+  padding-top: var(--space-24);
+  border-top: 1px solid var(--color-line);
+}
+
 .plant-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-8);
-  margin-bottom: var(--space-24);
+  gap: var(--space-12);
 }
 
-/* Very small phones: the one primary button gets a row of its own, the others wrap beneath it */
+/* Phones under 480px: the one primary button gets a row of its own, the others wrap beneath it */
 .plant-actions .btn-primary {
   flex: 1 1 100%;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 480px) {
   .plant-actions .btn-primary {
     flex: 0 0 auto;
   }
@@ -174,7 +198,10 @@
 /* Kept in one block so its look is easy to change: a white card with a header, five small cards in a grid and a
    footer; the sparkle marks AI content, as in the story. */
 
+/* A flex column, so when the card is stretched the extra room goes under the tiles and the footer stays last */
 .ai-guide {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
@@ -205,17 +232,20 @@
   font-size: var(--text-small);
 }
 
-/* Five small cards: one column on a phone, two from a tablet up */
+/* Five small tiles: one column on a phone, two from a tablet up. Grid rows stretch by default, so the two tiles
+   of a row are always the same height. flex: 1 takes any extra height when the card is stretched. */
 .ai-guide-list {
   display: grid;
+  flex: 1;
+  align-content: start;
   gap: var(--space-12);
   margin: 0;
   padding: var(--space-24);
 }
 
+/* No border: a soft beige tile on the white card */
 .ai-guide-item {
-  padding: var(--space-16);
-  border: 1px solid var(--color-line);
+  padding: var(--space-24);
   border-radius: var(--radius-input);
   background: var(--color-cream);
 }
@@ -470,8 +500,10 @@
   font-size: var(--text-h2);
 }
 
-/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled */
+/* A timeline: a vertical line on the left with a dot for each entry; the newest dot is filled.
+   At most 760px wide and left-aligned, so the cards do not stretch across a wide screen. */
 .story {
+  max-width: 760px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -528,6 +560,18 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-white);
+}
+
+/* An entry without a photo gets a plain leaf tile of the same size, so every entry's text starts at one line */
+.story-card .thumb {
+  flex-shrink: 0;
+}
+
+.story-thumb-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-leaf);
 }
 
 .story-body {

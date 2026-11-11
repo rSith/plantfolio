@@ -140,7 +140,7 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
-    <?php // Right column (phone: straight after the photo): who it is, what to do, then how to care for it ?>
+    <?php // Right column (phone: straight after the photo): who it is, then how to care for it ?>
     <div class="plant-info">
       <?php // Identity and status (p12, element 3) ?>
       <h1 class="plant-name"><?= e($plant['nickname']) ?></h1>
@@ -151,28 +151,7 @@ include __DIR__ . '/../includes/header.php';
         <span>Updated <?= e(mb_strtolower(time_ago($plant['last_logged_at']))) ?></span>
       </p>
 
-      <?php if ($is_owner): ?>
-        <?php // Primary actions (p12, element 4): right under the status, so nobody has to scroll for them ?>
-        <div class="plant-actions">
-          <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
-          <button type="button" class="btn btn-primary"><?= icon('pencil') ?> Log update</button>
-          <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
-          <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
-          <?php partial('plant-menu', ['plant' => $plant]); ?>
-        </div>
-      <?php else: ?>
-        <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
-        <div class="plant-actions">
-          <?php if ($current_user): ?>
-            <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
-            <button type="button" class="btn btn-secondary" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
-          <?php else: ?>
-            <a class="btn btn-secondary" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
-          <?php endif; ?>
-        </div>
-      <?php endif; ?>
-
-      <?php // How to care for it: reference content, so it comes after the actions ?>
+      <?php // How to care for it ?>
       <?php partial('care-guide', [
           'plant'     => $plant,
           'is_owner'  => $is_owner,
@@ -259,6 +238,30 @@ include __DIR__ . '/../includes/header.php';
     </div>
   </div>
 
+  <?php // Action bar: full width under both columns and above the Story, on every screen size ?>
+  <div class="plant-action-bar">
+    <?php if ($is_owner): ?>
+      <?php // Primary actions (p12, element 4): one green button; the rest are secondary or in the ⋯ menu ?>
+      <div class="plant-actions">
+        <?php // Stage F: does nothing yet. Week 5 opens the Log a health update dialog (S5, CORE-19). ?>
+        <button type="button" class="btn btn-primary"><?= icon('pencil') ?> Log update</button>
+        <a class="btn btn-secondary" href="<?= e(url('health-check.php?plant=' . $plant['id'])) ?>"><?= icon('activity') ?> Health check</a>
+        <a class="btn btn-secondary" href="<?= e(url('listing-form.php?plant=' . $plant['id'])) ?>"><?= icon('repeat') ?> List for exchange</a>
+        <?php partial('plant-menu', ['plant' => $plant]); ?>
+      </div>
+    <?php else: ?>
+      <?php // Read-only view (p12, UX notes): a like button instead of the edit controls ?>
+      <div class="plant-actions">
+        <?php if ($current_user): ?>
+          <?php // Stage F: does nothing yet. Stage B saves the like (COM-15, a Could task). ?>
+          <button type="button" class="btn btn-secondary" aria-pressed="false"><?= icon('heart') ?> Like · <?= e($like_count) ?></button>
+        <?php else: ?>
+          <a class="btn btn-secondary" href="<?= e(url('login.php')) ?>"><?= icon('heart') ?> Log in to like · <?= e($like_count) ?></a>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+  </div>
+
   <?php // Plant story (p12, element 6): full width under both columns. One section, so a plain heading, not a tab. ?>
   <section class="plant-story-section" aria-labelledby="story-title">
     <h2 class="plant-story-title" id="story-title">Story</h2>
@@ -272,8 +275,11 @@ include __DIR__ . '/../includes/header.php';
         <li class="story-entry">
           <p class="story-date"><?= e(date('j M Y', strtotime($log['logged_at']))) ?> · <?= e(story_kind($log, $is_oldest)) ?></p>
           <div class="story-card">
+            <?php // Every entry starts with a 48px square, a photo or a plain leaf tile, so the text always lines up ?>
             <?php if ($log['photo']): ?>
-              <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="">
+              <img class="thumb" src="<?= e(photo_url($log['photo'])) ?>" alt="" width="48" height="48" loading="lazy">
+            <?php else: ?>
+              <span class="thumb story-thumb-empty"><?= icon('leaf') ?></span>
             <?php endif; ?>
             <div class="story-body">
               <?php partial('status-badge', ['status' => $log['status']]); ?>
