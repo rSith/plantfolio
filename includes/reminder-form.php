@@ -1,5 +1,6 @@
 <?php
-// Add a reminder (CORE-22, UI half): the popup's choices, its server-side checks, saving, and the toast with Undo.
+// Reminders (CORE-22, CORE-23, UI half): Add a reminder (choices, server-side checks, saving), Mark done, and the
+// toast with Undo.
 // Shared by the Dashboard (any of the member's plants) and the Plant Profile (that one plant).
 // Moved here from dashboard.php on 2026-11-11 so the three pages use one copy. The popup itself is
 // partials/reminder-dialog.php, the toast partials/reminder-toast.php.
@@ -47,6 +48,70 @@ function first_due($start, $repeat, $days)
         }
     }
     return $start;
+}
+
+/**
+ * The next due day after a task was done on $done_day (Mark done): the next chosen weekday for "On chosen days",
+ * otherwise $done_day plus interval_days (1 for every day), the rule next_due = last_done + interval_days.
+ */
+function next_due_after($reminder, $done_day)
+{
+    if (($reminder['repeat_type'] ?? 'interval') === 'days') {
+        return first_due(date('Y-m-d', strtotime($done_day . ' +1 day')), 'days', $reminder['repeat_days']);
+    }
+    return date('Y-m-d', strtotime($done_day . ' +' . (int) $reminder['interval_days'] . ' days'));
+}
+
+/**
+ * Mark done (CORE-23): last_done becomes today and next_due moves on by the reminder's own rule; a one-off reminder
+ * is finished, so it goes. The Story gets a care line ("Watered · 11 Nov"). The toast with Undo waits in the session.
+ * $key is "plant_id-task" from the form; $rows are the reminders that may be marked on this page (joined with the
+ * plant's nickname), so a made-up key changes nothing. Moved here from dashboard.php on 2026-11-11.
+ * Stage B: UPDATE care_reminders SET last_done = CURDATE(), next_due = … WHERE id = ? (owner checked through plants),
+ *          or DELETE for a one-off reminder; INSERT INTO health_logs (type 'care', care_task) in the same transaction.
+ */
+function reminder_mark_done($key, array $rows)
+{
+    $row = null;
+    foreach ($rows as $candidate) {
+        if ($candidate['plant_id'] . '-' . $candidate['task'] === $key) {
+            $row = $candidate;
+        }
+    }
+    if (!$row) {
+        return;
+    }
+
+    $today    = date('Y-m-d');
+    $reminder = array_diff_key($row, array_flip(['nickname', 'photo', 'common_name']));   // the care_reminders columns only
+    $done     = task_done_label($row['task']) . ' ' . $row['nickname'];
+
+    if (($reminder['repeat_type'] ?? 'interval') === 'once') {
+        $updated = ['plant_id' => $reminder['plant_id'], 'task' => $reminder['task'], 'deleted' => true];
+        $message = $done . ' · reminder finished';
+    } else {
+        $updated = array_merge($reminder, ['last_done' => $today, 'next_due' => next_due_after($reminder, $today)]);
+        $message = $done . ' · next on ' . format_day($updated['next_due']);
+    }
+
+    // A re-check is not care given to the plant, so it adds nothing to the Story
+    $log_id = null;
+    if ($row['task'] !== 'recheck') {
+        $log_id = mock_add_health_log([
+            'plant_id' => $row['plant_id'], 'type' => 'care', 'care_task' => $row['task'], 'status' => null,
+            'source' => 'manual', 'photo' => null, 'note' => '', 'logged_at' => date('Y-m-d H:i:s'),
+            'prediction_type' => null, 'predicted_label' => null, 'confidence' => null,
+        ]);
+    }
+
+    $_SESSION['reminder_toast'] = [
+        'message'  => $message,
+        'key'      => $key,
+        'previous' => mock_add_reminder($updated),
+        'log'      => $log_id,
+        'undone'   => task_label($row['task']) . ' ' . $row['nickname'] . ' is back on the list.',
+        'icon'     => 'check',
+    ];
 }
 
 /** aria-invalid and aria-describedby for a field with an error, so a screen reader reads the message with it. */
@@ -139,6 +204,9 @@ function reminder_undo()
     unset($_SESSION['reminder_undo']);
     if ($undo) {
         mock_undo_reminder($undo['key'], $undo['previous']);
+        if (!empty($undo['log'])) {
+            mock_remove_health_log($undo['log']);   // the Story's care line of a Mark done goes too
+        }
         $_SESSION['reminder_toast'] = ['message' => $undo['undone'], 'key' => null, 'previous' => null, 'undone' => null];
     }
 }
@@ -152,7 +220,8 @@ function reminder_toast_take()
     $toast = $_SESSION['reminder_toast'] ?? null;
     unset($_SESSION['reminder_toast']);
     if ($toast && $toast['key']) {
-        $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous'], 'undone' => $toast['undone']];
+        $_SESSION['reminder_undo'] = ['key' => $toast['key'], 'previous' => $toast['previous'], 'undone' => $toast['undone'],
+                                      'log' => $toast['log'] ?? null];
     }
     return $toast;
 }

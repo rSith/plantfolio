@@ -48,8 +48,8 @@ if (!$plant || (!$plant['is_public'] && !$is_owner)) {
     exit;
 }
 
-// ── Add a reminder (owner only) ─────────────────────────
-// The Dashboard's popup, for this plant only: the plant is a hidden field, and reminder_form_save() accepts no other
+// ── Reminders (owner only): Add a reminder, Mark done, Undo ──
+// The Dashboard's popup and Mark done, for this plant only: the plant is a hidden field, and reminder_form_save() accepts no other
 // plant id (ownership check). Stage F keeps it in the session; stage B saves it (CORE-22).
 $reminder_values = reminder_defaults($plant['id']);
 $reminder_errors = [];
@@ -61,6 +61,17 @@ if ($is_owner && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . $page_url);   // POST, then redirect: a reload cannot add it twice
             exit;
         }
+    } elseif (post_text('form') === 'done') {
+        // Mark done, as in the Dashboard's Today's care: any of this plant's reminders may be marked here
+        $plant_rows = [];
+        foreach ($mock_plant_reminders as $row) {
+            if ($row['plant_id'] === $plant['id']) {
+                $plant_rows[] = $row + ['nickname' => $plant['nickname'], 'photo' => $plant['photo'], 'common_name' => $plant['common_name']];
+            }
+        }
+        reminder_mark_done(post_text('reminder'), $plant_rows);
+        header('Location: ' . $page_url);
+        exit;
     } elseif (post_text('form') === 'undo_reminder') {
         reminder_undo();
         header('Location: ' . $page_url);
@@ -74,6 +85,9 @@ $toast = $is_owner ? reminder_toast_take() : null;
 
 $reminders = array_values(array_filter($mock_plant_reminders, fn ($r) => $r['plant_id'] === $plant['id']));
 usort($reminders, fn ($a, $b) => $a['next_due'] <=> $b['next_due']);   // soonest first
+// The joined columns the care rows print (partials/care-row.php)
+$reminders = array_map(fn ($r) => $r + ['nickname' => $plant['nickname'], 'photo' => $plant['photo'], 'common_name' => $plant['common_name']], $reminders);
+$due_count = count(array_filter($reminders, fn ($r) => $r['next_due'] <= date('Y-m-d')));   // due today or overdue
 
 $story  = array_values(array_filter($mock_health_logs, fn ($log) => $log['plant_id'] === $plant['id']));
 usort($story, fn ($a, $b) => $b['logged_at'] <=> $a['logged_at']);   // newest first (stage B: ORDER BY logged_at DESC)
@@ -235,25 +249,27 @@ include __DIR__ . '/../includes/header.php';
       </section>
 
       <?php if ($is_owner): ?>
-        <?php // Reminders card (p12, element 7): active reminders with their next dates ?>
-        <section class="panel plant-panel" aria-labelledby="reminders-title">
+        <?php // Reminders card (p12, element 7), built like the Dashboard's Today's care: a count of what is due, one care
+              // row per reminder (partials/care-row.php, compact) with its due tag and Mark done, and the dashed
+              // Add a reminder button. Mark done is a POST: the date moves on, the Story gets a care line, and a
+              // toast with Undo appears (reminder_mark_done()). Stage F keeps it in the session. ?>
+        <section class="panel plant-panel plant-reminders" aria-labelledby="reminders-title">
           <div class="panel-head">
-            <h2 class="panel-title" id="reminders-title">Reminders</h2>
-            <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
-            <a class="panel-link" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add</a>
+            <h2 class="panel-title" id="reminders-title">Reminders
+              <?php if ($due_count > 0): ?><span class="badge badge-neutral"><?= e($due_count) ?> due</span><?php endif; ?>
+            </h2>
           </div>
-          <?php // Done ✓ (CORE-23, UI half): plant.js adds a "Watered" line to the Story and moves the date forward
-                // without a reload. Stage F changes the page only; stage B saves both (like the Dashboard's Mark done). ?>
-          <ul class="side-reminders">
-            <?php foreach ($reminders as $reminder): ?>
-              <?php $due = due_label($reminder['next_due']); ?>
-              <li data-reminder data-task="<?= e($reminder['task']) ?>" data-interval="<?= e($reminder['interval_days']) ?>" data-done-label="<?= e(care_done_label($reminder['task'])) ?>">
-                <span class="side-reminder-text"><?= task_name($reminder['task']) ?> · <?= e(repeat_words($reminder)) ?></span>
-                <span class="side-due side-due-<?= e($due['state']) ?>" data-due><?= e($due['text']) ?></span>
-                <button type="button" class="btn btn-secondary btn-sm side-done" data-reminder-done aria-label="Done: <?= e(task_label($reminder['task'])) ?> <?= e($plant['nickname']) ?>"><?= icon('check') ?> Done</button>
-              </li>
-            <?php endforeach; ?>
-          </ul>
+          <?php if ($reminders): ?>
+            <div class="care-list">
+              <?php foreach ($reminders as $reminder): ?>
+                <?php partial('care-row', ['reminder' => $reminder, 'action' => $page_url, 'compact' => true]); ?>
+              <?php endforeach; ?>
+            </div>
+          <?php else: ?>
+            <p class="text-small plant-reminders-empty">No reminders yet. Add one, and it shows here and on your Dashboard.</p>
+          <?php endif; ?>
+          <?php // Opens the Add a reminder popup (app.js); without JavaScript, &reminder=1 opens it when the page loads ?>
+          <a class="dash-add-btn" href="<?= e(url('plant.php?id=' . $plant['id'] . '&reminder=1')) ?>" data-dialog="add-reminder" aria-haspopup="dialog"><?= icon('plus') ?> Add a reminder</a>
         </section>
       <?php else: ?>
         <?php // Owner card (p12, UX notes): whose plant this is. No contact details: those belong to the exchange. ?>

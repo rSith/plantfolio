@@ -316,7 +316,7 @@ function task_icon($task)
     return $icons[$task] ?? 'calendar';
 }
 
-/** A care task in the past tense, for the Mark done toast: "Watered Monty". */
+/** A care task in the past tense, for the Mark done toast ("Watered Monty") and a Story care line. */
 function task_done_label($task)
 {
     $labels = [
@@ -365,38 +365,6 @@ function schedule_words($reminder)
 function task_name($task)
 {
     return '<span class="task task-' . e($task) . '">' . icon(task_icon($task)) . ' ' . e(task_label($task)) . '</span>';
-}
-
-/** A care task in the past tense, for a Story entry: "Watered", "Fertilised" … */
-function care_done_label($task)
-{
-    $labels = [
-        'water'     => 'Watered',
-        'fertilise' => 'Fertilised',
-        'mist'      => 'Misted',
-        'rotate'    => 'Rotated',
-        'prune'     => 'Pruned',
-        'repot'     => 'Repotted',
-    ];
-
-    return $labels[$task] ?? ucfirst($task);
-}
-
-/**
- * The short relative label of a reminder's next date: "Today", "Tomorrow", "In 3 days" or "Overdue", and its state
- * (due, upcoming or overdue), which picks the colour: terracotta for today, red only for overdue (design system).
- */
-function due_label($next_due)
-{
-    $due = care_due($next_due);
-    if ($due['state'] === 'due') {
-        return ['state' => 'due', 'text' => 'Today'];
-    }
-    if ($due['state'] === 'overdue') {
-        return ['state' => 'overdue', 'text' => 'Overdue'];
-    }
-
-    return $due;
 }
 
 /** The words and icon for an exchange_listings.type value (swap, free or either). */

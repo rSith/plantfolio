@@ -62,7 +62,7 @@ if (isset($_GET['member'])) {
     // ?member starts Nimali clean: the interests and listings of the mock data, nothing rated and no reminders added,
     // in both previews (see mock_send_interest(), mock_mark_exchanged(), mock_rate_exchange(), mock_add_reminder(),
     // mock_add_collection())
-    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
+    foreach (['interests', 'exchanges', 'ratings', 'reminders', 'health_logs', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
         $_SESSION['preview_' . $list]          = [];
         $_SESSION['preview_' . $list . '_new'] = [];
     }
@@ -104,7 +104,7 @@ function mock_log_in_and_go($page, $new_account = false)
     $_SESSION['preview_visitor'] = false;
     if ($new_account) {
         // A brand-new account has done nothing yet, and its pages carry empty=1 from here on
-        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
+        foreach (['interests', 'exchanges', 'ratings', 'reminders', 'health_logs', 'collections', 'collection_plants', 'deleted_collections', 'plants', 'deleted_plants'] as $list) {
             $_SESSION['preview_' . $list . '_new'] = [];
         }
         header('Location: ' . url($page) . (str_contains($page, '?') ? '&' : '?') . 'empty=1');
@@ -509,6 +509,27 @@ function mock_add_reminder($reminder)
     $_SESSION[preview_key('reminders')][$key] = $reminder;
 
     return $previous;
+}
+
+/**
+ * Mock-only: a Story entry added in the preview (Mark done adds a care line). Kept in the session and added to
+ * $mock_health_logs at the end of this file. Returns its made-up id, which Undo needs.
+ * Stage B: INSERT INTO health_logs (plant_id, type, care_task, status, source, note, photo, logged_at) VALUES (…).
+ */
+function mock_add_health_log($row)
+{
+    $id = 2000 + count($_SESSION[preview_key('health_logs')] ?? []);
+    while (isset($_SESSION[preview_key('health_logs')][$id])) {
+        $id++;
+    }
+    $_SESSION[preview_key('health_logs')][$id] = ['id' => $id] + $row;
+    return $id;
+}
+
+/** Mock-only: Undo of a Mark done also takes back its Story line. Stage B: DELETE FROM health_logs WHERE id = ? */
+function mock_remove_health_log($id)
+{
+    unset($_SESSION[preview_key('health_logs')][$id]);
 }
 
 /**
@@ -1614,6 +1635,23 @@ $mock_site_stats['open_listing_count'] = count(array_filter($mock_listings, fn (
 // "Waiting for your rating" to "Ratings you gave". The rated member's average and reviews follow in stage B, where the
 // INSERT makes every COUNT() and AVG() on user_ratings include the new row.
 $mock_preview_ratings = array_values($_SESSION[preview_key('ratings')] ?? []);
+
+// Story entries added in the preview (mock_add_health_log(): a Mark done's care line), for Nimali's own plants only.
+// The plant's "Updated …" (last_logged_at) follows its newest entry.
+if (current_page() !== 'index.php') {
+    $own_ids = array_column($mock_plants, 'id');
+    foreach ($_SESSION[preview_key('health_logs')] ?? [] as $preview_log) {
+        if (!in_array($preview_log['plant_id'], $own_ids, true)) {
+            continue;
+        }
+        $mock_health_logs[] = $preview_log;
+        foreach ($mock_plants as $index => $plant) {
+            if ($plant['id'] === $preview_log['plant_id'] && $preview_log['logged_at'] > $plant['last_logged_at']) {
+                $mock_plants[$index]['last_logged_at'] = $preview_log['logged_at'];
+            }
+        }
+    }
+}
 
 // Reminders Nimali added or marked done in the preview (mock_add_reminder()). Each replaces the mock row for the same
 // plant and task, as stage B's UNIQUE (plant_id, task) key does, and joins Today's care ($mock_reminders) when it is due

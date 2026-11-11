@@ -1,5 +1,5 @@
-// The Plant Profile's own script (P05): the Add a photo popup, the Add to story popup and the reminders' Done
-// buttons. CORE-17, CORE-19 and CORE-23, UI half. Loaded through $page_js by plant.php.
+// The Plant Profile's own script (P05): the Add a photo and Add to story popups. CORE-17 and CORE-19, UI half.
+// Loaded through $page_js by plant.php. (Mark done in the Reminders card is a server form, like the Dashboard's.)
 // Stage F changes the page only: nothing is saved, so a reload shows the mock data again.
 // Stage B sends each change to the server with fetch() first and updates the page when the server says OK.
 // Everything a member typed is put on the page with textContent, never as HTML.
@@ -29,13 +29,13 @@ const addDays = (date, days) => {
 // Whole days from today to a date: negative when it lies in the past
 const daysFromToday = (date) => Math.round((fromInput(isoDay(date)) - fromInput(isoDay(new Date()))) / 86400000);
 
-// The same words as due_label() in helpers.php
+// The same words as care_due() in helpers.php: "Overdue 2 days", "Due today", "Tomorrow", "In 7 days"
 const dueLabel = (days) => {
   if (days < 0) {
-    return { text: 'Overdue', state: 'overdue' };
+    return { text: `Overdue ${-days} ${days === -1 ? 'day' : 'days'}`, state: 'overdue' };
   }
   if (days === 0) {
-    return { text: 'Today', state: 'due' };
+    return { text: 'Due today', state: 'due' };
   }
   return { text: days === 1 ? 'Tomorrow' : `In ${days} days`, state: 'upcoming' };
 };
@@ -70,29 +70,12 @@ function moveReminder(task, date) {
   const label = dueLabel(daysFromToday(next));
   const due = row.querySelector('[data-due]');
   due.textContent = label.text;
-  due.className = `side-due side-due-${label.state}`;
+  due.className = `badge badge-${label.state === 'upcoming' ? 'neutral' : label.state}`;   // as partials/care-row.php
   return next;
 }
 
-// ── Done on a reminder ──────────────────────────────────────────────────────
-
-document.querySelectorAll('[data-reminder-done]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const row = button.closest('[data-reminder]');
-    const task = row.dataset.task;
-    const today = new Date();
-    if (doneWords[task]) {
-      addCareEntry(task, today, '');
-    }
-    const next = moveReminder(task, today);
-    // Done once is enough until the next date: the button stays pressed
-    button.disabled = true;
-    button.classList.add('is-done');
-    storyStatus.textContent = next
-      ? `${row.dataset.doneLabel}. Next on ${shortDate(next)}.`
-      : `${row.dataset.doneLabel}.`;
-  });
-});
+// Mark done in the Reminders card is a normal form (partials/care-row.php): the server moves the date on, adds the
+// Story's care line and shows the toast with Undo, the same as the Dashboard's Today's care.
 
 // ── Add to story popup ──────────────────────────────────────────────────────
 

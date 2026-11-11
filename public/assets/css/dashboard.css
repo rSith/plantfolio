@@ -270,30 +270,3 @@
 
 /* ── Add a reminder ─────────────────────────────────── */
 
-/* The dashed add button at the bottom of a box, like the dashed Add tiles elsewhere: "+ Add a reminder" in Today's
-   care (a <button> that opens a popup) and "+ Add plant" in Garden at a glance (a link to Add Plant) */
-.dash-add-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-8);
-  width: 100%;
-  min-height: 44px;   /* touch target */
-  margin-top: var(--space-12);
-  border: 1px dashed var(--color-line-strong);
-  border-radius: var(--radius-input);
-  background: transparent;
-  color: var(--color-forest);
-  font-family: inherit;
-  font-size: var(--text-body-sm);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
-}
-
-.dash-add-btn:hover {
-  border-color: var(--color-leaf);
-  background: var(--color-sage);
-  color: var(--color-forest);   /* the link version would otherwise take the darker link colour */
-}

@@ -17,7 +17,7 @@ $kinds     = ['note' => 'Update', 'photo' => 'Photo', 'health_check' => 'Health 
   <?php if ($type === 'care'): ?>
     <p class="story-care">
       <?php // .task-<name> gives the task its colour, the same as in the Reminders card ?>
-      <span class="story-care-task task task-<?= e($log['care_task']) ?>"><?= icon(task_icon($log['care_task'])) ?> <?= e(care_done_label($log['care_task'])) ?></span>
+      <span class="story-care-task task task-<?= e($log['care_task']) ?>"><?= icon(task_icon($log['care_task'])) ?> <?= e(task_done_label($log['care_task'])) ?></span>
       <span class="story-care-date">· <?= e(date('j M', strtotime($log['logged_at']))) ?></span>
       <?php if ($log['note'] !== ''): ?>
         <span class="story-care-note">· <?= e($log['note']) ?></span>

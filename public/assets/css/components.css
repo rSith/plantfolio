@@ -1610,6 +1610,76 @@ textarea.input {
   }
 }
 
+/* Compact care row (the plant's own page): no photo or plant name, so the task is the title; the due tag sits under
+   it and Mark done keeps its words, because the row has room for them at every width */
+.care-row-compact {
+  grid-template-columns: 1fr auto;
+}
+
+.care-row-compact .care-row-text {
+  grid-column: 1;
+}
+
+.care-row-compact .badge {
+  grid-column: 1;
+}
+
+.care-row-compact .care-row-form {
+  grid-column: 2;
+}
+
+.care-row-compact .care-row-btn-label {
+  display: inline;
+}
+
+.care-row-task-title {
+  font-size: var(--text-body-sm);
+}
+
+@media (min-width: 768px) {
+  .care-row-compact {
+    grid-template-columns: 1fr auto;
+  }
+
+  .care-row-compact .badge {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .care-row-compact .care-row-form {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+/* The dashed add button at the bottom of a box (Dashboard, Plant Profile; moved from dashboard.css 2026-11-11), like the dashed Add tiles elsewhere: "+ Add a reminder" in Today's
+   care (a <button> that opens a popup) and "+ Add plant" in Garden at a glance (a link to Add Plant) */
+.dash-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  width: 100%;
+  min-height: 44px;   /* touch target */
+  margin-top: var(--space-12);
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-forest);
+  font-family: inherit;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dash-add-btn:hover {
+  border-color: var(--color-leaf);
+  background: var(--color-sage);
+  color: var(--color-forest);   /* the link version would otherwise take the darker link colour */
+}
+
 /* ── Results bar: count, active filters, sort ───────── */
 /* Above a list of search results. Moved here from explore.css: the Exchange page (P10) uses it too. */
 

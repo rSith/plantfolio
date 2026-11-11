@@ -461,8 +461,7 @@
   text-align: right;
 }
 
-/* Reminders: one task per line: the task, its relative date ("Today", "Tomorrow", "In 3 days", "Overdue") and Done */
-.side-reminders,
+/* The owner card's list of facts (a visitor sees it instead of Reminders) */
 .plant-facts {
   margin: 0;
   padding: 0;
@@ -470,7 +469,6 @@
   font-size: var(--text-body-sm);
 }
 
-.side-reminders li,
 .plant-facts li {
   display: flex;
   align-items: center;
@@ -478,43 +476,13 @@
   padding: var(--space-8) 0;
 }
 
-/* Reminder icons keep their task colour (.task); the owner card's icons are grey */
 .plant-facts .icon {
   color: var(--color-muted);
 }
 
-.side-reminder-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.side-due {
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
-}
-
-.side-done {
-  flex-shrink: 0;
-}
-
-/* Pressed: stays visible but quiet until the next date */
-.side-done.is-done {
-  border-color: transparent;
-  background: var(--color-sage);
-  color: var(--color-forest);
-}
-
-.side-due-due {
-  color: var(--color-terracotta);
-}
-
-.side-due-overdue {
-  color: var(--color-danger);
-}
-
-.side-due-upcoming {
-  color: var(--color-muted);
-  font-weight: var(--weight-regular);
+/* Reminders: the Dashboard's care rows (components.css); only the empty message is this page's own */
+.plant-reminders-empty {
+  margin: 0;
 }
 
 /* Owner card (what a visitor sees instead of Reminders) */
